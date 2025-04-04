@@ -1,0 +1,2 @@
+domain layer의 repository에 구현한 추상클래스를 바탕으로 implimnets해와서 쓰게되고,
+source에 있는 로직들을 호출하는 함수가 됨

@@ -1,0 +1,2 @@
+data layer에서 구현할 impliments 파일들의 abstract class가 있는 폴더
+- 여기서 abstract class를 구현해서 data layer의 repository에서 가져다가 쓰는 방식

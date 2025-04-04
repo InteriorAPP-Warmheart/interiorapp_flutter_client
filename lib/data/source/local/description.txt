@@ -1,0 +1,1 @@
+로컬 데이터를 다루는 로직 (Shared Prefarence, SQLite 등)
