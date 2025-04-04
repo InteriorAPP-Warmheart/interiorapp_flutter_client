@@ -40,8 +40,8 @@ file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/characters-1.4.0/
 file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/characters-1.4.0/lib/
 chat_bubbles
 2.12
-file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/chat_bubbles-1.7.0/
-file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/chat_bubbles-1.7.0/lib/
+file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/chat_bubbles-1.6.0/
+file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/chat_bubbles-1.6.0/lib/
 checked_yaml
 2.19
 file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/checked_yaml-2.0.3/
@@ -70,6 +70,10 @@ crypto
 3.4
 file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/crypto-3.0.6/
 file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/crypto-3.0.6/lib/
+cupertino_icons
+3.1
+file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/cupertino_icons-1.0.8/
+file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/cupertino_icons-1.0.8/lib/
 custom_lint
 3.0
 file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/custom_lint-0.7.5/
@@ -159,9 +163,9 @@ http_parser
 file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/http_parser-4.1.2/
 file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/http_parser-4.1.2/lib/
 intl
-3.3
-file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/intl-0.20.2/
-file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/intl-0.20.2/lib/
+3.0
+file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/intl-0.19.0/
+file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/intl-0.19.0/lib/
 json_annotation
 3.0
 file:///Users/jeongtaeyeong/.pub-cache/hosted/pub.dev/json_annotation-4.9.0/
@@ -398,6 +402,10 @@ flutter
 3.7
 file:///opt/homebrew/Caskroom/flutter/3.24.4/flutter/packages/flutter/
 file:///opt/homebrew/Caskroom/flutter/3.24.4/flutter/packages/flutter/lib/
+flutter_localizations
+3.7
+file:///opt/homebrew/Caskroom/flutter/3.24.4/flutter/packages/flutter_localizations/
+file:///opt/homebrew/Caskroom/flutter/3.24.4/flutter/packages/flutter_localizations/lib/
 flutter_test
 3.7
 file:///opt/homebrew/Caskroom/flutter/3.24.4/flutter/packages/flutter_test/
