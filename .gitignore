@@ -77,3 +77,4 @@ GoogleService-Info.plist
 !pubspec.lock
 doc/api/
 .metadata
+.dart_tool
