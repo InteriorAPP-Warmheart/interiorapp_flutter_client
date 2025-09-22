@@ -1,13 +1,20 @@
 import 'package:go_router/go_router.dart';
-import 'package:interiorapp_flutter_client/ui/components/app_tabbar.dart';
+import 'package:interiorapp_flutter_client/components/components_widget/app_tabbar.dart';
+import 'package:interiorapp_flutter_client/settings_tab/setting_screen.dart';
+import 'package:interiorapp_flutter_client/signin_signup/ui/screen/signin_screen.dart';
+import 'package:interiorapp_flutter_client/splash_screen.dart';
 
 class AppRouter {
-  static final router = GoRouter(
+  static GoRouter buildRouter() => GoRouter(
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const AppTabBar(),
-      ),
+      // GoRoute(
+      //   path: '/',
+      //   builder: (context, state) => const SplashScreen(),
+      // ),
+      // 자동 로그인 개발 전 까지는 splash 화면 없음
+      GoRoute(path: '/', builder: (context, state) => const AppTabBar()),
+      GoRoute(path: '/signin', builder: (context, state) => const SigninScreen()),
+      GoRoute(path: '/settings', builder: (context, state) => const SettingScreen()),
     ]
   );
 }

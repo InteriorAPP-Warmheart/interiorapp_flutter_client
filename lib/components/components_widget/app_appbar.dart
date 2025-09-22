@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
   const AppAppBar({super.key});
@@ -10,11 +11,17 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         IconButton(
           onPressed: () {},
-          icon: Icon(Icons.person_rounded), // 로그인 여부에 따라 아이콘 변경
+          icon: Icon(Icons.search_rounded), // 검색
         ),
         IconButton(
           onPressed: () {},
-          icon: Icon(Icons.notifications_rounded), // 알람 여부에 따라 아이콘 변경
+          icon: Icon(Icons.shopping_cart_rounded), // 장바구니
+        ),
+        IconButton(
+          onPressed: () {
+            context.push('/settings');
+          },
+          icon: Icon(Icons.person_rounded), // 로그인 여부에 따라 아이콘 변경
         ),
       ],
     );

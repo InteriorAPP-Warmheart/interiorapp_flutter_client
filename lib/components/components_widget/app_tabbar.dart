@@ -2,15 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:interiorapp_flutter_client/presentation/provider/tabbar_provider.dart';
-import 'package:interiorapp_flutter_client/ui/components/app_appbar.dart';
-import 'package:interiorapp_flutter_client/ui/screen/chatting_screen.dart';
-import 'package:interiorapp_flutter_client/ui/screen/construct_screen.dart';
-import 'package:interiorapp_flutter_client/ui/screen/home_screen.dart';
-import 'package:interiorapp_flutter_client/ui/screen/setting_screen.dart';
-import 'package:interiorapp_flutter_client/ui/screen/showroom_screen.dart';
-import 'package:interiorapp_flutter_client/ui/screen/store_screen.dart';
-import 'package:interiorapp_flutter_client/util/theme/tabbar_theme.dart';
+import 'package:interiorapp_flutter_client/components/components_vm/tabbar_provider.dart';
+import 'package:interiorapp_flutter_client/components/components_widget/app_appbar.dart';
+import 'package:interiorapp_flutter_client/favorite_tab/favorite_screen.dart';
+import 'package:interiorapp_flutter_client/home_tab/home_screen.dart';
+import 'package:interiorapp_flutter_client/build_tab/build_screen.dart';
+import 'package:interiorapp_flutter_client/showroom_tab/showroom_screen.dart';
+import 'package:interiorapp_flutter_client/signin_signup/util/theme/tabbar_theme.dart';
+import 'package:interiorapp_flutter_client/store_tab/store_screen.dart';
 
 class AppTabBar extends ConsumerStatefulWidget {
   const AppTabBar({super.key});
@@ -31,7 +30,7 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
     super.initState();
     // Provider의 현재 상태로 초기화
     _tabController = TabController(
-      length: 6,
+      length: 5,
       vsync: this,
       initialIndex: ref.read(tabProvider),
     );
@@ -72,10 +71,9 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
       body: TabBarView(controller: _tabController, children: [
         HomeScreen(),
         ShowroomScreen(),
-        ConstructScreen(),
         StoreScreen(),
-        ChattingScreen(),
-        SettingScreen(),
+        BuildScreen(),
+        FavoriteScreen(),
         ],
       ),
       bottomNavigationBar: _buildTab(),
@@ -105,20 +103,16 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
             text: '쇼룸',
           ),
           Tab(
-            icon: Icon(Icons.build_rounded, size: AppTabBarTheme.iconSize),
-            text: '시공',
-          ),
-          Tab(
             icon: Icon(Icons.shopping_bag_rounded, size: AppTabBarTheme.iconSize),
             text: '스토어',
           ),
           Tab(
-            icon: Icon(Icons.chat_bubble_rounded, size: AppTabBarTheme.iconSize),
-            text: '채팅',
+            icon: Icon(Icons.build_rounded, size: AppTabBarTheme.iconSize),
+            text: '시공',
           ),
           Tab(
-            icon: Icon(Icons.settings_rounded, size: AppTabBarTheme.iconSize),
-            text: '설정',
+            icon: Icon(Icons.favorite_rounded, size: AppTabBarTheme.iconSize),
+            text: '즐겨찾기',
           ),
         ],
       ),
