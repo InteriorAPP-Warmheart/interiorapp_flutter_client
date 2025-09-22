@@ -2,10 +2,11 @@ import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/components/components_widget/app_tabbar.dart';
 import 'package:interiorapp_flutter_client/settings_tab/setting_screen.dart';
 import 'package:interiorapp_flutter_client/signin_signup/ui/screen/signin_screen.dart';
-import 'package:interiorapp_flutter_client/splash_screen.dart';
+// import 'package:interiorapp_flutter_client/splash_screen.dart';
 
 class AppRouter {
-  static GoRouter buildRouter() => GoRouter(
+  // Use a singleton GoRouter instance to preserve navigation state across hot reloads
+  static final GoRouter router = GoRouter(
     routes: [
       // GoRoute(
       //   path: '/',
@@ -15,6 +16,9 @@ class AppRouter {
       GoRoute(path: '/', builder: (context, state) => const AppTabBar()),
       GoRoute(path: '/signin', builder: (context, state) => const SigninScreen()),
       GoRoute(path: '/settings', builder: (context, state) => const SettingScreen()),
-    ]
+    ],
   );
+
+  // Backward-compatible helper if other places still call buildRouter()
+  static GoRouter buildRouter() => router;
 }

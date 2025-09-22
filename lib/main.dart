@@ -26,7 +26,7 @@ class MainApp extends StatelessWidget {
             ],
             supportedLocales: const [Locale('ko', '')],
             debugShowCheckedModeBanner: false,
-            routerConfig: AppRouter.buildRouter(),
+            routerConfig: AppRouter.router,
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
               fontFamily: 'Pretendard',
