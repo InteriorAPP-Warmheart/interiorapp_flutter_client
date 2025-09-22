@@ -43,6 +43,13 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # assets
-  # assets:
-    # - assets/images/
+  assets:
+    - assets/images/
+    # - assets/json/
+    # - .env
+  
+  
+  # fonts:
+  #   - family: omyu-pretty
+  #     fonts:
+  #       - asset: assets/fonts/omyu-pretty.ttf
