@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:interiorapp_flutter_client/home_tab/ui/widget/showroom_slider_widget.dart';
+import 'package:interiorapp_flutter_client/home_tab/presentation/provider/recommend_build_provider.dart';
 import 'package:interiorapp_flutter_client/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/adv_widget.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/section.dart';
-import 'package:interiorapp_flutter_client/home_tab/ui/widget/generic_carousel_section.dart';
-import 'package:interiorapp_flutter_client/home_tab/presentation/provider/showroom_slider_provider.dart';
-import 'package:interiorapp_flutter_client/home_tab/data/model/showroom_slider_model.dart';
+import 'package:interiorapp_flutter_client/home_tab/presentation/provider/hot_showroom_provider.dart';
+import 'package:interiorapp_flutter_client/home_tab/data/model/hot_showroom_model.dart';
+import 'package:interiorapp_flutter_client/home_tab/ui/widget/image_slider_widget.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -100,89 +100,8 @@ class HomeScreen extends StatelessWidget {
                 child: const Text('더보기'),
               ),
               gap: ResponsiveSize.subGap(context) * 0,
-              child: ImageSliderSection<ShowroomSliderModel>(
-                watchItems: (ref) => ref.watch(showroomSliderProvider),
-                imageBuilder: (context, item) {
-                  return Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.network(item.thumbnailUrl, fit: BoxFit.cover),
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Colors.black.withOpacity(0.0),
-                              Colors.black.withOpacity(0.55),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        left: 0,
-                        right: 15,
-                        bottom: 12,
-                        child: Row(
-                          children: const [
-                            Expanded(child: SizedBox()),
-                            Icon(Icons.bookmark_border, color: Colors.white, size: 30),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                },
-                infoBuilder: (context, item) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        constraints: const BoxConstraints(maxWidth: 220, minHeight: 20),
-                        child: Text(
-                          item.themeName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      const Spacer(),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          CircleAvatar(backgroundImage: NetworkImage(item.userProfileUrl), radius: 12),
-                          const SizedBox(width: 6),
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 120),
-                            child: Text(
-                              item.userName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(width: 4, height: 4, decoration: const BoxDecoration(color: Colors.grey, shape: BoxShape.circle)),
-                          const SizedBox(width: 8),
-                          const Text('좋아요', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.grey)),
-                          const SizedBox(width: 2),
-                          Text(
-                            item.likeCount > 999 ? '999+' : item.likeCount.toString(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
-                },
+              child: ImageSliderWidget().showroomInfo(
+                watchItems: (ref) => ref.watch(hotShowroomSliderProvider),
               ),
             ),
             SizedBox(height: sectionGap),
@@ -203,16 +122,11 @@ class HomeScreen extends StatelessWidget {
               child: const Text('더보기'),
             ),
             gap: ResponsiveSize.subGap(context) * 0,
-            child: ImageSliderSection<ShowroomSliderModel>(
-              watchItems: (ref) => ref.watch(showroomSliderProvider),
-              imageBuilder: (context, item) {
-                return Image.network(item.thumbnailUrl, fit: BoxFit.cover);
-              },
-              infoBuilder: (context, item) {
-                return Text(item.themeName);
-              },
+            child: ImageSliderWidget().recommendBuild(
+              watchItems: (ref) => ref.watch(recommendBuildProvider),
             ),
           ),
+          SizedBox(height: sectionGap),
           ],
         ),
       ),

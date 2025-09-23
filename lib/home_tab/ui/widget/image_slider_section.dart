@@ -11,6 +11,7 @@ class ImageSliderSection<T> extends ConsumerWidget {
   final Widget Function(BuildContext context, T item) infoBuilder;
   final double viewportFraction;
   final double gap;
+  final double infoHeight; // 하단 정보 높이 (고정)
 
   const ImageSliderSection({
     super.key,
@@ -19,6 +20,7 @@ class ImageSliderSection<T> extends ConsumerWidget {
     required this.infoBuilder,
     this.viewportFraction = 0.95,
     this.gap = 12.0,
+    this.infoHeight = 40.0,
   });
 
   @override
@@ -34,7 +36,6 @@ class ImageSliderSection<T> extends ConsumerWidget {
       useResponsiveHeight: true,
     );
     const double spacer = 0.0;
-    const double infoHeight = 40.0;
     final double cardHeight = height + spacer + infoHeight;
 
     return asyncItems.when(
