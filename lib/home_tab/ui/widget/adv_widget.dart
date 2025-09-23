@@ -21,11 +21,11 @@ class AdvWidget extends StatefulWidget {
   const AdvWidget({
     super.key,
     required this.imageUrls,
-    this.height = 200.0,
+    this.height = 280.0,
     this.useResponsiveHeight = true,
     this.aspectRatio, // 예: 16/9, 4/3 등
-    this.minHeight = 140.0,
-    this.maxHeight = 360.0,
+    this.minHeight = 280.0,
+    this.maxHeight = 280.0,
     this.borderRadius = 12.0,
     this.showIndicators = true,
     this.indicatorColor = Colors.white54,
@@ -170,91 +170,6 @@ class _ImageSliderWidgetState extends State<AdvWidget> {
           ),
         );
       },
-    );
-  }
-}
-
-// 사용 예시를 위한 데모 위젯
-class ImageSliderDemo extends StatelessWidget {
-  const ImageSliderDemo({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    // 샘플 이미지 URL들 (실제 사용시에는 실제 이미지 URL로 교체)
-    final List<String> sampleImages = [
-      'https://picsum.photos/400/300?random=1',
-      'https://picsum.photos/400/300?random=2',
-      'https://picsum.photos/400/300?random=3',
-      'https://picsum.photos/400/300?random=4',
-      'https://picsum.photos/400/300?random=5',
-    ];
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('이미지 슬라이더 데모'),
-        backgroundColor: Colors.blue[600],
-        foregroundColor: Colors.white,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 기본 슬라이더
-            const Text(
-              '기본 슬라이더',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            AdvWidget(
-              imageUrls: sampleImages,
-              height: 200,
-            ),
-            
-            const SizedBox(height: 32),
-            
-            // 커스텀 스타일 슬라이더
-            const Text(
-              '커스텀 스타일 슬라이더',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            AdvWidget(
-              imageUrls: sampleImages.take(3).toList(),
-              height: 250,
-              borderRadius: 20,
-              indicatorColor: Colors.grey[400]!,
-              activeIndicatorColor: Colors.blue[600]!,
-              indicatorSize: 10,
-              autoPlayInterval: const Duration(seconds: 2),
-            ),
-            
-            const SizedBox(height: 32),
-            
-            // 인디케이터 없는 슬라이더
-            const Text(
-              '인디케이터 없는 슬라이더',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            AdvWidget(
-              imageUrls: sampleImages.take(2).toList(),
-              height: 180,
-              showIndicators: false,
-              autoPlay: false,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

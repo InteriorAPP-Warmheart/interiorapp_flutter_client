@@ -10,7 +10,6 @@ class ShowroomSliderWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncItems = ref.watch(showroomSliderProvider);
-    final currentIndex = ref.watch(showroomSliderIndexProvider);
 
     final double width = MediaQuery.of(context).size.width;
     final double height = ResponsiveSize.bannerHeight(
@@ -22,7 +21,7 @@ class ShowroomSliderWidget extends ConsumerWidget {
       useResponsiveHeight: true,
     );
     const double vf = 0.95; // 슬라이드 가시 폭 비율
-    const double gap = 12.0; // 카드 간 간격 (오른쪽 여백)
+    const double gap = 8.0; // 카드 간 간격 (오른쪽 여백)
 
     return asyncItems.when(
       loading:
@@ -99,15 +98,16 @@ class ShowroomSliderWidget extends ConsumerWidget {
                             ),
                             Positioned(
                               left: 0,
-                              right: 15,
-                              bottom: 12,
+                              right: 8,
+                              bottom: 8,
                               child: Row(
-                                children: const [
+                                children: [
                                   Expanded(child: SizedBox()),
-                                  Icon(
-                                    Icons.bookmark_border,
+                                  IconButton(
+                                    onPressed: () {},
+                                    icon: Icon(Icons.bookmark_border),
                                     color: Colors.white,
-                                    size: 30,
+                                    iconSize: 30,
                                   ),
                                 ],
                               ),
@@ -203,7 +203,7 @@ class ShowroomSliderWidget extends ConsumerWidget {
               autoPlay: false,
               onPageChanged:
                   (index, reason) => ref
-                      .read(showroomSliderIndexProvider.notifier)
+                      .watch(showroomSliderIndexProvider.notifier)
                       .changeIndex(index),
             ),
           ),

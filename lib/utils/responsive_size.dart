@@ -122,6 +122,22 @@ class ResponsiveSize {
     return const EdgeInsets.symmetric(horizontal: 16.0);
   }
 
+  /// 섹션 간 기본 간격 (디바이스 폭 기준 고정 비율)
+  static double sectionGap(BuildContext context) {
+    final double width = MediaQuery.of(context).size.width;
+    if (width >= 900) return 32.0; // 태블릿/폴더블 와이드
+    if (width >= 600) return 28.0; // 큰 폰/작은 태블릿
+    return 24.0; // 일반 폰
+  }
+
+  /// 제목-컨텐츠, 요소 내부의 보조 간격 (sectionGap의 약 0.5배)
+  static double subGap(BuildContext context) {
+    final double width = MediaQuery.of(context).size.width;
+    if (width >= 900) return 16.0;
+    if (width >= 600) return 14.0;
+    return 12.0;
+  }
+
   /// 폰트 스케일 팩터 (살짝만 조정)
   static double fontScale(BuildContext context) {
     final double width = MediaQuery.of(context).size.width;
