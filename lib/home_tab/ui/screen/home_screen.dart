@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:interiorapp_flutter_client/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/adv_widget.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -14,9 +15,25 @@ class HomeScreen extends StatelessWidget {
       'https://picsum.photos/400/300?random=4',
     ];
 
+    final EdgeInsets screenPadding = ResponsiveSize.responsivePadding(context);
+    final double fontScale = ResponsiveSize.fontScale(context);
+
+    // Grid 2열 카드 비율 계산
+    const int gridColumns = 2;
+    const double gridGap = 16.0;
+    final double contentWidth = MediaQuery.of(context).size.width - (screenPadding.horizontal) - (gridGap * (gridColumns - 1));
+    final double tileWidth = contentWidth / gridColumns;
+    final double cardHeight = ResponsiveSize.gridTileHeightByWidth(
+      tileWidth: tileWidth,
+      aspectRatio: 3 / 4,
+      minHeight: 140,
+      maxHeight: 200,
+    );
+    final double childAspect = tileWidth / cardHeight;
+
     return Scaffold(
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: screenPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -24,7 +41,6 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 16),
             AdvWidget(
               imageUrls: sampleImages,
-              height: 270,
               borderRadius: 16,
               indicatorColor: Colors.white54,
               activeIndicatorColor: Colors.white,
@@ -34,10 +50,8 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 32),
 
             // 카테고리 섹션
-            const Text(
-              '관심있는 인테리어 방식이 있나요?',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            Text('관심있는 인테리어 방식이 있나요?',
+                style: TextStyle(fontSize: 18 * fontScale, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
 
             // 그리드 카테고리
@@ -47,7 +61,7 @@ class HomeScreen extends StatelessWidget {
               crossAxisCount: 2,
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
-              childAspectRatio: 1.5,
+              childAspectRatio: childAspect,
               children: [
                 _buildCategoryCard('셀프 반셀프 인테리어', Icons.living),
                 _buildCategoryCard('외주 시공', Icons.bed),
@@ -60,11 +74,9 @@ class HomeScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  '인기 쇼룸',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                TextButton(onPressed: () {}, child: Text('더보기')),
+                Text('인기 쇼룸',
+                    style: TextStyle(fontSize: 18 * fontScale, fontWeight: FontWeight.bold)),
+                TextButton(onPressed: () {}, child: const Text('더보기')),
               ],
             ),
           ],
