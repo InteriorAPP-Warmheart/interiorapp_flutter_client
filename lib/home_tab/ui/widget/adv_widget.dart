@@ -1,7 +1,7 @@
 // == 광고 위젯 ==
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:interiorapp_flutter_client/home_tab/ui/util/responsive_size.dart';
+import 'package:interiorapp_flutter_client/utils/responsive_size.dart';
 
 class AdvWidget extends StatefulWidget {
   final List<String> imageUrls;

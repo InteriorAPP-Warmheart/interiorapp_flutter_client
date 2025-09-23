@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:interiorapp_flutter_client/home_tab/ui/widget/showroom_slider_widget.dart';
 import 'package:interiorapp_flutter_client/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/adv_widget.dart';
 
@@ -21,7 +22,10 @@ class HomeScreen extends StatelessWidget {
     // Grid 2열 카드 비율 계산
     const int gridColumns = 2;
     const double gridGap = 16.0;
-    final double contentWidth = MediaQuery.of(context).size.width - (screenPadding.horizontal) - (gridGap * (gridColumns - 1));
+    final double contentWidth =
+        MediaQuery.of(context).size.width -
+        (screenPadding.horizontal) -
+        (gridGap * (gridColumns - 1));
     final double tileWidth = contentWidth / gridColumns;
     final double cardHeight = ResponsiveSize.gridTileHeightByWidth(
       tileWidth: tileWidth,
@@ -50,8 +54,13 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 32),
 
             // 카테고리 섹션
-            Text('관심있는 인테리어 방식이 있나요?',
-                style: TextStyle(fontSize: 18 * fontScale, fontWeight: FontWeight.bold)),
+            Text(
+              '관심있는 인테리어 방식이 있나요?',
+              style: TextStyle(
+                fontSize: 18 * fontScale,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 16),
 
             // 그리드 카테고리
@@ -74,11 +83,29 @@ class HomeScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('인기 쇼룸',
-                    style: TextStyle(fontSize: 18 * fontScale, fontWeight: FontWeight.bold)),
-                TextButton(onPressed: () {}, child: const Text('더보기')),
+                Text(
+                  '인기 쇼룸',
+                  style: TextStyle(
+                    fontSize: 18 * fontScale,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {},
+                  style: TextButton.styleFrom(
+                    textStyle: const TextStyle(
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                  child: const Text('더보기'),
+                ),
               ],
             ),
+
+            // 인기 쇼룸 슬라이더
+            const ShowroomSliderWidget(),
+
+            SizedBox(height: 32),
           ],
         ),
       ),
