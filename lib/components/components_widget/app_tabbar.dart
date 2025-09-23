@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/components/components_vm/tabbar_provider.dart';
 import 'package:interiorapp_flutter_client/components/components_widget/app_appbar.dart';
 import 'package:interiorapp_flutter_client/favorite_tab/favorite_screen.dart';
-import 'package:interiorapp_flutter_client/home_tab/home_screen.dart';
+import 'package:interiorapp_flutter_client/home_tab/ui/screen/home_screen.dart';
 import 'package:interiorapp_flutter_client/build_tab/build_screen.dart';
 import 'package:interiorapp_flutter_client/showroom_tab/showroom_screen.dart';
 import 'package:interiorapp_flutter_client/signin_signup/util/theme/tabbar_theme.dart';

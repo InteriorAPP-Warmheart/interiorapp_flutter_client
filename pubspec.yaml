@@ -30,6 +30,8 @@ dependencies:
   flutter_dotenv: ^5.2.1
   # intl
   intl: ^0.20.2
+  # 이미지 슬라이더
+  carousel_slider: ^5.1.1
 
 dev_dependencies:
   flutter_test:
