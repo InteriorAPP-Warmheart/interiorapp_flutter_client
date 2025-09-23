@@ -5,6 +5,7 @@ import 'package:interiorapp_flutter_client/home_tab/data/model/recommend_build_m
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/image_slider_section.dart';
 import 'package:intl/intl.dart';
 
+/// 가격 포맷
 String _formatKrw(dynamic raw) {
   final String original = raw?.toString() ?? '';
   // 이미 "만원" 또는 "억" 표기 등 포맷된 경우는 그대로 사용
@@ -34,6 +35,80 @@ String _formatKrw(dynamic raw) {
   final bool isInt = man == man.floorToDouble();
   final NumberFormat fmt = NumberFormat(isInt ? '#,##0' : '#,##0.#', 'ko_KR');
   return '${fmt.format(man)}만원';
+}
+
+/// 시공기간 포맷
+String _formatBuildPeriod(dynamic raw) {
+  final String original = raw?.toString() ?? '';
+  if (original.isEmpty) return '';
+
+  // 한글 단위 입력 처리: "X년 Y개월", "X개월", "X주", "X일"
+  String sK = original.replaceAll(' ', '');
+  int? parseIntSafe(String v) => int.tryParse(v);
+
+  if (sK.contains('년')) {
+    // 년 단위는 개월로 환산(1년=12개월), 주/일로는 환산하지 않음
+    final reg = RegExp(r'^(\d+)년(?:(\d+)개월)?$');
+    final m = reg.firstMatch(sK);
+    if (m != null) {
+      final y = parseIntSafe(m.group(1)!) ?? 0;
+      final mm = parseIntSafe(m.group(2) ?? '0') ?? 0;
+      final totalMonths = y * 12 + mm;
+      // 간결 표기: 가장 큰 단위 하나만, 반올림 없음
+      return '$totalMonths개월';
+    }
+  }
+  if (sK.endsWith('개월')) {
+    final n = parseIntSafe(sK.replaceAll('개월', '')) ?? 0;
+    return n <= 0 ? original : '$n개월';
+  }
+  if (sK.endsWith('주')) {
+    final n = parseIntSafe(sK.replaceAll('주', '')) ?? 0;
+    return n <= 0 ? original : '$n주';
+  }
+  if (sK.endsWith('일')) {
+    final n = parseIntSafe(sK.replaceAll('일', '')) ?? 0;
+    return n <= 0 ? original : '$n일';
+  }
+
+  // 축약 표기/숫자 표기 처리 (y,m,w,d), 단 년(y)은 개월로 환산
+  int daysFrom(dynamic v) {
+    if (v == null) return 0;
+    if (v is int) return v;
+    final s = v.toString().trim().toLowerCase();
+    final match = RegExp(r'^(\d+)\s*([ymwd])?$').firstMatch(s);
+    if (match != null) {
+      final n = int.tryParse(match.group(1)!) ?? 0;
+      final unit = match.group(2);
+      switch (unit) {
+        case 'y':
+          return n * 12 * 30; // 년→개월→일 근사 환산
+        case 'm':
+          return n * 30;
+        case 'w':
+          return n * 7;
+        case 'd':
+        case null:
+          return n;
+      }
+    }
+    final onlyNum = int.tryParse(s) ?? 0;
+    return onlyNum;
+  }
+
+  final int days = daysFrom(original);
+  if (days <= 0) return original;
+
+  // 간결 표기: 한 단위만 표시 + 반올림 (우선순위: 개월 > 주 > 일)
+  if (days >= 30) {
+    final int monthsRounded = ((days / 30.0).round()).clamp(1, 1000000);
+    return '약 $monthsRounded개월';
+  }
+  if (days >= 7) {
+    final int weeksRounded = ((days / 7.0).round()).clamp(1, 1000000);
+    return '약 $weeksRounded주';
+  }
+  return '$days일';
 }
 
 /// 프리셋 스타일을 제공하는 슬라이더 헬퍼
@@ -278,7 +353,7 @@ class ImageSliderWidget {
                   ),
                 ),
                 Text(
-                  item.buildPeriod,
+                  '시공기간 ${_formatBuildPeriod(item.buildPeriod)}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(

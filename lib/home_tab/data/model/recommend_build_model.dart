@@ -2,7 +2,7 @@ class RecommendBuildModel {
   final String thumbnailUrl;
   final String companyName;
   final String buildAddress;
-  final String buildPeriod;
+  final int buildPeriod;
   final int buildCost;
   final bool favoriteStatus;
   final double rating;
@@ -35,7 +35,7 @@ class RecommendBuildModel {
       thumbnailUrl: json['thumbnailUrl']?.toString() ?? '',
       companyName: json['companyName']?.toString() ?? '',
       buildAddress: json['buildAddress']?.toString() ?? '',
-      buildPeriod: json['buildPeriod']?.toString() ?? '',
+      buildPeriod: json['buildPeriod'] ?? 0,
       buildCost: json['buildCost'] ?? 0,
       favoriteStatus: json['favoriteStatus'] == true || json['favoriteStatus'] == 'true',
       rating: parseDouble(json['rating']),
@@ -65,7 +65,7 @@ class RecommendBuildModel {
     String? thumbnailUrl,
     String? companyName,
     String? buildAddress,
-    String? buildPeriod,
+    int? buildPeriod,
     int? buildCost,
     bool? favoriteStatus,
     double? rating,
@@ -83,5 +83,5 @@ class RecommendBuildModel {
 
   @override
   String toString() =>
-      'RecommendBuildModel(company: $companyName, rating: $rating, buildCost: $buildCost)';
+      'RecommendBuildModel(company: $companyName, rating: $rating, buildCost: $buildCost, buildPeriod: $buildPeriod)';
 }
