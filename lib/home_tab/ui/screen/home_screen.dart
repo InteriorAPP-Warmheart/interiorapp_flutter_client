@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:interiorapp_flutter_client/home_tab/presentation/provider/recommend_build_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/adv_widget.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/section.dart';
-import 'package:interiorapp_flutter_client/home_tab/presentation/provider/hot_showroom_provider.dart';
-import 'package:interiorapp_flutter_client/home_tab/data/model/hot_showroom_model.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/image_slider_widget.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // 샘플 이미지 URL들
     final List<String> sampleImages = [
       'https://picsum.photos/400/300?random=1',
@@ -101,7 +99,7 @@ class HomeScreen extends StatelessWidget {
               ),
               gap: ResponsiveSize.subGap(context) * 0,
               child: ImageSliderWidget().showroomInfo(
-                watchItems: (ref) => ref.watch(hotShowroomSliderProvider),
+                ref: ref,
               ),
             ),
             SizedBox(height: sectionGap),
@@ -122,8 +120,8 @@ class HomeScreen extends StatelessWidget {
               child: const Text('더보기'),
             ),
             gap: ResponsiveSize.subGap(context) * 0,
-            child: ImageSliderWidget().recommendBuild(
-              watchItems: (ref) => ref.watch(recommendBuildProvider),
+            child: ImageSliderWidget().recommendBuildInfo(
+              ref: ref,
             ),
           ),
           SizedBox(height: sectionGap),

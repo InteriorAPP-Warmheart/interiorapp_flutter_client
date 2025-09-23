@@ -5,12 +5,24 @@ import 'package:interiorapp_flutter_client/home_tab/presentation/provider/recomm
 class RecommendBuildVmClass extends Notifier<List<RecommendBuildModel>> {
 
   @override List<RecommendBuildModel> build() {
-    return [];
+    // 초기 한 번만 자동 로드
+    Future.microtask(() async {
+      if (state.isEmpty) {
+        state = await ref.read(recommendBuildUseCaseProvider).getRecommendBuild();
+      }
+    });
+    return <RecommendBuildModel>[];
   }
 
   Future<void> getRecommendBuild() async {
-    final recommendBuild = ref.read(recommendBuildVm);
-    state = recommendBuild;
+    state = await ref.read(recommendBuildUseCaseProvider).getRecommendBuild();
+  }
+
+  Future<void> toggleFavoriteByIndex(String id) async {
+    if (id.isEmpty) return;
+    // 필요 시 동일한 낙관적 업데이트 패턴으로 변경 가능
+    final data = await ref.read(recommendBuildUseCaseProvider).updateFavoriteStatus(id);
+    state = state.map((e) => e.id == id ? data : e).toList();
   }
 }
 

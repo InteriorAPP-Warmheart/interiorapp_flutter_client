@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/home_tab/data/model/hot_showroom_model.dart';
 import 'package:interiorapp_flutter_client/home_tab/data/model/recommend_build_model.dart';
+import 'package:interiorapp_flutter_client/home_tab/presentation/provider/hot_showroom_provider.dart';
+import 'package:interiorapp_flutter_client/home_tab/presentation/vm/hot_showroom_vm.dart';
+import 'package:interiorapp_flutter_client/home_tab/presentation/provider/recommend_build_provider.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/image_slider_section.dart';
 import 'package:intl/intl.dart';
 
@@ -117,15 +120,15 @@ class ImageSliderWidget {
 
   /// 쇼룸 전용 프리셋 (썸네일 오버레이 + pill 테마명 + 아바타/이름/좋아요)
   Widget showroomInfo({
-    required AsyncValue<List<HotShowroomModel>> Function(WidgetRef ref)
-    watchItems,
+    required WidgetRef ref,
     double viewportFraction = 0.95,
     double gap = 12.0,
   }) {
     return ImageSliderSection<HotShowroomModel>(
-      watchItems: watchItems,
+      watchItems: (ref) => AsyncValue.data(ref.watch(hotShowroomSliderVm)),
       viewportFraction: viewportFraction,
       gap: gap,
+      onIndexChange: (i) => ref.read(hotShowroomSliderIndexProvider.notifier).changeIndex(i),
       imageBuilder: (context, item) {
         return Stack(
           fit: StackFit.expand,
@@ -137,8 +140,8 @@ class ImageSliderWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomRight,
                   colors: [
-                    Colors.black.withOpacity(0.0),
-                    Colors.black.withOpacity(0.55),
+                    Colors.black.withValues(alpha: 0.0),
+                    Colors.black.withValues(alpha: 0.55),
                   ],
                 ),
               ),
@@ -151,9 +154,11 @@ class ImageSliderWidget {
                 children: [
                   Expanded(child: SizedBox()),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      ref.read(hotShowroomSliderVm.notifier).toggleFavoriteByIndex(item.id);
+                    },
                     icon: Icon(
-                      Icons.bookmark_border,
+                      item.favoriteStatus ? Icons.bookmark : Icons.bookmark_border,
                       color: Colors.white,
                       size: 30,
                     ),
@@ -238,18 +243,18 @@ class ImageSliderWidget {
   }
 
   /// 추천 시공사례 전용 프리셋
-  Widget recommendBuild({
-    required AsyncValue<List<RecommendBuildModel>> Function(WidgetRef ref)
-    watchItems,
+  Widget recommendBuildInfo({
+    required WidgetRef ref,
     double viewportFraction = 0.95,
     double gap = 12.0,
     double infoHeight = 56.0,
   }) {
     return ImageSliderSection<RecommendBuildModel>(
-      watchItems: watchItems,
+      watchItems: (ref) => AsyncValue.data(ref.watch(recommendBuildVm)),
       viewportFraction: viewportFraction,
       gap: gap,
       infoHeight: infoHeight,
+      onIndexChange: (i) => ref.read(recommendBuildIndexProvider.notifier).changeIndex(i),
       imageBuilder: (context, item) {
         return Stack(
           fit: StackFit.expand,
@@ -276,7 +281,7 @@ class ImageSliderWidget {
                   Expanded(child: SizedBox()),
                   IconButton(
                     onPressed: () {
-                      item.copyWith(favoriteStatus: !item.favoriteStatus);
+                      ref.read(recommendBuildVm.notifier).toggleFavoriteByIndex(item.id);
                     },
                     icon: Icon(
                       item.favoriteStatus

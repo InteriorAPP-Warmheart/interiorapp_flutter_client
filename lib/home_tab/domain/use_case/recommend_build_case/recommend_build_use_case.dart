@@ -9,4 +9,8 @@ class RecommendBuildUseCase {
   Future<List<RecommendBuildModel>> getRecommendBuild() async {
     return _recommendBuildRepository.getRecommendBuild();
   }
+
+  Future<RecommendBuildModel> updateFavoriteStatus(String id) async {
+    return _recommendBuildRepository.updateFavoriteStatus(id);
+  }
 }

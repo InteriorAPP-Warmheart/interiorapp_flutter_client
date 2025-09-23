@@ -9,4 +9,8 @@ class HotShowroomUseCase {
   Future<List<HotShowroomModel>> getHotShowroom() async {
     return _hotShowroomRepository.getHotShowroom();
   }
+
+  Future<HotShowroomModel> updateFavoriteStatus(String id) async {
+    return _hotShowroomRepository.updateFavoriteStatus(id);
+  }
 }

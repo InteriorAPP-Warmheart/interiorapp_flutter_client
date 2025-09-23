@@ -3,4 +3,5 @@ import 'package:interiorapp_flutter_client/home_tab/data/model/hot_showroom_mode
 
 abstract class HotShowroomRepository {
   Future<List<HotShowroomModel>> getHotShowroom();
+  Future<HotShowroomModel> updateFavoriteStatus(String id);
 }

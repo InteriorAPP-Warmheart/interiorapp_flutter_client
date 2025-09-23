@@ -1,4 +1,5 @@
 class RecommendBuildModel {
+  final String id;
   final String thumbnailUrl;
   final String companyName;
   final String buildAddress;
@@ -8,6 +9,7 @@ class RecommendBuildModel {
   final double rating;
 
   const RecommendBuildModel({
+    required this.id,
     required this.thumbnailUrl,
     required this.companyName,
     required this.buildAddress,
@@ -32,6 +34,7 @@ class RecommendBuildModel {
     }
 
     return RecommendBuildModel(
+      id: json['id']?.toString() ?? '',
       thumbnailUrl: json['thumbnailUrl']?.toString() ?? '',
       companyName: json['companyName']?.toString() ?? '',
       buildAddress: json['buildAddress']?.toString() ?? '',
@@ -44,6 +47,7 @@ class RecommendBuildModel {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'thumbnailUrl': thumbnailUrl,
       'companyName': companyName,
       'buildAddress': buildAddress,
@@ -62,6 +66,7 @@ class RecommendBuildModel {
   }
 
   RecommendBuildModel copyWith({
+    String? id,
     String? thumbnailUrl,
     String? companyName,
     String? buildAddress,
@@ -71,6 +76,7 @@ class RecommendBuildModel {
     double? rating,
   }) {
     return RecommendBuildModel(
+      id: id ?? this.id,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       companyName: companyName ?? this.companyName,
       buildAddress: buildAddress ?? this.buildAddress,
@@ -83,5 +89,5 @@ class RecommendBuildModel {
 
   @override
   String toString() =>
-      'RecommendBuildModel(company: $companyName, rating: $rating, buildCost: $buildCost, buildPeriod: $buildPeriod)';
+      'RecommendBuildModel(id: $id, company: $companyName, rating: $rating, buildCost: $buildCost, buildPeriod: $buildPeriod)';
 }

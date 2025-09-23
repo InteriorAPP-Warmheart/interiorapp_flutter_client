@@ -12,7 +12,7 @@ class ImageSliderSection<T> extends ConsumerWidget {
   final double viewportFraction;
   final double gap;
   final double infoHeight; // 하단 정보 높이 (고정)
-
+  final void Function(int index)? onIndexChange;
   const ImageSliderSection({
     super.key,
     required this.watchItems,
@@ -21,6 +21,7 @@ class ImageSliderSection<T> extends ConsumerWidget {
     this.viewportFraction = 0.95,
     this.gap = 12.0,
     this.infoHeight = 40.0,
+    this.onIndexChange,
   });
 
   @override
@@ -96,6 +97,7 @@ class ImageSliderSection<T> extends ConsumerWidget {
               enableInfiniteScroll: false,
               initialPage: 0,
               autoPlay: false,
+              onPageChanged: (i, _) { if (onIndexChange != null) onIndexChange!(i); },
             ),
           ),
         );

@@ -1,4 +1,5 @@
 class HotShowroomModel {
+  final String id;
   final String thumbnailUrl;
   final String themeName;
   final String userName;
@@ -7,6 +8,7 @@ class HotShowroomModel {
   final int likeCount;
 
   const HotShowroomModel({
+    required this.id,
     required this.thumbnailUrl,
     required this.themeName,
     required this.userName,
@@ -49,6 +51,7 @@ class HotShowroomModel {
     }
 
     return HotShowroomModel(
+      id: readString('id'),
       thumbnailUrl: readString('thumbnailUrl'),
       themeName: readString('themeName'),
       userName: readString('userName'),
@@ -60,6 +63,7 @@ class HotShowroomModel {
 
   /// Model -> JSON
   Map<String, dynamic> toJson() => <String, dynamic>{
+        'id': id,
         'thumbnailUrl': thumbnailUrl,
         'themeName': themeName,
         'userName': userName,
@@ -70,6 +74,7 @@ class HotShowroomModel {
 
   /// 편의: 복사 후 일부 필드만 변경
   HotShowroomModel copyWith({
+    String? id,
     String? thumbnailUrl,
     String? themeName,
     String? userName,
@@ -78,6 +83,7 @@ class HotShowroomModel {
     int? likeCount,
   }) {
     return HotShowroomModel(
+      id: id ?? this.id,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       themeName: themeName ?? this.themeName,
       userName: userName ?? this.userName,
@@ -103,6 +109,7 @@ class HotShowroomModel {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is HotShowroomModel &&
+        other.id == id &&
         other.thumbnailUrl == thumbnailUrl &&
         other.themeName == themeName &&
         other.userName == userName &&
@@ -113,6 +120,7 @@ class HotShowroomModel {
 
   @override
   int get hashCode => Object.hash(
+        id,
         thumbnailUrl,
         themeName,
         userName,

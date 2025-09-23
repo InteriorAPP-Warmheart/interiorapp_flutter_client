@@ -2,4 +2,5 @@ import 'package:interiorapp_flutter_client/home_tab/data/model/recommend_build_m
 
 abstract class RecommendBuildRepository {
   Future<List<RecommendBuildModel>> getRecommendBuild();
+  Future<RecommendBuildModel> updateFavoriteStatus(String id);
 }

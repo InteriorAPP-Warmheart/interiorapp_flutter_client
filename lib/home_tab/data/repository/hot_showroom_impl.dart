@@ -3,10 +3,16 @@ import 'package:interiorapp_flutter_client/home_tab/data/source/hot_showroom_api
 import 'package:interiorapp_flutter_client/home_tab/domain/repository/hot_showroom_abst.dart';
 
 class HotShowroomImpl implements HotShowroomRepository {
+  final HotShowroomApi _api;
+  HotShowroomImpl(this._api);
 
-  final HotShowroomApi _showroomSliderApi = HotShowroomApi();
   @override
   Future<List<HotShowroomModel>> getHotShowroom() async {
-    return _showroomSliderApi.getHotShowroomApiData();
+    return _api.getHotShowroomApiData();
+  }
+
+  @override
+  Future<HotShowroomModel> updateFavoriteStatus(String id) async {
+    return _api.updateFavoriteStatus(id);
   }
 }
