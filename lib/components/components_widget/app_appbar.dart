@@ -10,7 +10,9 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Text('Logo'),
       actions: [
         IconButton(
-          onPressed: () {},
+          onPressed: () {
+            context.push('/search');
+          },
           icon: Icon(Icons.search_rounded), // 검색
         ),
         IconButton(
