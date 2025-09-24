@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/components/components_widget/app_tabbar.dart';
-import 'package:interiorapp_flutter_client/search/ui/screen/search_result_screen.dart';
-import 'package:interiorapp_flutter_client/search/ui/screen/search_screen.dart';
+import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_result_screen.dart';
+import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_screen.dart';
 import 'package:interiorapp_flutter_client/settings_tab/setting_screen.dart';
 import 'package:interiorapp_flutter_client/signin_signup/ui/screen/signin_screen.dart';
 // import 'package:interiorapp_flutter_client/splash_screen.dart';
@@ -27,12 +27,12 @@ class AppRouter {
       // 검색은 라우트 계층형 구조로 구성
       GoRoute(
         path: '/search',
-        builder: (context, state) => const SearchScreen(),
+        builder: (context, state) => const CombineSearchScreen(),
         routes: [
           GoRoute(
             path: 'result',
             builder:
-                (context, state) => SearchResultScreen(
+                (context, state) => CombineSearchResultScreen(
                   // query: state.uri.queryParameters['q'],
                 ),
             routes: [
