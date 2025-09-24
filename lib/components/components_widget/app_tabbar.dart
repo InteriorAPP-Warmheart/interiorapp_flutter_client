@@ -68,12 +68,15 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
 
     return Scaffold(
       appBar: AppAppBar(),
-      body: TabBarView(controller: _tabController, children: [
-        HomeScreen(),
-        ShowroomScreen(),
-        StoreScreen(),
-        BuildScreen(),
-        FavoriteScreen(),
+      body: TabBarView(
+        controller: _tabController,
+        physics: NeverScrollableScrollPhysics(), // 탭바 좌우 스크롤 방지 (커스텀 아이콘 넣기위해선 필수)
+        children: [
+          HomeScreen(),
+          ShowroomScreen(),
+          StoreScreen(),
+          BuildScreen(),
+          FavoriteScreen(),
         ],
       ),
       bottomNavigationBar: _buildTab(),
@@ -87,9 +90,8 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
       child: TabBar(
         controller: _tabController,
         labelColor: AppTabBarTheme.selectedColor,
-        // unselectedLabelColor: AppTabBarTheme.unselectedColor,
-        // indicatorWeight: AppTabBarTheme.indicatorWeight,
         labelStyle: AppTabBarTheme.labelStyle,
+        indicatorColor: Colors.transparent, // 탭바 인디케이터 색상 제거
         onTap: (index) {
           ref.read(tabProvider.notifier).changeTab(index);
         },
@@ -103,7 +105,10 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
             text: '쇼룸',
           ),
           Tab(
-            icon: Icon(Icons.shopping_bag_rounded, size: AppTabBarTheme.iconSize),
+            icon: Icon(
+              Icons.shopping_bag_rounded,
+              size: AppTabBarTheme.iconSize,
+            ),
             text: '스토어',
           ),
           Tab(
@@ -119,3 +124,30 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
     );
   }
 }
+
+// === 커스텀으로 이미지 아이콘으로 탭 생성하는 로직 ===
+// Tab(
+//   icon: imageToIcon(
+//     context,
+//     'assets/images/bone.png',
+//     AppTabBarTheme.iconSize,
+//     currentIndex == 1 ? Colors.blue : Colors.black,
+//   ),
+//   text: '식사관리',
+// ),
+
+// === style 폴더 만들어서 빼두기 ===
+// Widget imageToIcon(
+//   BuildContext context,
+//   String imagePath,
+//   double size,
+//   Color color,
+// ) {
+//   return Image.asset(
+//     imagePath,
+//     width: size,
+//     height: size,
+//     fit: BoxFit.cover,
+//     color: color,
+//   );
+// }
