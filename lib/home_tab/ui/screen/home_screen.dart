@@ -59,7 +59,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     // Grid 2열 카드 비율 계산
     const int gridColumns = 2;
-    const double gridGap = 16.0;
+    const double gridGap = 12.0;
     final double contentWidth =
         MediaQuery.of(context).size.width -
         (screenPadding.horizontal) -
@@ -105,8 +105,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
                 childAspectRatio: childAspect,
                 children: [
                   _buildCategoryCard('셀프 반셀프 인테리어', Icons.living),
@@ -130,9 +130,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 style: TextButton.styleFrom(
                   textStyle: const TextStyle(
                     decoration: TextDecoration.underline,
+                    color: Colors.black,
                   ),
                 ),
-                child: const Text('더보기'),
+                child: const Text('더보기', style: TextStyle(color: Colors.black)),
               ),
               gap: ResponsiveSize.subGap(context) * 0,
               child: ImageSliderWidget().showroomInfo(ref: ref),
@@ -153,7 +154,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     decoration: TextDecoration.underline,
                   ),
                 ),
-                child: const Text('더보기'),
+                child: const Text('더보기', style: TextStyle(color: Colors.black)),
               ),
               gap: ResponsiveSize.subGap(context) * 0,
               child: ImageSliderWidget().recommendBuildInfo(ref: ref),
@@ -197,8 +198,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 40, color: Colors.grey),
-          const SizedBox(height: 8),
+          Icon(icon, size: 80, color: Colors.grey),
+          const SizedBox(height: 10),
           Text(
             title,
             style: TextStyle(
