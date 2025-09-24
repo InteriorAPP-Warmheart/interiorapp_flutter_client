@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/home_tab/data/model/hot_showroom_model.dart';
 import 'package:interiorapp_flutter_client/home_tab/data/model/recommend_build_model.dart';
 import 'package:interiorapp_flutter_client/home_tab/presentation/provider/hot_showroom_provider.dart';
-import 'package:interiorapp_flutter_client/home_tab/presentation/vm/hot_showroom_vm.dart';
 import 'package:interiorapp_flutter_client/home_tab/presentation/provider/recommend_build_provider.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/image_slider_section.dart';
 import 'package:intl/intl.dart';
@@ -187,6 +186,7 @@ class ImageSliderWidget {
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
+                  color: Color(0xFF333333),
                 ),
               ),
             ),
@@ -209,6 +209,7 @@ class ImageSliderWidget {
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
+                      color: Color(0xFF333333),
                     ),
                   ),
                 ),
@@ -217,12 +218,12 @@ class ImageSliderWidget {
                   child: VerticalDivider(
                     width: 10, // 좌우 여백 포함
                     thickness: 1,
-                    color: Colors.grey,
+                    color: Color(0xFF333333),
                   ),
                 ),
                 const Text(
                   '좋아요',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF333333)),
                 ),
                 const SizedBox(width: 2),
                 Text(
@@ -232,6 +233,7 @@ class ImageSliderWidget {
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
+                    color: Color(0xFF333333),
                   ),
                 ),
               ],
@@ -266,8 +268,8 @@ class ImageSliderWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomRight,
                   colors: [
-                    Colors.black.withOpacity(0.0),
-                    Colors.black.withOpacity(0.55),
+                    Colors.black.withValues(alpha: 0.0),
+                    Colors.black.withValues(alpha: 0.55),
                   ],
                 ),
               ),
@@ -321,7 +323,7 @@ class ImageSliderWidget {
                   ),
                 ),
                 const Spacer(),
-                Icon(Icons.star, color: Colors.grey, size: 12),
+                Icon(Icons.star, color: Color(0xFF333333), size: 12),
                 const SizedBox(width: 2),
                 Text(
                   item.rating.toString(),
@@ -330,6 +332,7 @@ class ImageSliderWidget {
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
+                    color: Color(0xFF333333),
                   ),
                 ),
               ],
@@ -346,6 +349,7 @@ class ImageSliderWidget {
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
+                      color: Color(0xFF333333),
                     ),
                   ),
                 ),
@@ -354,7 +358,7 @@ class ImageSliderWidget {
                   child: VerticalDivider(
                     width: 10, // 좌우 여백 포함
                     thickness: 1,
-                    color: Colors.grey,
+                    color: Color(0xFF333333),
                   ),
                 ),
                 Text(
@@ -364,6 +368,7 @@ class ImageSliderWidget {
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
+                    color: Color(0xFF333333),
                   ),
                 ),
                 SizedBox(
@@ -371,7 +376,7 @@ class ImageSliderWidget {
                   child: VerticalDivider(
                     width: 10, // 좌우 여백 포함
                     thickness: 1,
-                    color: Colors.grey,
+                    color: Color(0xFF333333),
                   ),
                 ),
                 Text(
@@ -381,6 +386,7 @@ class ImageSliderWidget {
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
+                    color: Color(0xFF333333),
                   ),
                 ),
               ],
