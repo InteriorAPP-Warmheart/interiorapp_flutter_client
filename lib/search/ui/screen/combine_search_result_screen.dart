@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/search/ui/widget/combine_searchbar_widget.dart';
+import 'package:interiorapp_flutter_client/search/ui/widget/search_result_section.dart';
+import 'package:interiorapp_flutter_client/search/ui/widget/result_showroom_dummy.dart'
+    show dummySearchResultItems, dummyStoreItems, dummyConstructionItems;
 
 class CombineSearchResultScreen extends ConsumerStatefulWidget {
   const CombineSearchResultScreen({super.key});
@@ -42,6 +45,10 @@ class _CombineSearchResultScreenState
           focusNode: _searchFocusNode,
           initialValue: _searchQuery,
         ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(50),
+          child: _buildCategoryTabs(),
+        ),
       ),
       body:
           _searchQuery == null
@@ -69,29 +76,18 @@ class _CombineSearchResultScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 카테고리 탭
-          _buildCategoryTabs(),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
 
           // 검색 결과 섹션들 (필터 적용)
           if (_shouldShow('쇼룸')) ...[
-            _buildResultSection('쇼룸', Icons.storefront, _buildMockResults('쇼룸')),
-            const SizedBox(height: 16),
+            _buildShowroomSection(),
+            const SizedBox(height: 12),
           ],
           if (_shouldShow('스토어')) ...[
-            _buildResultSection(
-              '스토어',
-              Icons.shopping_bag,
-              _buildMockResults('스토어'),
-            ),
-            const SizedBox(height: 16),
+            _buildStoreSection(),
+            const SizedBox(height: 12),
           ],
-          if (_shouldShow('시공')) ...[
-            _buildResultSection(
-              '시공',
-              Icons.home_work,
-              _buildMockResults('시공'),
-            ),
-          ],
+          if (_shouldShow('시공')) ...[_buildConstructionSection()],
         ],
       ),
     );
@@ -106,62 +102,67 @@ class _CombineSearchResultScreenState
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          children: [
-            for (final label in categories)
-              Expanded(
-                child: InkWell(
-                  onTap: () => setState(() => _selectedCategory = label),
-                  child: Container(
-                    height: 40,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: _selectedCategory == label
-                              ? Colors.black
-                              : Colors.transparent,
-                          width: 2,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          child: Row(
+            children: [
+              for (final label in categories)
+                Expanded(
+                  child: InkWell(
+                    onTap: () => setState(() => _selectedCategory = label),
+                    child: Container(
+                      height: 40,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color:
+                                _selectedCategory == label
+                                    ? Colors.black
+                                    : Colors.transparent,
+                            width: 2,
+                          ),
                         ),
                       ),
-                    ),
-                    child: Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: _selectedCategory == label
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        color: _selectedCategory == label
-                            ? Colors.black
-                            : Colors.black54,
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight:
+                              _selectedCategory == label
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                          color:
+                              _selectedCategory == label
+                                  ? Colors.black
+                                  : Colors.black54,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
-        // const SizedBox(height: 4),
         Container(height: 1, color: Colors.grey.withValues(alpha: 0.3)),
       ],
     );
   }
 
-  Widget _buildResultSection(
-    String title,
-    IconData icon,
-    List<Widget> results,
-  ) {
+  Widget _buildShowroomSection() {
+    final bool isFullList = _selectedCategory == '쇼룸';
+    final itemsToShow =
+        isFullList
+            ? dummySearchResultItems
+            : dummySearchResultItems.take(3).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(icon, size: 20, color: Colors.blue),
-            const SizedBox(width: 8),
-            Text(
-              title,
+            const Text(
+              '쇼룸',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -169,64 +170,156 @@ class _CombineSearchResultScreenState
               ),
             ),
             const Spacer(),
-            TextButton(
-              onPressed: () {
-                // TODO: 해당 카테고리 상세 페이지로 이동
-                print('$title 더보기');
-              },
-              child: Text('더보기'),
-            ),
           ],
         ),
-        const SizedBox(height: 12),
-        ...results,
+        const SizedBox(height: 8),
+        SearchResultSection(
+          items: itemsToShow,
+          listTileHorizontalPadding: 0,
+          onTapItem: (item) {
+            debugPrint('tap showroom: ${item.title}');
+          },
+        ),
+        if (!isFullList) ...[
+          const SizedBox(height: 8),
+          Center(
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width * 0.85,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () {
+                  setState(() {
+                    _selectedCategory = '쇼룸';
+                  });
+                },
+                child: const Text('쇼룸 결과 더보기'),
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
 
-  List<Widget> _buildMockResults(String category) {
-    return List.generate(3, (index) {
-      return Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey[300]!),
-        ),
-        child: Row(
+  Widget _buildStoreSection() {
+    final bool isFullList = _selectedCategory == '스토어';
+    final int previewCount = _selectedCategory == '전체' ? 4 : 3;
+    final itemsToShow =
+        isFullList
+            ? dummyStoreItems
+            : dummyStoreItems.take(previewCount).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(Icons.image, color: Colors.grey[400]),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '$_searchQuery 관련 $category ${index + 1}',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '검색어 "$_searchQuery"와 관련된 $category 정보입니다.',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+            const Text(
+              '스토어',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
               ),
             ),
+            const Spacer(),
           ],
         ),
-      );
-    });
+        const SizedBox(height: 8),
+        SearchResultSection(
+          items: itemsToShow,
+          layout: SearchResultLayout.storeGrid,
+          gridCrossAxisCount: 2,
+          gridSpacing: 12,
+          gridHorizontalPadding: 0,
+          onTapItem: (item) {
+            debugPrint('tap store: ${item.title}');
+          },
+        ),
+        if (!isFullList) ...[
+          const SizedBox(height: 8),
+          Center(
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width * 0.85,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () {
+                  setState(() {
+                    _selectedCategory = '스토어';
+                  });
+                },
+                child: const Text('스토어 결과 더보기'),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildConstructionSection() {
+    final bool isFullList = _selectedCategory == '시공';
+    final itemsToShow =
+        isFullList
+            ? dummyConstructionItems
+            : dummyConstructionItems.take(3).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text(
+              '시공',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            const Spacer(),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SearchResultSection(
+          items: itemsToShow,
+          layout: SearchResultLayout.gallery,
+          maxImagesToShow: 3,
+          listTileHorizontalPadding: 0,
+          onTapItem: (item) {
+            debugPrint('tap construction: ${item.title}');
+          },
+        ),
+        if (!isFullList) ...[
+          const SizedBox(height: 8),
+          Center(
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width * 0.85,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () {
+                  setState(() {
+                    _selectedCategory = '시공';
+                  });
+                },
+                child: const Text('시공 결과 더보기'),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
   }
 }
