@@ -79,8 +79,12 @@ class AppSearchBar extends StatelessWidget {
                 children: [
                   if (hasText)
                     IconButton(
-                      icon: const Icon(Icons.cancel, color: Colors.black45),
-                      splashRadius: 16,
+                      icon: const Icon(Icons.cancel, color: Colors.black45, size: 18),
+                      splashRadius: 12,
+                      constraints: const BoxConstraints(
+                        minWidth: 24,
+                        minHeight: 24,
+                      ),
                       onPressed: () {
                         textController.clear();
                         onClear?.call();
@@ -89,8 +93,12 @@ class AppSearchBar extends StatelessWidget {
                     ),
                   // === Search Button ===
                   IconButton(
-                    icon: const Icon(Icons.search, color: Colors.black45),
-                    splashRadius: 16,
+                    icon: const Icon(Icons.search, color: Colors.black45, size: 18),
+                    splashRadius: 12,
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                     onPressed: () {
                       onSubmitted?.call(textController.text);
                     },
@@ -99,7 +107,7 @@ class AppSearchBar extends StatelessWidget {
               ),
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
+                horizontal: 8,
                 vertical: 10,
               ),
               border: InputBorder.none,

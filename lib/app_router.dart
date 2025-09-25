@@ -32,9 +32,7 @@ class AppRouter {
           GoRoute(
             path: 'result',
             builder:
-                (context, state) => CombineSearchResultScreen(
-                  // query: state.uri.queryParameters['q'],
-                ),
+                (context, state) => CombineSearchResultScreen(),
             routes: [
               // GoRoute(path: 'showrooms', builder: ...),
               // GoRoute(path: 'stores', builder: ...),
