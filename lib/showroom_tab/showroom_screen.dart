@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:interiorapp_flutter_client/home_tab/ui/widget/adv_widget.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/image_slider_widget.dart';
 import 'package:interiorapp_flutter_client/showroom_tab/ui/widget/filter_button.dart';
 import 'package:interiorapp_flutter_client/showroom_tab/ui/widget/post_section.dart';
@@ -27,9 +26,10 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
             children: [
               //광고 Section
               Container(
-                color: const Color.fromARGB(255, 210, 213, 213),
-                height: 100,
+                color: const Color.fromARGB(255, 233, 233, 233),
+                height: 150,
                 width: double.infinity,
+                child: Center(child: Text('광고', textAlign: TextAlign.center, style: TextStyle(color: Colors.black, fontSize: 20),)),
               ),
               SizedBox(height: sectionGap),
               Padding(
@@ -39,25 +39,25 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
                     // 필터링 Section
                     Row(
                       children: [
-                        FilterButton(text: '필터', onTap: () {}),
+                        FilterButton(text: '필터'),
                         SizedBox(width: 8),
-                        FilterButton(text: '스타일', onTap: () {}),
+                        FilterButton(text: '스타일'),
                       ],
                     ),
                     SizedBox(height: 8),
                     Row(
                       children: [
-                        FilterButton(text: '공간 형태', onTap: () {}),
+                        FilterButton(text: '공간 형태'),
                         SizedBox(width: 8),
-                        FilterButton(text: '예산', onTap: () {}),
+                        FilterButton(text: '예산'),
                       ],
                     ),
                     SizedBox(height: 8),
                     Row(
                       children: [
-                        FilterButton(text: '톤앤매너', onTap: () {}),
+                        FilterButton(text: '톤앤매너'),
                         SizedBox(width: 8),
-                        FilterButton(text: '소재', onTap: () {}),
+                        FilterButton(text: '소재'),
                       ],
                     ),
                     SizedBox(height: sectionGap),
