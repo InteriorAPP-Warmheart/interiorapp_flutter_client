@@ -116,8 +116,8 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
           backgroundColor: const Color.fromARGB(255, 253, 252, 252),
           elevation: 3,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28), // 모서리 둥근 값
-            side: BorderSide(color: Colors.white, width: 0), // 테두리 없음
+            borderRadius: BorderRadius.circular(28), 
+            side: BorderSide(color: Colors.white, width: 0),
           ),
           extendedIconLabelSpacing: 2,
         ),
