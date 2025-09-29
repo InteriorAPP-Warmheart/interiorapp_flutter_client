@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:interiorapp_flutter_client/search/presentation/provider/search_provider.dart';
 
-class SearchNotifier extends StateNotifier<String> {
+class SearchNotifier extends Notifier<String> {
   late final TextEditingController searchController;
   
-  SearchNotifier() : super('') {
+  @override
+  String build() {
     searchController = TextEditingController();
     searchController.addListener(() => state = searchController.text);
+    return '';
   }
   
   void clear() {
     searchController.clear();
   }
   
-  @override
   void dispose() {
     searchController.dispose();
-    super.dispose();
+  }
+
+  Future<void> loadSearchResultItems() async {
+    await ref.read(searchResultUseCaseProvider).getSearchResultItems();
+    // 검색 결과는 별도의 provider에서 관리됩니다
   }
 }

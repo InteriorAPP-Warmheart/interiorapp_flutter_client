@@ -1,7 +1,11 @@
-import 'package:interiorapp_flutter_client/search/ui/widget/search_result_section.dart';
+import 'package:interiorapp_flutter_client/search/data/model/search_result_model.dart';
+import 'package:interiorapp_flutter_client/search/data/source/remote/search_result_remote_data_source.dart';
 
-final List<SearchResultItem> dummySearchResultItems = [
-  const SearchResultItem(
+/// 검색 결과 데이터 소스 구현체 (더미 데이터 사용)
+class SearchResultRemoteDataSourceImpl implements SearchResultRemoteDataSource {
+
+final List<SearchResultModel> dummySearchResultItems = [
+  const SearchResultModel(
     imageUrls: [
       'https://picsum.photos/id/1011/600/600',
       'https://picsum.photos/id/1012/600/600',
@@ -13,7 +17,7 @@ final List<SearchResultItem> dummySearchResultItems = [
     publisherNickname: 'daily_home',
     publisherAvatarUrl: 'https://i.pravatar.cc/100?img=5',
   ),
-  const SearchResultItem(
+  const SearchResultModel(
     imageUrls: [
       'https://picsum.photos/id/1021/600/600',
       'https://picsum.photos/id/1022/600/600',
@@ -24,7 +28,7 @@ final List<SearchResultItem> dummySearchResultItems = [
     publisherNickname: 'cozy_life',
     publisherAvatarUrl: 'https://i.pravatar.cc/100?img=12',
   ),
-  const SearchResultItem(
+  const SearchResultModel(
     imageUrls: [
       'https://picsum.photos/id/1031/600/600',
       'https://picsum.photos/id/1032/600/600',
@@ -37,7 +41,7 @@ final List<SearchResultItem> dummySearchResultItems = [
     publisherNickname: 'kitchen_studio',
     publisherAvatarUrl: 'https://i.pravatar.cc/100?img=22',
   ),
-  const SearchResultItem(
+  const SearchResultModel(
     imageUrls: [
       'https://picsum.photos/id/1041/600/600',
       'https://picsum.photos/id/1042/600/600',
@@ -47,7 +51,7 @@ final List<SearchResultItem> dummySearchResultItems = [
     publisherNickname: 'study_place',
     publisherAvatarUrl: 'https://i.pravatar.cc/100?img=30',
   ),
-  const SearchResultItem(
+  const SearchResultModel(
     imageUrls: [
       'https://picsum.photos/id/1051/600/600',
       'https://picsum.photos/id/1052/600/600',
@@ -60,29 +64,29 @@ final List<SearchResultItem> dummySearchResultItems = [
   ),
 ];
 
-final List<SearchResultItem> dummyStoreItems = [
-  const SearchResultItem(
+final List<SearchResultModel> dummyStoreItems = [
+  const SearchResultModel(
     imageUrls: ['https://picsum.photos/id/200/600/600'],
     title: '브랜드A · 미니 테이블 램프',
     contentSnippet: '침실과 거실 어디에 두어도 포인트가 되는 조명',
     publisherNickname: 'BrandA',
     publisherAvatarUrl: null,
   ),
-  const SearchResultItem(
+  const SearchResultModel(
     imageUrls: ['https://picsum.photos/id/201/600/600'],
     title: '브랜드B · 우드 체어',
     contentSnippet: '오랜 시간 앉아도 편안한 인체공학 설계',
     publisherNickname: 'BrandB',
     publisherAvatarUrl: null,
   ),
-  const SearchResultItem(
+  const SearchResultModel(
     imageUrls: ['https://picsum.photos/id/202/600/600'],
     title: '브랜드C · 러그 120x180',
     contentSnippet: '부드러운 촉감과 미끄럼 방지 처리',
     publisherNickname: 'BrandC',
     publisherAvatarUrl: null,
   ),
-  const SearchResultItem(
+  const SearchResultModel(
     imageUrls: ['https://picsum.photos/id/203/600/600'],
     title: '브랜드D · 원형 사이드테이블',
     contentSnippet: '베드사이드, 소파 옆 어디든 잘 어울려요',
@@ -91,8 +95,8 @@ final List<SearchResultItem> dummyStoreItems = [
   ),
 ];
 
-final List<SearchResultItem> dummyConstructionItems = [
-  const SearchResultItem(
+final List<SearchResultModel> dummyConstructionItems = [
+  const SearchResultModel(
     imageUrls: [
       'https://picsum.photos/id/300/600/600',
       'https://picsum.photos/id/301/600/600',
@@ -103,7 +107,7 @@ final List<SearchResultItem> dummyConstructionItems = [
     publisherNickname: 'AAA 시공업체',
     publisherAvatarUrl: 'https://i.pravatar.cc/100?img=8',
   ),
-  const SearchResultItem(
+  const SearchResultModel(
     imageUrls: [
       'https://picsum.photos/id/303/600/600',
     ],
@@ -112,7 +116,7 @@ final List<SearchResultItem> dummyConstructionItems = [
     publisherNickname: 'BBB 시공업체',
     publisherAvatarUrl: 'https://i.pravatar.cc/100?img=16',
   ),
-  const SearchResultItem(
+  const SearchResultModel(
     imageUrls: [
       'https://picsum.photos/id/304/600/600',
       'https://picsum.photos/id/305/600/600',
@@ -124,4 +128,13 @@ final List<SearchResultItem> dummyConstructionItems = [
   ),
 ];
 
+
+
+
+  @override
+  Future<List<SearchResultModel>> getSearchResultItems() async {
+    await Future.delayed(const Duration(milliseconds: 350));
+    return dummySearchResultItems;
+  }
+}
 
