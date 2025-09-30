@@ -4,8 +4,6 @@ import 'package:interiorapp_flutter_client/home_tab/ui/widget/section.dart';
 import 'package:interiorapp_flutter_client/utils/responsive_size.dart';
 
 class PostSection extends ConsumerWidget {
-    final double fontScale;
-    final WidgetRef ref;
     final String sectionTitle;
     final VoidCallback onPressed;
     final Widget child;
@@ -13,8 +11,6 @@ class PostSection extends ConsumerWidget {
 
   const PostSection({
     super.key,
-    required this.fontScale,
-    required this.ref,
     required this.sectionTitle,
     required this.onPressed,
     required this.child,
@@ -22,6 +18,8 @@ class PostSection extends ConsumerWidget {
   
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final double fontScale = ResponsiveSize.fontScale(context);
+    
     return Section(
       title: Text(
         sectionTitle,

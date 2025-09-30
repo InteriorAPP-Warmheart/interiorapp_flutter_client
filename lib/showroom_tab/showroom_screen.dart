@@ -15,9 +15,9 @@ class ShowroomScreen extends ConsumerStatefulWidget {
 class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
   @override
   Widget build(BuildContext context) {
-    final double fontScale = ResponsiveSize.fontScale(context);
     final double sectionGap = ResponsiveSize.sectionGap(context);
     final EdgeInsets screenPadding = ResponsiveSize.responsivePadding(context);
+    
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -29,43 +29,29 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
                 color: const Color.fromARGB(255, 233, 233, 233),
                 height: 150,
                 width: double.infinity,
-                child: Center(child: Text('광고', textAlign: TextAlign.center, style: TextStyle(color: Colors.black, fontSize: 20),)),
+                child: Center(
+                  child: Text(
+                    '광고',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.black, fontSize: 20),
+                  ),
+                ),
               ),
               SizedBox(height: sectionGap),
               Padding(
                 padding: screenPadding,
                 child: Column(
                   children: [
-                    // 필터링 Section
-                    Row(
-                      children: [
-                        FilterButton(text: '필터'),
-                        SizedBox(width: 8),
-                        FilterButton(text: '스타일'),
-                      ],
-                    ),
+                    // 필터링 버튼 Section
+                    _rowFilterButton('필터', '스타일'),
                     SizedBox(height: 8),
-                    Row(
-                      children: [
-                        FilterButton(text: '공간 형태'),
-                        SizedBox(width: 8),
-                        FilterButton(text: '예산'),
-                      ],
-                    ),
+                    _rowFilterButton('공간 형태', '예산'),
                     SizedBox(height: 8),
-                    Row(
-                      children: [
-                        FilterButton(text: '톤앤매너'),
-                        SizedBox(width: 8),
-                        FilterButton(text: '소재'),
-                      ],
-                    ),
+                    _rowFilterButton('톤앤매너', '소재'),
                     SizedBox(height: sectionGap),
 
                     //인기 쇼룸 Section
                     PostSection(
-                      fontScale: fontScale,
-                      ref: ref,
                       sectionTitle: '인기 쇼룸',
                       onPressed: () {},
                       child: ImageSliderWidget().showroomInfo(ref: ref),
@@ -74,8 +60,6 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
 
                     //동네 게시물 Section
                     PostSection(
-                      fontScale: fontScale,
-                      ref: ref,
                       sectionTitle: '동네 게시물',
                       onPressed: () {},
                       child: ImageSliderWidget().showroomInfo(ref: ref),
@@ -84,8 +68,6 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
 
                     //추천 시공 Section
                     PostSection(
-                      fontScale: fontScale,
-                      ref: ref,
                       sectionTitle: '추천 시공',
                       onPressed: () {},
                       child: ImageSliderWidget().recommendBuildInfo(ref: ref),
@@ -99,6 +81,7 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
         ),
       ),
 
+    //글쓰기 버튼
       floatingActionButton: SizedBox(
         width: 100,
         height: 40,
@@ -116,12 +99,23 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
           backgroundColor: const Color.fromARGB(255, 253, 252, 252),
           elevation: 3,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28), 
+            borderRadius: BorderRadius.circular(28),
             side: BorderSide(color: Colors.white, width: 0),
           ),
           extendedIconLabelSpacing: 2,
         ),
       ),
+    );
+  }
+
+//필터링 버튼
+  _rowFilterButton(String leftText, String rightText) {
+    return Row(
+      children: [
+        FilterButton(text: leftText),
+        SizedBox(width: 8),
+        FilterButton(text: rightText),
+      ],
     );
   }
 }
