@@ -30,11 +30,7 @@ class FilterVm extends Notifier<FilterState> {
         FilterItem(id: 'studio', name: '단독주택', parentId: 'residential'),
         FilterItem(id: 'officetel', name: '오피스텔', parentId: 'residential'),
         FilterItem(id: 'one_room', name: '원룸', parentId: 'residential'),
-        FilterItem(
-          id: 'shared_house',
-          name: '고시원/셰어하우스',
-          parentId: 'residential',
-        ),
+        FilterItem(id: 'shared_house',name: '고시원/셰어하우스',parentId: 'residential',),
       ],
 
       // 상업 공간 하위 항목
@@ -42,11 +38,7 @@ class FilterVm extends Notifier<FilterState> {
         FilterItem(id: 'store', name: '상가/매장', parentId: 'commercial'),
         FilterItem(id: 'restaurant', name: '음식점/카페', parentId: 'commercial'),
         FilterItem(id: 'office', name: '사무실/오피스', parentId: 'commercial'),
-        FilterItem(
-          id: 'other_commercial',
-          name: '기타 상업시설',
-          parentId: 'commercial',
-        ),
+        FilterItem(id: 'other_commercial',name: '기타 상업시설',parentId: 'commercial',),
       ],
 
       // 주거 공간 세부 항목
@@ -60,11 +52,7 @@ class FilterVm extends Notifier<FilterState> {
         FilterItem(id: 'multi_room', name: '다용도실', parentId: 'residential'),
         FilterItem(id: 'entrance', name: '현관', parentId: 'residential'),
         FilterItem(id: 'veranda', name: '베란다/발코니', parentId: 'residential'),
-        FilterItem(
-          id: 'interior_garden',
-          name: '실내복도',
-          parentId: 'residential',
-        ),
+        FilterItem(id: 'interior_garden',name: '실내복도',parentId: 'residential',),
         FilterItem(id: 'study', name: '서재/작업실', parentId: 'residential'),
         FilterItem(id: 'storage', name: '창고/수납공간', parentId: 'residential'),
         FilterItem(id: 'attic', name: '마당', parentId: 'residential'),
@@ -122,7 +110,7 @@ class FilterVm extends Notifier<FilterState> {
       selectedCategory: '스타일',
       selectedFilters: [],
       selectedSpaceType: null,
-      budgetRange: const RangeValues(0, 16000000),
+      budgetRange: const RangeValues(0, 0),
     );
   }
 
@@ -180,8 +168,6 @@ class FilterVm extends Notifier<FilterState> {
       }
     }
 
-    // if (actualCategory == null) return;
-
     final categoryItems = state.categoryItems[actualCategory] ?? [];
     final itemIndex = categoryItems.indexWhere((item) => item.id == filterId);
 
@@ -189,13 +175,12 @@ class FilterVm extends Notifier<FilterState> {
 
     final item = categoryItems[itemIndex];
 
-    final updatedItems =
-        categoryItems.map((item) {
-          if (item.id == filterId) {
-            return item.copyWith(isSelected: !item.isSelected);
-          }
-          return item;
-        }).toList();
+    final updatedItems = categoryItems.map((item) {
+      if (item.id == filterId) {
+        return item.copyWith(isSelected: !item.isSelected);
+      }
+      return item;
+    }).toList();
 
     final updatedCategories = Map<String, List<FilterItem>>.from(
       state.categoryItems,
@@ -241,8 +226,8 @@ class FilterVm extends Notifier<FilterState> {
     state = state.copyWith(
       categoryItems: resetCategories,
       selectedFilters: [],
-      selectedSpaceType: null,
-      budgetRange: const RangeValues(0, 16000000),
+      clearSpaceType: true,
+      budgetRange: const RangeValues(0, 0),
     );
   }
 
