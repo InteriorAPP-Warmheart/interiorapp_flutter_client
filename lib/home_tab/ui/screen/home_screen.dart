@@ -19,27 +19,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   final ScrollController _scrollController = ScrollController();
   bool _atBottom = false;
   bool _isCardExpanded = false;
+  bool _isClosing = false;
   CategoryType? _expandedCardType;
   late AnimationController _cardController;
   late AnimationController _rotationController;
+  late AnimationController _cardCloseController;
+  late AnimationController _rotationCloseController;
   late Animation<double> _cardAnimation;
   late Animation<double> _rotationAnimation;
+  late Animation<double> _cardCloseAnimation;
+  late Animation<double> _rotationCloseAnimation;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
 
-    // 카드 확대/축소 애니메이션
+    // 카드 확대/축소 애니메이션 (열기용)
     _cardController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
 
-    // 회전 애니메이션
+    // 회전 애니메이션 (열기용)
     _rotationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
+    );
+
+    // 카드 축소 애니메이션 (닫기용 - 빠름)
+    _cardCloseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300), // 더 빠름
+    );
+
+    // 회전 복원 애니메이션 (닫기용 - 빠름)
+    _rotationCloseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400), // 더 빠름
     );
 
     _cardAnimation = Tween<double>(
@@ -55,6 +72,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     ).animate(
       CurvedAnimation(parent: _rotationController, curve: Curves.easeInOut),
     );
+
+    _cardCloseAnimation = Tween<double>(
+      begin: 1.5,
+      end: 1.0, // 원래 크기로 복원
+    ).animate(
+      CurvedAnimation(parent: _cardCloseController, curve: Curves.easeInOut),
+    );
+
+    _rotationCloseAnimation = Tween<double>(
+      begin: 3.14159265359, // π (180도)
+      end: 0.0, // 원래 각도로 복원
+    ).animate(
+      CurvedAnimation(parent: _rotationCloseController, curve: Curves.easeInOut),
+    );
   }
 
   void _onScroll() {
@@ -68,20 +99,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   void _onCardTap(CategoryType type) {
+    if (_isCardExpanded && _expandedCardType == type) {
+      // 같은 카드를 다시 탭하면 닫기 - 역순 애니메이션
+      _closeCard();
+    } else {
+      // 다른 카드나 처음 탭하면 열기
+      _openCard(type);
+    }
+  }
+
+  void _openCard(CategoryType type) {
     setState(() {
-      if (_isCardExpanded && _expandedCardType == type) {
-        // 같은 카드를 다시 탭하면 닫기
-        _isCardExpanded = false;
-        _expandedCardType = null;
-        _cardController.reverse();
-        _rotationController.reverse();
-      } else {
-        // 다른 카드나 처음 탭하면 열기
-        _isCardExpanded = true;
-        _expandedCardType = type;
-        _cardController.forward();
-        _rotationController.forward();
-      }
+      _isCardExpanded = true;
+      _expandedCardType = type;
+    });
+    
+    // 열기 애니메이션: 동시에 시작하지만 회전이 조금 늦게 시작
+    _cardController.forward();
+    Future.delayed(const Duration(milliseconds: 100), () {
+      _rotationController.forward();
+    });
+  }
+
+  void _closeCard() {
+    setState(() {
+      _isClosing = true;
+    });
+    
+    // 닫기 애니메이션: 먼저 회전 복원, 그 다음 크기 축소 (빠른 애니메이션 사용)
+    _rotationCloseController.forward().then((_) {
+      _cardCloseController.forward().then((_) {
+        setState(() {
+          _isCardExpanded = false;
+          _isClosing = false;
+          _expandedCardType = null;
+        });
+        
+        // 모든 애니메이션 컨트롤러 리셋
+        _cardController.reset();
+        _rotationController.reset();
+        _cardCloseController.reset();
+        _rotationCloseController.reset();
+      });
     });
   }
 
@@ -91,6 +150,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _scrollController.dispose();
     _cardController.dispose();
     _rotationController.dispose();
+    _cardCloseController.dispose();
+    _rotationCloseController.dispose();
     super.dispose();
   }
 
@@ -271,7 +332,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           if (_isCardExpanded)
             Positioned.fill(
               child: GestureDetector(
-                onTap: () => _onCardTap(_expandedCardType!), // 배경 탭하면 닫기
+                onTap: _closeCard, // 배경 탭하면 역순 애니메이션으로 닫기
                 child: Container(color: Colors.black.withValues(alpha: 0.5)),
               ),
             ),
@@ -284,22 +345,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   tag:
                       'category_${_expandedCardType!.name}', // 그리드 카드와 동일한 Hero 태그
                   child: AnimatedBuilder(
-                    animation: Listenable.merge([
-                      _cardAnimation,
-                      _rotationAnimation,
-                    ]),
+                    animation: _isClosing 
+                        ? Listenable.merge([
+                            _cardCloseAnimation,
+                            _rotationCloseAnimation,
+                          ])
+                        : Listenable.merge([
+                            _cardAnimation,
+                            _rotationAnimation,
+                          ]),
                     builder: (context, child) {
-                      final isBackSide =
-                          _rotationAnimation.value > 1.57079632679; // π/2
+                      final cardScale = _isClosing ? _cardCloseAnimation.value : _cardAnimation.value;
+                      final rotationValue = _isClosing ? _rotationCloseAnimation.value : _rotationAnimation.value;
+                      final isBackSide = rotationValue > 1.57079632679; // π/2
 
                       return Transform.scale(
-                        scale: _cardAnimation.value,
+                        scale: cardScale,
                         child: Transform(
                           alignment: Alignment.center,
                           transform:
                               Matrix4.identity()
                                 ..setEntry(3, 2, 0.001) // 원근감
-                                ..rotateY(_rotationAnimation.value),
+                                ..rotateY(rotationValue),
                           child:
                               isBackSide
                                   ? Transform(
@@ -433,7 +500,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   shape: BoxShape.circle,
                 ),
                 child: GestureDetector(
-                  onTap: () => _onCardTap(_expandedCardType!),
+                  onTap: _closeCard, // 역순 애니메이션으로 닫기
                   child: const Icon(Icons.close, size: 20, color: Colors.white),
                 ),
               ),
