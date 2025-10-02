@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:interiorapp_flutter_client/home_tab/ui/widget/category_card_widget.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/my_build_project_widget.dart';
 import 'package:interiorapp_flutter_client/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/adv_widget.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/section.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/image_slider_widget.dart';
+
+enum CategoryType { self, outsourcing }
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -19,72 +20,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   final ScrollController _scrollController = ScrollController();
   bool _atBottom = false;
   bool _isCardExpanded = false;
-  bool _isClosing = false;
   CategoryType? _expandedCardType;
   late AnimationController _cardController;
   late AnimationController _rotationController;
-  late AnimationController _cardCloseController;
-  late AnimationController _rotationCloseController;
   late Animation<double> _cardAnimation;
   late Animation<double> _rotationAnimation;
-  late Animation<double> _cardCloseAnimation;
-  late Animation<double> _rotationCloseAnimation;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
 
-    // 카드 확대/축소 애니메이션 (열기용)
+    // 카드 크기 애니메이션 (열기: 600ms, 닫기: 300ms)
     _cardController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
 
-    // 회전 애니메이션 (열기용)
+    // 회전 애니메이션 (열기: 800ms, 닫기: 400ms)
     _rotationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
 
-    // 카드 축소 애니메이션 (닫기용 - 빠름)
-    _cardCloseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300), // 더 빠름
-    );
-
-    // 회전 복원 애니메이션 (닫기용 - 빠름)
-    _rotationCloseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400), // 더 빠름
-    );
-
+    // 크기 애니메이션 (1.0 ↔ 1.5)
     _cardAnimation = Tween<double>(
       begin: 1.0,
-      end: 1.5, // 다이얼로그 크기
+      end: 1.5,
     ).animate(
       CurvedAnimation(parent: _cardController, curve: Curves.easeInOut),
     );
 
+    // 회전 애니메이션 (0 ↔ π)
     _rotationAnimation = Tween<double>(
       begin: 0.0,
       end: 3.14159265359, // π (180도)
     ).animate(
       CurvedAnimation(parent: _rotationController, curve: Curves.easeInOut),
-    );
-
-    _cardCloseAnimation = Tween<double>(
-      begin: 1.5,
-      end: 1.0, // 원래 크기로 복원
-    ).animate(
-      CurvedAnimation(parent: _cardCloseController, curve: Curves.easeInOut),
-    );
-
-    _rotationCloseAnimation = Tween<double>(
-      begin: 3.14159265359, // π (180도)
-      end: 0.0, // 원래 각도로 복원
-    ).animate(
-      CurvedAnimation(parent: _rotationCloseController, curve: Curves.easeInOut),
     );
   }
 
@@ -114,7 +86,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       _expandedCardType = type;
     });
     
-    // 열기 애니메이션: 동시에 시작하지만 회전이 조금 늦게 시작
+    // 열기 애니메이션: 크기 확대 후 회전 시작 (느린 속도)
+    _cardController.duration = const Duration(milliseconds: 600);
+    _rotationController.duration = const Duration(milliseconds: 800);
+    
     _cardController.forward();
     Future.delayed(const Duration(milliseconds: 100), () {
       _rotationController.forward();
@@ -122,24 +97,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   void _closeCard() {
-    setState(() {
-      _isClosing = true;
-    });
+    // 닫기 애니메이션: 빠른 속도로 설정 후 역순 실행
+    _cardController.duration = const Duration(milliseconds: 300);
+    _rotationController.duration = const Duration(milliseconds: 400);
     
-    // 닫기 애니메이션: 먼저 회전 복원, 그 다음 크기 축소 (빠른 애니메이션 사용)
-    _rotationCloseController.forward().then((_) {
-      _cardCloseController.forward().then((_) {
+    // 먼저 회전 복원, 그 다음 크기 축소
+    _rotationController.reverse().then((_) {
+      _cardController.reverse().then((_) {
         setState(() {
           _isCardExpanded = false;
-          _isClosing = false;
           _expandedCardType = null;
         });
-        
-        // 모든 애니메이션 컨트롤러 리셋
-        _cardController.reset();
-        _rotationController.reset();
-        _cardCloseController.reset();
-        _rotationCloseController.reset();
       });
     });
   }
@@ -150,8 +118,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _scrollController.dispose();
     _cardController.dispose();
     _rotationController.dispose();
-    _cardCloseController.dispose();
-    _rotationCloseController.dispose();
     super.dispose();
   }
 
@@ -345,28 +311,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   tag:
                       'category_${_expandedCardType!.name}', // 그리드 카드와 동일한 Hero 태그
                   child: AnimatedBuilder(
-                    animation: _isClosing 
-                        ? Listenable.merge([
-                            _cardCloseAnimation,
-                            _rotationCloseAnimation,
-                          ])
-                        : Listenable.merge([
-                            _cardAnimation,
-                            _rotationAnimation,
-                          ]),
+                    animation: Listenable.merge([
+                      _cardAnimation,
+                      _rotationAnimation,
+                    ]),
                     builder: (context, child) {
-                      final cardScale = _isClosing ? _cardCloseAnimation.value : _cardAnimation.value;
-                      final rotationValue = _isClosing ? _rotationCloseAnimation.value : _rotationAnimation.value;
-                      final isBackSide = rotationValue > 1.57079632679; // π/2
+                      final isBackSide = _rotationAnimation.value > 1.57079632679; // π/2
 
                       return Transform.scale(
-                        scale: cardScale,
+                        scale: _cardAnimation.value,
                         child: Transform(
                           alignment: Alignment.center,
                           transform:
                               Matrix4.identity()
                                 ..setEntry(3, 2, 0.001) // 원근감
-                                ..rotateY(rotationValue),
+                                ..rotateY(_rotationAnimation.value),
                           child:
                               isBackSide
                                   ? Transform(
