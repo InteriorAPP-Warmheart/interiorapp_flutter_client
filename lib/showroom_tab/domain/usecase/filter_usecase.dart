@@ -9,18 +9,22 @@ class FilteredShowroomUseCase {
   Future<List<FilteredShowroomModel>> getFilteredShowrooms({
     List<String>? styles,
     List<String>? spaceTypes,
-    List<String>? budgets,
+    double? minBudget,
+    double? maxBudget,
     List<String>? tones,
     List<String>? materials,
   }) async {
     return _repository.getFilteredShowrooms(
       styles: styles,
       spaceTypes: spaceTypes,
-      budgets: budgets,
+      minBudget: minBudget,
+      maxBudget: maxBudget,
       tones: tones,
       materials: materials,
     );
   }
 
-
+  // Future<FilteredShowroomModel> updateFavoriteStatus(String id) async {
+  //   return _repository.updateFavoriteStatus(id);
+  // }
 }

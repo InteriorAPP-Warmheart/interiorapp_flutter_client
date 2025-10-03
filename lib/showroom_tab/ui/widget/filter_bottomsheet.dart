@@ -136,6 +136,9 @@ class FilterBottomSheet extends ConsumerWidget {
                       child: TextButton(
                         onPressed: () {
                           ref.read(filterProvider.notifier).resetFilters();
+                          ref
+                              .read(filteredShowroomListProvider.notifier)
+                              .fetchFiltered();
                         },
                         child: Text(
                           '초기화',
@@ -152,6 +155,9 @@ class FilterBottomSheet extends ConsumerWidget {
                       flex: 3,
                       child: ElevatedButton(
                         onPressed: () {
+                          ref
+                              .read(filteredShowroomListProvider.notifier)
+                              .fetchFiltered();
                           Navigator.pop(context);
                         },
                         style: ElevatedButton.styleFrom(
@@ -553,4 +559,3 @@ class _ColorFilterChip extends ConsumerWidget {
     );
   }
 }
-

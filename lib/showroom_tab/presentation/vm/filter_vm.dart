@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:interiorapp_flutter_client/showroom_tab/data/model/filter_showroom_model.dart';
 import 'package:interiorapp_flutter_client/showroom_tab/domain/entity/filter_entity.dart';
+import 'package:interiorapp_flutter_client/showroom_tab/presentation/provider/filter_provider.dart';
 
 class FilterVm extends Notifier<FilterState> {
   @override
@@ -211,7 +213,62 @@ class FilterVm extends Notifier<FilterState> {
 
   // 예산 범위 변경
   void updateBudgetRange(RangeValues range) {
-    state = state.copyWith(budgetRange: range);
+    List<SelectedFilter> selectedFilters = List.from(state.selectedFilters);
+    
+    // 기존 예산 필터 제거
+    selectedFilters.removeWhere((filter) => filter.category == '예산');
+    
+    // 새로운 예산 범위가 0이 아니면 추가
+    if (range.start != 0 || range.end != 0) {
+      selectedFilters.add(
+        SelectedFilter(
+          id: 'budget',
+          name: _formatBudgetRange(range),
+          category: '예산',
+        ),
+      );
+    }
+    
+    state = state.copyWith(
+      budgetRange: range,
+      selectedFilters: selectedFilters,
+    );
+  }
+  
+  // 예산 범위 포맷팅
+  String _formatBudgetRange(RangeValues range) {
+    if (range.start == 0 && range.end == 0) {
+      return '0원';
+    }
+    return '${_formatCurrency(range.start)} ~ ${_formatCurrency(range.end)}';
+  }
+  
+  // 통화 포맷팅 함수
+  String _formatCurrency(double value) {
+    if (value == 0) return '0원';
+
+    final intValue = value.round();
+    final eok = intValue ~/ 100000000;
+    final remainder = intValue % 100000000;
+    final manWon = remainder ~/ 10000;
+
+    List<String> parts = [];
+
+    if (eok > 0) {
+      parts.add('$eok억');
+    }
+
+    if (manWon > 0) {
+      final manWonStr = manWon.toString().replaceAllMapped(
+            RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+            (Match m) => '${m[1]},',
+          );
+      parts.add('$manWonStr만원');
+    }
+
+    if (parts.isEmpty) return '0원';
+
+    return parts.join(' ');
   }
 
   // 필터 초기화
@@ -232,14 +289,119 @@ class FilterVm extends Notifier<FilterState> {
   }
 
   // 선택된 필터 제거
-  void removeSelectedFilter(String filterId) {
-    toggleFilter(filterId);
+ void removeSelectedFilter(String filterId) {
+  // selectedFilters에서 직접 제거
+  final updatedSelectedFilters = state.selectedFilters
+      .where((filter) => filter.id != filterId)
+      .toList();
+
+  // 모든 카테고리를 순회하면서 해당 필터 항목의 isSelected를 false로 변경
+  final updatedCategories = Map<String, List<FilterItem>>.from(
+    state.categoryItems,
+  );
+
+  for (var key in updatedCategories.keys) {
+    updatedCategories[key] = updatedCategories[key]!.map((item) {
+      if (item.id == filterId) {
+        return item.copyWith(isSelected: false);
+      }
+      return item;
+    }).toList();
   }
 
+  // 예산 필터인 경우 budgetRange도 초기화
+  RangeValues newBudgetRange = state.budgetRange;
+  if (filterId == 'budget') {
+    newBudgetRange = const RangeValues(0, 0);
+  }
+
+  state = state.copyWith(
+    categoryItems: updatedCategories,
+    selectedFilters: updatedSelectedFilters,
+    budgetRange: newBudgetRange,
+  );
+}
   // 카테고리 표시 이름 가져오기
   String _getCategoryDisplayName(String category) {
     if (category.startsWith('주거_')) return '공간 형태';
     if (category.startsWith('상업_')) return '공간 형태';
     return category;
+  }
+
+
+
+
+}
+
+  //데이터 가져오기 
+class FilteredShowroomNotifier extends AsyncNotifier<List<FilteredShowroomModel>> {
+  @override
+  Future<List<FilteredShowroomModel>> build() async {
+    // 초기에는 빈 리스트 반환
+    return [];
+  }
+
+  // 필터링 실행
+  Future<void> fetchFiltered() async {
+    // 로딩 상태로 변경
+    state = const AsyncValue.loading();
+    
+    try {
+      final filterState = ref.read(filterProvider);
+      final useCase = ref.read(filteredShowroomUseCaseProvider);
+      
+      // 필터가 없으면 빈 리스트
+      if (filterState.selectedFilters.isEmpty && 
+          (filterState.budgetRange.start == 0 && filterState.budgetRange.end == 0)) {
+        state = const AsyncValue.data([]);
+        return;
+      }
+      
+      // 카테고리별 필터 추출
+      final styles = filterState.selectedFilters
+          .where((f) => f.category == '스타일')
+          .map((f) => f.id)
+          .toList();
+      
+      final spaceTypes = filterState.selectedFilters
+          .where((f) => f.category == '공간 형태')
+          .map((f) => f.id)
+          .toList();
+      
+      final tones = filterState.selectedFilters
+          .where((f) => f.category == '톤앤매너')
+          .map((f) => f.id)
+          .toList();
+      
+      final materials = filterState.selectedFilters
+          .where((f) => f.category == '소재')
+          .map((f) => f.id)
+          .toList();
+
+      // 예산 필터
+      double? minBudget;
+      double? maxBudget;
+      
+      if (filterState.budgetRange.start > 0 || filterState.budgetRange.end > 0) {
+        minBudget = filterState.budgetRange.start;
+        maxBudget = filterState.budgetRange.end;
+      }
+
+      // API 호출
+      final result = await useCase.getFilteredShowrooms(
+        styles: styles.isEmpty ? null : styles,
+        spaceTypes: spaceTypes.isEmpty ? null : spaceTypes,
+        minBudget: minBudget,
+        maxBudget: maxBudget,
+        tones: tones.isEmpty ? null : tones,
+        materials: materials.isEmpty ? null : materials,
+      );
+      
+      // 성공 상태로 변경
+      state = AsyncValue.data(result);
+    } catch (error, stackTrace) {
+      // 에러 상태로 변경
+      state = AsyncValue.error(error, stackTrace);
+    }
   }
 }

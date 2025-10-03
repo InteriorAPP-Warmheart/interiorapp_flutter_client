@@ -11,18 +11,18 @@ class FilteredShowroomImpl implements FilteredShowroomRepository {
   Future<List<FilteredShowroomModel>> getFilteredShowrooms({
     List<String>? styles,
     List<String>? spaceTypes,
-    List<String>? budgets,
+    double? minBudget,
+    double? maxBudget,
     List<String>? tones,
     List<String>? materials,
   }) async {
     return _api.getFilteredShowrooms(
       styles: styles,
       spaceTypes: spaceTypes,
-      budgets: budgets,
+      minBudget: minBudget,
+      maxBudget: maxBudget,
       tones: tones,
       materials: materials,
     );
   }
-
-
 }

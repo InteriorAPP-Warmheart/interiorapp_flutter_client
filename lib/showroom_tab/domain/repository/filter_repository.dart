@@ -4,9 +4,13 @@ abstract class FilteredShowroomRepository {
   Future<List<FilteredShowroomModel>> getFilteredShowrooms({
     List<String>? styles,
     List<String>? spaceTypes,
-    List<String>? budgets,
+    double? minBudget,  
+    double? maxBudget, 
     List<String>? tones,
     List<String>? materials,
   });
+
+  //추후 좋아요 상태 갱신할 때 사용
+  // Future<FilteredShowroomModel> updateFavoriteStatus(String id);
 
 }
