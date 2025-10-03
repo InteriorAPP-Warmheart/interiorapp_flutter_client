@@ -4,6 +4,7 @@ import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_resul
 import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_screen.dart';
 import 'package:interiorapp_flutter_client/settings_tab/setting_screen.dart';
 import 'package:interiorapp_flutter_client/signin_signup/ui/screen/signin_screen.dart';
+import 'package:interiorapp_flutter_client/signin_signup/ui/screen/signup_screen.dart';
 // import 'package:interiorapp_flutter_client/splash_screen.dart';
 
 class AppRouter {
@@ -19,6 +20,10 @@ class AppRouter {
       GoRoute(
         path: '/signin',
         builder: (context, state) => const SigninScreen(),
+      ),
+      GoRoute(
+        path: '/signup',
+        builder: (context, state) => const SignupScreen(),
       ),
       GoRoute(
         path: '/settings',

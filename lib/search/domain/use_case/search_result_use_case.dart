@@ -8,4 +8,12 @@ class SearchResultUseCase {
   Future<List<SearchResultModel>> getSearchResultItems() async {
     return _repository.getSearchResultItems();
   }
+
+  Future<List<SearchResultModel>> searchItems(String query) async {
+    return _repository.searchItems(query);
+  }
+
+  Future<List<SearchResultModel>> searchByCategory(String query, String category) async {
+    return _repository.searchByCategory(query, category);
+  }
 }

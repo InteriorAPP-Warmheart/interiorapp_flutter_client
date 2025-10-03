@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:interiorapp_flutter_client/home_tab/ui/widget/category_card_widget.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/my_build_project_widget.dart';
 import 'package:interiorapp_flutter_client/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/adv_widget.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/section.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/image_slider_widget.dart';
+
+enum CategoryType { self, outsourcing }
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -30,25 +31,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     super.initState();
     _scrollController.addListener(_onScroll);
 
-    // 카드 확대/축소 애니메이션
+    // 카드 크기 애니메이션 (열기: 600ms, 닫기: 300ms)
     _cardController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
 
-    // 회전 애니메이션
+    // 회전 애니메이션 (열기: 800ms, 닫기: 400ms)
     _rotationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
 
+    // 크기 애니메이션 (1.0 ↔ 1.5)
     _cardAnimation = Tween<double>(
       begin: 1.0,
-      end: 1.5, // 다이얼로그 크기
+      end: 1.5,
     ).animate(
       CurvedAnimation(parent: _cardController, curve: Curves.easeInOut),
     );
 
+    // 회전 애니메이션 (0 ↔ π)
     _rotationAnimation = Tween<double>(
       begin: 0.0,
       end: 3.14159265359, // π (180도)
@@ -68,20 +71,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   void _onCardTap(CategoryType type) {
+    if (_isCardExpanded && _expandedCardType == type) {
+      // 같은 카드를 다시 탭하면 닫기 - 역순 애니메이션
+      _closeCard();
+    } else {
+      // 다른 카드나 처음 탭하면 열기
+      _openCard(type);
+    }
+  }
+
+  void _openCard(CategoryType type) {
     setState(() {
-      if (_isCardExpanded && _expandedCardType == type) {
-        // 같은 카드를 다시 탭하면 닫기
-        _isCardExpanded = false;
-        _expandedCardType = null;
-        _cardController.reverse();
-        _rotationController.reverse();
-      } else {
-        // 다른 카드나 처음 탭하면 열기
-        _isCardExpanded = true;
-        _expandedCardType = type;
-        _cardController.forward();
-        _rotationController.forward();
-      }
+      _isCardExpanded = true;
+      _expandedCardType = type;
+    });
+    
+    // 열기 애니메이션: 크기 확대 후 회전 시작 (느린 속도)
+    _cardController.duration = const Duration(milliseconds: 600);
+    _rotationController.duration = const Duration(milliseconds: 800);
+    
+    _cardController.forward();
+    Future.delayed(const Duration(milliseconds: 100), () {
+      _rotationController.forward();
+    });
+  }
+
+  void _closeCard() {
+    // 닫기 애니메이션: 빠른 속도로 설정 후 역순 실행
+    _cardController.duration = const Duration(milliseconds: 300);
+    _rotationController.duration = const Duration(milliseconds: 400);
+    
+    // 먼저 회전 복원, 그 다음 크기 축소
+    _rotationController.reverse().then((_) {
+      _cardController.reverse().then((_) {
+        setState(() {
+          _isCardExpanded = false;
+          _expandedCardType = null;
+        });
+      });
     });
   }
 
@@ -271,7 +298,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           if (_isCardExpanded)
             Positioned.fill(
               child: GestureDetector(
-                onTap: () => _onCardTap(_expandedCardType!), // 배경 탭하면 닫기
+                onTap: _closeCard, // 배경 탭하면 역순 애니메이션으로 닫기
                 child: Container(color: Colors.black.withValues(alpha: 0.5)),
               ),
             ),
@@ -289,8 +316,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       _rotationAnimation,
                     ]),
                     builder: (context, child) {
-                      final isBackSide =
-                          _rotationAnimation.value > 1.57079632679; // π/2
+                      final isBackSide = _rotationAnimation.value > 1.57079632679; // π/2
 
                       return Transform.scale(
                         scale: _cardAnimation.value,
@@ -433,7 +459,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   shape: BoxShape.circle,
                 ),
                 child: GestureDetector(
-                  onTap: () => _onCardTap(_expandedCardType!),
+                  onTap: _closeCard, // 역순 애니메이션으로 닫기
                   child: const Icon(Icons.close, size: 20, color: Colors.white),
                 ),
               ),
