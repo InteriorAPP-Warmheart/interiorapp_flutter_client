@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class SigninScreen extends StatelessWidget {
   const SigninScreen({super.key});
@@ -102,8 +103,23 @@ class SigninScreen extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      side: const BorderSide(color: Color(0xFFDADCE0), width: 1),
+                      side: const BorderSide(
+                        color: Color(0xFFDADCE0),
+                        width: 1,
+                      ),
                     ),
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  context.push('/signup');
+                },
+                child: Text(
+                  '테스트용 회원가입 페이지',
+                  style: TextStyle(
+                    decoration: TextDecoration.underline,
+                    color: Colors.black,
                   ),
                 ),
               ),
