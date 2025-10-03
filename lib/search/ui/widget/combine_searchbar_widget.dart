@@ -11,11 +11,13 @@ class CombineSearchbarWidget extends ConsumerStatefulWidget {
     this.focusNode,
     this.initialValue,
     this.useGlobalController = false,
+    this.onQueryChanged,
   });
 
   final FocusNode? focusNode;
   final String? initialValue;
   final bool useGlobalController; // 전역 컨트롤러 사용 여부
+  final void Function(String query)? onQueryChanged;
 
   @override
   ConsumerState<CombineSearchbarWidget> createState() => _CombineSearchbarWidgetState();
@@ -35,7 +37,18 @@ class _CombineSearchbarWidgetState extends ConsumerState<CombineSearchbarWidget>
       if (widget.initialValue != null && widget.initialValue!.isNotEmpty) {
         _localController!.text = widget.initialValue!;
       }
+      
+      // 로컬 컨트롤러에 리스너 추가
+      _localController!.addListener(_onTextChanged);
     }
+  }
+
+  void _onTextChanged() {
+    final controller = widget.useGlobalController 
+        ? ref.read(searchProvider.notifier).searchController
+        : _localController!;
+    
+    widget.onQueryChanged?.call(controller.text);
   }
 
   @override
@@ -63,6 +76,13 @@ class _CombineSearchbarWidgetState extends ConsumerState<CombineSearchbarWidget>
     final controller = widget.useGlobalController 
         ? ref.watch(searchProvider.notifier).searchController
         : _localController!;
+
+    // 전역 컨트롤러를 사용하는 경우 텍스트 변경 감지
+    if (widget.useGlobalController) {
+      ref.listen(searchProvider, (previous, next) {
+        widget.onQueryChanged?.call(next);
+      });
+    }
 
     return AppSearchBar(
       widthRatio: 0.75,  // 화면 너비의 75%

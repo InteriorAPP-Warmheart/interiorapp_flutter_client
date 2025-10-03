@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:interiorapp_flutter_client/search/data/model/search_result_model.dart';
 
 enum SearchResultLayout { gallery, singleThumbnail, storeGrid }
 
@@ -15,8 +16,8 @@ class SearchResultSection extends StatelessWidget {
     this.listTileHorizontalPadding = 16,
   });
 
-  final List<SearchResultItem> items;
-  final void Function(SearchResultItem item)? onTapItem;
+  final List<SearchResultModel> items;
+  final void Function(SearchResultModel item)? onTapItem;
   final SearchResultLayout layout;
   final int maxImagesToShow;
   final int gridCrossAxisCount;
@@ -81,8 +82,8 @@ class _SearchResultListTile extends StatelessWidget {
     required this.horizontalPadding,
   });
 
-  final SearchResultItem item;
-  final void Function(SearchResultItem item)? onTap;
+  final SearchResultModel item;
+  final void Function(SearchResultModel item)? onTap;
   final SearchResultLayout layout;
   final int maxImagesToShow;
   final double horizontalPadding;
@@ -91,10 +92,10 @@ class _SearchResultListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final int displayedImageCount =
-        item.imageUrls.isEmpty
+        item.imageUrls?.isEmpty ?? true
             ? 0
-            : item.imageUrls.length.clamp(0, maxImagesToShow);
-    final remainingCount = item.imageUrls.length - displayedImageCount;
+            : item.imageUrls!.length.clamp(0, maxImagesToShow);
+    final remainingCount = item.imageUrls!.length - displayedImageCount;
 
     return InkWell(
       onTap: onTap == null ? null : () => onTap!(item),
@@ -113,7 +114,7 @@ class _SearchResultListTile extends StatelessWidget {
                       (constraints.maxWidth - totalGaps) / 3;
                   return Row(
                     children: List.generate(3, (i) {
-                      final hasImage = i < item.imageUrls.length;
+                      final hasImage = i < item.imageUrls!.length;
                       final isLastTile = i == 2; // last visible tile
                       final overlayText =
                           isLastTile && remainingCount > 0
@@ -127,7 +128,7 @@ class _SearchResultListTile extends StatelessWidget {
                           child:
                               hasImage
                                   ? _ImageTile(
-                                    imageUrl: item.imageUrls[i],
+                                    imageUrl: item.imageUrls![i],
                                     overlayText: overlayText,
                                   )
                                   : ClipRRect(
@@ -154,7 +155,7 @@ class _SearchResultListTile extends StatelessWidget {
                       child:
                           displayedImageCount > 0
                               ? Image.network(
-                                item.imageUrls.first,
+                                item.imageUrls!.first,
                                 fit: BoxFit.cover,
                                 errorBuilder:
                                     (context, error, stackTrace) => Container(
@@ -182,14 +183,14 @@ class _SearchResultListTile extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          item.title,
+                          item.title!,
                           style: theme.textTheme.titleMedium,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          item.contentSnippet,
+                          item.contentSnippet!,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.textTheme.bodyMedium?.color
                                 ?.withValues(alpha: 0.8),
@@ -214,7 +215,7 @@ class _SearchResultListTile extends StatelessWidget {
                             const SizedBox(width: 8),
                             Flexible(
                               child: Text(
-                                item.publisherNickname,
+                                item.publisherNickname!,
                                 style: theme.textTheme.labelMedium,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -230,14 +231,14 @@ class _SearchResultListTile extends StatelessWidget {
             if (layout == SearchResultLayout.gallery) ...[
               const SizedBox(height: 6),
               Text(
-                item.title,
+                item.title!,
                 style: theme.textTheme.titleMedium,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 3),
               Text(
-                item.contentSnippet,
+                item.contentSnippet!,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
                 ),
@@ -261,7 +262,7 @@ class _SearchResultListTile extends StatelessWidget {
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
-                      item.publisherNickname,
+                      item.publisherNickname!,
                       style: theme.textTheme.labelMedium,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -324,8 +325,8 @@ class _ImageTile extends StatelessWidget {
 class _StoreGridTile extends StatelessWidget {
   const _StoreGridTile({required this.item, this.onTap});
 
-  final SearchResultItem item;
-  final void Function(SearchResultItem item)? onTap;
+  final SearchResultModel item;
+  final void Function(SearchResultModel item)? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -340,9 +341,9 @@ class _StoreGridTile extends StatelessWidget {
             child: AspectRatio(
               aspectRatio: 1,
               child:
-                  item.imageUrls.isNotEmpty
+                  item.imageUrls?.isNotEmpty ?? false
                       ? Image.network(
-                        item.imageUrls.first,
+                        item.imageUrls!.first,
                         fit: BoxFit.cover,
                         errorBuilder:
                             (context, error, stackTrace) => Container(
@@ -366,14 +367,14 @@ class _StoreGridTile extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            item.publisherNickname, // brand
+            item.publisherNickname!, // brand
             style: theme.textTheme.labelLarge,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 2),
           Text(
-            item.contentSnippet, // description
+            item.contentSnippet!, // description
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.85),
             ),
@@ -386,18 +387,3 @@ class _StoreGridTile extends StatelessWidget {
   }
 }
 
-class SearchResultItem {
-  const SearchResultItem({
-    required this.imageUrls,
-    required this.title,
-    required this.contentSnippet,
-    required this.publisherNickname,
-    this.publisherAvatarUrl,
-  });
-
-  final List<String> imageUrls;
-  final String title;
-  final String contentSnippet;
-  final String publisherNickname;
-  final String? publisherAvatarUrl;
-}
