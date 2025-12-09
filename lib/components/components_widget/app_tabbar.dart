@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/components/components_vm/tabbar_provider.dart';
 import 'package:interiorapp_flutter_client/components/components_widget/app_appbar.dart';
@@ -93,6 +94,7 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
         labelStyle: AppTabBarTheme.labelStyle,
         indicatorColor: Colors.transparent, // 탭바 인디케이터 색상 제거
         onTap: (index) {
+          HapticFeedback.lightImpact(); // 탭 클릭 시 가벼운 진동
           ref.read(tabProvider.notifier).changeTab(index);
         },
         tabs: [
