@@ -3,6 +3,7 @@ import 'package:interiorapp_flutter_client/components/components_widget/app_tabb
 import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_result_screen.dart';
 import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_screen.dart';
 import 'package:interiorapp_flutter_client/settings_tab/setting_screen.dart';
+import 'package:interiorapp_flutter_client/showroom_tab/ui/screen/showroom_write_screen.dart';
 import 'package:interiorapp_flutter_client/signin_signup/ui/screen/signin_screen.dart';
 import 'package:interiorapp_flutter_client/signin_signup/ui/screen/signup_screen.dart';
 // import 'package:interiorapp_flutter_client/splash_screen.dart';
@@ -29,6 +30,10 @@ class AppRouter {
         path: '/settings',
         builder: (context, state) => const SettingScreen(),
       ),
+      GoRoute(
+        path: '/showroom-write',
+        builder: (context, state) => const ShowroomWriteScreen(),
+      ),
       // 검색은 라우트 계층형 구조로 구성
       GoRoute(
         path: '/search',
@@ -39,7 +44,7 @@ class AppRouter {
             builder:
                 (context, state) => CombineSearchResultScreen(),
             routes: [
-              // GoRoute(path: 'showrooms', builder: ...),
+              // GoRoute(path: 'showrooms', builder: (context, state) => ShowroomWriteScreen()),
               // GoRoute(path: 'stores', builder: ...),
               // GoRoute(path: 'builds', builder: ...),
               // GoRoute(path: 'companies', builder: ...),

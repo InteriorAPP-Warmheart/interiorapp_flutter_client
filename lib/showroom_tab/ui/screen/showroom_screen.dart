@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/home_tab/ui/widget/image_slider_widget.dart';
 import 'package:interiorapp_flutter_client/showroom_tab/presentation/provider/filter_provider.dart';
 import 'package:interiorapp_flutter_client/showroom_tab/ui/widget/filter_bottomsheet.dart';
@@ -100,7 +101,7 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
         width: 100,
         height: 40,
         child: FloatingActionButton.extended(
-          onPressed: () {},
+          onPressed: () => context.push('/showroom-write'),
           icon: Icon(Icons.add, color: Colors.black, size: 18),
           label: Text(
             '글쓰기',
