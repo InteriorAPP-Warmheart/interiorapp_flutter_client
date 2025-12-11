@@ -14,6 +14,7 @@ class SearchResultSection extends StatelessWidget {
     this.gridSpacing = 12,
     this.gridHorizontalPadding = 16,
     this.listTileHorizontalPadding = 16,
+    this.searchQuery,
   });
 
   final List<SearchResultModel> items;
@@ -24,6 +25,7 @@ class SearchResultSection extends StatelessWidget {
   final double gridSpacing;
   final double gridHorizontalPadding;
   final double listTileHorizontalPadding;
+  final String? searchQuery;
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +35,11 @@ class SearchResultSection extends StatelessWidget {
 
     if (layout == SearchResultLayout.storeGrid) {
       return GridView.builder(
-        padding: EdgeInsets.symmetric(
-          vertical: 6,
-          horizontal: gridHorizontalPadding,
+        padding: EdgeInsets.only(
+          top: 6,
+          bottom: 0,
+          left: gridHorizontalPadding,
+          right: gridHorizontalPadding,
         ),
         physics: const NeverScrollableScrollPhysics(),
         shrinkWrap: true,
@@ -48,7 +52,11 @@ class SearchResultSection extends StatelessWidget {
         itemCount: items.length,
         itemBuilder: (context, index) {
           final item = items[index];
-          return _StoreGridTile(item: item, onTap: onTapItem);
+          return _StoreGridTile(
+            item: item,
+            onTap: onTapItem,
+            searchQuery: searchQuery,
+          );
         },
       );
     }
@@ -67,6 +75,7 @@ class SearchResultSection extends StatelessWidget {
           layout: layout,
           maxImagesToShow: maxImagesToShow,
           horizontalPadding: listTileHorizontalPadding,
+          searchQuery: searchQuery,
         );
       },
     );
@@ -80,6 +89,7 @@ class _SearchResultListTile extends StatelessWidget {
     required this.layout,
     required this.maxImagesToShow,
     required this.horizontalPadding,
+    this.searchQuery,
   });
 
   final SearchResultModel item;
@@ -87,6 +97,7 @@ class _SearchResultListTile extends StatelessWidget {
   final SearchResultLayout layout;
   final int maxImagesToShow;
   final double horizontalPadding;
+  final String? searchQuery;
 
   @override
   Widget build(BuildContext context) {
@@ -182,21 +193,21 @@ class _SearchResultListTile extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          item.title!,
+                        _HighlightText(
+                          text: item.title!,
+                          searchQuery: searchQuery,
                           style: theme.textTheme.titleMedium,
                           maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 2),
-                        Text(
-                          item.contentSnippet!,
+                        _HighlightText(
+                          text: item.contentSnippet!,
+                          searchQuery: searchQuery,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.textTheme.bodyMedium?.color
                                 ?.withValues(alpha: 0.8),
                           ),
                           maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
                         Row(
@@ -230,20 +241,20 @@ class _SearchResultListTile extends StatelessWidget {
             ],
             if (layout == SearchResultLayout.gallery) ...[
               const SizedBox(height: 6),
-              Text(
-                item.title!,
+              _HighlightText(
+                text: item.title!,
+                searchQuery: searchQuery,
                 style: theme.textTheme.titleMedium,
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 3),
-              Text(
-                item.contentSnippet!,
+              _HighlightText(
+                text: item.contentSnippet!,
+                searchQuery: searchQuery,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
                 ),
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 6),
               Row(
@@ -323,10 +334,15 @@ class _ImageTile extends StatelessWidget {
 }
 
 class _StoreGridTile extends StatelessWidget {
-  const _StoreGridTile({required this.item, this.onTap});
+  const _StoreGridTile({
+    required this.item,
+    this.onTap,
+    this.searchQuery,
+  });
 
   final SearchResultModel item;
   final void Function(SearchResultModel item)? onTap;
+  final String? searchQuery;
 
   @override
   Widget build(BuildContext context) {
@@ -373,16 +389,136 @@ class _StoreGridTile extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 2),
-          Text(
-            item.contentSnippet!, // description
+          _HighlightText(
+            text: item.contentSnippet!,
+            searchQuery: searchQuery,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.85),
             ),
             maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 검색어를 하이라이트하는 텍스트 위젯
+class _HighlightText extends StatelessWidget {
+  const _HighlightText({
+    required this.text,
+    this.searchQuery,
+    this.style,
+    this.maxLines,
+  });
+
+  final String text;
+  final String? searchQuery;
+  final TextStyle? style;
+  final int? maxLines;
+
+  @override
+  Widget build(BuildContext context) {
+    // 검색어가 없거나 비어있으면 일반 Text 반환
+    if (searchQuery == null || searchQuery!.trim().isEmpty) {
+      return Text(
+        text,
+        style: style,
+        maxLines: maxLines,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+
+    final query = searchQuery!.toLowerCase().trim();
+    final lowerText = text.toLowerCase();
+    
+    // 검색어를 단어 단위로 분리
+    final queryWords = query.split(' ').where((word) => word.isNotEmpty).toList();
+    
+    // 검색어가 포함되지 않으면 일반 Text 반환
+    bool hasMatch = false;
+    for (final word in queryWords) {
+      if (lowerText.contains(word)) {
+        hasMatch = true;
+        break;
+      }
+    }
+    
+    if (!hasMatch) {
+      return Text(
+        text,
+        style: style,
+        maxLines: maxLines,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+
+    // 하이라이트 스타일
+    final highlightStyle = style?.copyWith(
+      backgroundColor: Colors.yellow.withValues(alpha: 0.5),
+      fontWeight: FontWeight.bold,
+    ) ?? TextStyle(
+      backgroundColor: Colors.yellow.withValues(alpha: 0.5),
+      fontWeight: FontWeight.bold,
+    );
+
+    // TextSpan 리스트 생성
+    final spans = <TextSpan>[];
+    String remainingText = text;
+    int currentIndex = 0;
+
+    while (currentIndex < remainingText.length) {
+      int? earliestMatchIndex;
+      String? matchedWord;
+
+      // 가장 앞에 있는 검색어 찾기
+      for (final word in queryWords) {
+        final lowerRemaining = remainingText.substring(currentIndex).toLowerCase();
+        final wordIndex = lowerRemaining.indexOf(word);
+        if (wordIndex != -1) {
+          final absoluteIndex = currentIndex + wordIndex;
+          if (earliestMatchIndex == null || absoluteIndex < earliestMatchIndex) {
+            earliestMatchIndex = absoluteIndex;
+            matchedWord = remainingText.substring(
+              absoluteIndex,
+              absoluteIndex + word.length,
+            );
+          }
+        }
+      }
+
+      if (earliestMatchIndex == null) {
+        // 더 이상 매칭되는 검색어가 없으면 나머지 텍스트 추가
+        if (currentIndex < remainingText.length) {
+          spans.add(TextSpan(
+            text: remainingText.substring(currentIndex),
+            style: style,
+          ));
+        }
+        break;
+      }
+
+      // 매칭 전 텍스트 추가
+      if (earliestMatchIndex > currentIndex) {
+        spans.add(TextSpan(
+          text: remainingText.substring(currentIndex, earliestMatchIndex),
+          style: style,
+        ));
+      }
+
+      // 하이라이트된 검색어 추가
+      spans.add(TextSpan(
+        text: matchedWord,
+        style: highlightStyle,
+      ));
+
+      currentIndex = earliestMatchIndex + matchedWord!.length;
+    }
+
+    return RichText(
+      maxLines: maxLines,
+      overflow: TextOverflow.ellipsis,
+      text: TextSpan(children: spans),
     );
   }
 }

@@ -76,7 +76,7 @@ class _CombineSearchScreenState extends ConsumerState<CombineSearchScreen> {
           Icon(Icons.search_rounded, size: 80, color: Colors.grey),
           const SizedBox(height: 16),
           const Text(
-            '궁금한 인테리어,\n무엇이든 검색하세요',
+            '궁금한 인테리어,\n무엇이든 검색하세요\n\n테스트를 위해서 "전체검색"을 검색하면\n모든 카테고리별 검색결과를 확인할 수 있습니다.',
             style: TextStyle(fontSize: 18, color: Colors.black),
             textAlign: TextAlign.center,
           ),

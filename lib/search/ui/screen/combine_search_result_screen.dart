@@ -146,6 +146,7 @@ class _CombineSearchResultScreenState
             const SizedBox(height: 12),
           ],
           if (_shouldShow('시공')) ...[_buildConstructionSection([])], // 빈 리스트 전달 (내부에서 검색 결과 사용)
+          const SizedBox(height: 50),
         ],
       ),
     );
@@ -341,6 +342,7 @@ class _CombineSearchResultScreenState
             SearchResultSection(
               items: itemsToShow,
               listTileHorizontalPadding: 0,
+              searchQuery: _searchQuery,
               onTapItem: (item) {
                 debugPrint('tap showroom: ${item.title}');
               },
@@ -372,7 +374,7 @@ class _CombineSearchResultScreenState
 
   Widget _buildStoreSection(List<SearchResultModel> data) {
     final bool isFullList = _selectedCategory == '스토어';
-    final int previewCount = _selectedCategory == '전체' ? 4 : 3;
+    final int previewCount = 4;
     
     // 검색어가 있으면 스토어 전용 검색 결과를 사용, 없으면 기본 데이터 사용
     if (_searchQuery != null) {
@@ -407,7 +409,7 @@ class _CombineSearchResultScreenState
 
   Widget _buildStoreSectionContent(List<SearchResultModel> storeItems, bool isFullList, int previewCount) {
     final itemsToShow = isFullList ? storeItems : storeItems.take(previewCount).toList();
-    final hasMoreItems = storeItems.length > previewCount;
+    final hasMoreItems = storeItems.length >= previewCount;
     
     return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -430,8 +432,9 @@ class _CombineSearchResultScreenState
               items: itemsToShow,
               layout: SearchResultLayout.storeGrid,
               gridCrossAxisCount: 2,
-              gridSpacing: 12,
+              gridSpacing: 6,
               gridHorizontalPadding: 0,
+              searchQuery: _searchQuery,
               onTapItem: (item) {
                 debugPrint('tap store: ${item.title}');
               },
@@ -461,6 +464,7 @@ class _CombineSearchResultScreenState
         );
   }
 
+  // 시공 섹션 빌드
   Widget _buildConstructionSection(List<SearchResultModel> data) {
     final bool isFullList = _selectedCategory == '시공';
     
@@ -496,8 +500,9 @@ class _CombineSearchResultScreenState
   }
 
   Widget _buildConstructionSectionContent(List<SearchResultModel> constructionItems, bool isFullList) {
-    final itemsToShow = isFullList ? constructionItems : constructionItems.take(3).toList();
-    final hasMoreItems = constructionItems.length > 3;
+    final previewCount = 2; // 시공은 2개만 미리보기
+    final itemsToShow = isFullList ? constructionItems : constructionItems.take(previewCount).toList();
+    final hasMoreItems = constructionItems.length > previewCount;
     
     return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -521,6 +526,7 @@ class _CombineSearchResultScreenState
               layout: SearchResultLayout.gallery,
               maxImagesToShow: 3,
               listTileHorizontalPadding: 0,
+              searchQuery: _searchQuery,
               onTapItem: (item) {
                 debugPrint('tap construction: ${item.title}');
               },

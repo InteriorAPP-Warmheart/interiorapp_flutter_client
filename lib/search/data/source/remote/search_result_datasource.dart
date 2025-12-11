@@ -136,11 +136,24 @@ class SearchResultRemoteDataSourceImpl implements SearchResultRemoteDataSource {
   Future<List<SearchResultModel>> searchItems(String query) async {
     await Future.delayed(const Duration(milliseconds: 400));
 
-    if (query.trim().isEmpty) {
+    final trimmedQuery = query.trim();
+    
+    if (trimmedQuery.isEmpty) {
       return dummySearchResultItems;
     }
 
-    final lowerQuery = query.toLowerCase().trim();
+    final lowerQuery = trimmedQuery.toLowerCase();
+
+    // '전체검색' 키워드 처리
+    if (lowerQuery == '전체검색') {
+      final allItems = [
+        ...dummySearchResultItems,
+        ...dummyStoreItems,
+        ...dummyConstructionItems,
+      ];
+      print('🔍 전체검색 -> Found ${allItems.length} items');
+      return allItems;
+    }
 
     // 모든 데이터를 합쳐서 검색
     final allItems = [
@@ -149,16 +162,10 @@ class SearchResultRemoteDataSourceImpl implements SearchResultRemoteDataSource {
       ...dummyConstructionItems,
     ];
 
-    // 검색어와 일치하는 아이템들 필터링
+    // 검색어와 일치하는 아이템들 필터링 (단어 단위 검색)
     final filteredItems =
         allItems.where((item) {
-          final title = item.title?.toLowerCase() ?? '';
-          final content = item.contentSnippet?.toLowerCase() ?? '';
-          final publisher = item.publisherNickname?.toLowerCase() ?? '';
-
-          return title.contains(lowerQuery) ||
-              content.contains(lowerQuery) ||
-              publisher.contains(lowerQuery);
+          return _matchesQuery(item, lowerQuery);
         }).toList();
 
     // 검색어와의 유사도에 따라 정렬
@@ -178,22 +185,24 @@ class SearchResultRemoteDataSourceImpl implements SearchResultRemoteDataSource {
   Future<List<SearchResultModel>> searchShowroomItems(String query) async {
     await Future.delayed(const Duration(milliseconds: 400));
 
-    if (query.trim().isEmpty) {
+    final trimmedQuery = query.trim();
+    
+    if (trimmedQuery.isEmpty) {
       return dummySearchResultItems;
     }
 
-    final lowerQuery = query.toLowerCase().trim();
+    final lowerQuery = trimmedQuery.toLowerCase();
 
-    // 쇼룸 데이터에서만 검색
+    // '전체검색' 키워드 처리
+    if (lowerQuery == '전체검색') {
+      print('🏠 Showroom 전체검색 -> Found ${dummySearchResultItems.length} items');
+      return dummySearchResultItems;
+    }
+
+    // 쇼룸 데이터에서만 검색 (단어 단위 검색)
     final filteredItems =
         dummySearchResultItems.where((item) {
-          final title = item.title?.toLowerCase() ?? '';
-          final content = item.contentSnippet?.toLowerCase() ?? '';
-          final publisher = item.publisherNickname?.toLowerCase() ?? '';
-
-          return title.contains(lowerQuery) ||
-              content.contains(lowerQuery) ||
-              publisher.contains(lowerQuery);
+          return _matchesQuery(item, lowerQuery);
         }).toList();
 
     // 검색어와의 유사도에 따라 정렬
@@ -215,22 +224,24 @@ class SearchResultRemoteDataSourceImpl implements SearchResultRemoteDataSource {
   Future<List<SearchResultModel>> searchStoreItems(String query) async {
     await Future.delayed(const Duration(milliseconds: 400));
 
-    if (query.trim().isEmpty) {
+    final trimmedQuery = query.trim();
+    
+    if (trimmedQuery.isEmpty) {
       return dummyStoreItems;
     }
 
-    final lowerQuery = query.toLowerCase().trim();
+    final lowerQuery = trimmedQuery.toLowerCase();
 
-    // 스토어 데이터에서만 검색
+    // '전체검색' 키워드 처리
+    if (lowerQuery == '전체검색') {
+      print('🛒 Store 전체검색 -> Found ${dummyStoreItems.length} items');
+      return dummyStoreItems;
+    }
+
+    // 스토어 데이터에서만 검색 (단어 단위 검색)
     final filteredItems =
         dummyStoreItems.where((item) {
-          final title = item.title?.toLowerCase() ?? '';
-          final content = item.contentSnippet?.toLowerCase() ?? '';
-          final publisher = item.publisherNickname?.toLowerCase() ?? '';
-
-          return title.contains(lowerQuery) ||
-              content.contains(lowerQuery) ||
-              publisher.contains(lowerQuery);
+          return _matchesQuery(item, lowerQuery);
         }).toList();
 
     // 검색어와의 유사도에 따라 정렬
@@ -252,22 +263,24 @@ class SearchResultRemoteDataSourceImpl implements SearchResultRemoteDataSource {
   Future<List<SearchResultModel>> searchConstructionItems(String query) async {
     await Future.delayed(const Duration(milliseconds: 400));
 
-    if (query.trim().isEmpty) {
+    final trimmedQuery = query.trim();
+    
+    if (trimmedQuery.isEmpty) {
       return dummyConstructionItems;
     }
 
-    final lowerQuery = query.toLowerCase().trim();
+    final lowerQuery = trimmedQuery.toLowerCase();
 
-    // 시공 데이터에서만 검색
+    // '전체검색' 키워드 처리
+    if (lowerQuery == '전체검색') {
+      print('🔨 Construction 전체검색 -> Found ${dummyConstructionItems.length} items');
+      return dummyConstructionItems;
+    }
+
+    // 시공 데이터에서만 검색 (단어 단위 검색)
     final filteredItems =
         dummyConstructionItems.where((item) {
-          final title = item.title?.toLowerCase() ?? '';
-          final content = item.contentSnippet?.toLowerCase() ?? '';
-          final publisher = item.publisherNickname?.toLowerCase() ?? '';
-
-          return title.contains(lowerQuery) ||
-              content.contains(lowerQuery) ||
-              publisher.contains(lowerQuery);
+          return _matchesQuery(item, lowerQuery);
         }).toList();
 
     // 검색어와의 유사도에 따라 정렬
@@ -284,39 +297,84 @@ class SearchResultRemoteDataSourceImpl implements SearchResultRemoteDataSource {
     return filteredItems;
   }
 
+  /// 검색어를 단어 단위로 분리하여 아이템과 매칭되는지 확인
+  bool _matchesQuery(SearchResultModel item, String query) {
+    final title = item.title?.toLowerCase() ?? '';
+    final content = item.contentSnippet?.toLowerCase() ?? '';
+    final publisher = item.publisherNickname?.toLowerCase() ?? '';
+    
+    // 검색어를 공백으로 분리하여 단어 리스트 생성
+    final queryWords = query.split(' ').where((word) => word.isNotEmpty).toList();
+    
+    // 하나 이상의 단어가 포함되면 매칭됨 (OR 조건)
+    for (final word in queryWords) {
+      final matches = title.contains(word) ||
+          content.contains(word) ||
+          publisher.contains(word);
+      
+      if (matches) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
   /// 검색어와 아이템의 관련도 점수 계산
   int _calculateRelevanceScore(SearchResultModel item, String query) {
     int score = 0;
     final title = item.title?.toLowerCase() ?? '';
     final content = item.contentSnippet?.toLowerCase() ?? '';
     final publisher = item.publisherNickname?.toLowerCase() ?? '';
+    
+    // 검색어를 단어 단위로 분리
+    final queryWords = query.split(' ').where((word) => word.isNotEmpty).toList();
+    
+    // 각 단어에 대해 점수 계산
+    for (final word in queryWords) {
+      // 제목에서 일치하는 경우 높은 점수
+      if (title.contains(word)) {
+        score += 10;
+        // 제목의 시작 부분에 있으면 더 높은 점수
+        if (title.startsWith(word)) {
+          score += 5;
+        }
+      }
 
-    // 제목에서 정확히 일치하는 경우 높은 점수
-    if (title.contains(query)) {
-      score += 10;
-      // 제목의 시작 부분에 있으면 더 높은 점수
-      if (title.startsWith(query)) {
+      // 내용에서 일치하는 경우
+      if (content.contains(word)) {
         score += 5;
       }
-    }
 
-    // 내용에서 일치하는 경우
+      // 게시자명에서 일치하는 경우
+      if (publisher.contains(word)) {
+        score += 3;
+      }
+    }
+    
+    // 전체 쿼리가 정확히 일치하는 경우 보너스 점수
+    if (title.contains(query)) {
+      score += 15;
+      if (title.startsWith(query)) {
+        score += 10;
+      }
+    }
     if (content.contains(query)) {
-      score += 5;
+      score += 8;
     }
-
-    // 게시자명에서 일치하는 경우
     if (publisher.contains(query)) {
-      score += 3;
+      score += 5;
     }
 
     // 키워드가 여러 필드에 걸쳐 있으면 보너스 점수
     int matches = 0;
-    if (title.contains(query)) matches++;
-    if (content.contains(query)) matches++;
-    if (publisher.contains(query)) matches++;
+    for (final word in queryWords) {
+      if (title.contains(word)) matches++;
+      if (content.contains(word)) matches++;
+      if (publisher.contains(word)) matches++;
+    }
 
-    if (matches > 1) {
+    if (matches > queryWords.length) {
       score += matches * 2;
     }
 

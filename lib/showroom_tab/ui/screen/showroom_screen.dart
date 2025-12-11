@@ -91,6 +91,7 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
                   ],
                 ),
               ),
+              SizedBox(height: sectionGap + 10),
             ],
           ),
         ),
