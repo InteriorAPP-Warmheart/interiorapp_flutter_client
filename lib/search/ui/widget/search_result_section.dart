@@ -47,7 +47,7 @@ class SearchResultSection extends StatelessWidget {
           crossAxisCount: gridCrossAxisCount,
           mainAxisSpacing: gridSpacing,
           crossAxisSpacing: gridSpacing,
-          childAspectRatio: 0.68,
+          childAspectRatio: 0.75,
         ),
         itemCount: items.length,
         itemBuilder: (context, index) {
@@ -351,6 +351,7 @@ class _StoreGridTile extends StatelessWidget {
       onTap: onTap == null ? null : () => onTap!(item),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
@@ -381,14 +382,14 @@ class _StoreGridTile extends StatelessWidget {
                       ),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           Text(
             item.publisherNickname!, // brand
             style: theme.textTheme.labelLarge,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 1),
           _HighlightText(
             text: item.contentSnippet!,
             searchQuery: searchQuery,

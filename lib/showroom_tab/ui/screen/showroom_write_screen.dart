@@ -155,6 +155,34 @@ class ShowroomWriteScreen extends ConsumerWidget {
                           },
                         ),
                       ),
+                      // button section
+                      Padding(
+                        padding: EdgeInsets.only(top: 10),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 54,
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: (selectedBuildId?.isNotEmpty ?? false)
+                                ? () => context.push(
+                                      '/showroom-write/first-write?buildId=$selectedBuildId',
+                                    )
+                                : null,
+                            child: const Text(
+                              '선택된 데이터로 쇼룸 작성하기',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
                       Padding(
                         padding: EdgeInsets.only(top: 10, bottom: 30),
                         child: SizedBox(
@@ -166,8 +194,9 @@ class ShowroomWriteScreen extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
-                            onPressed: () =>
-                              context.push('/showroom-write/first-write'),
+                            onPressed:
+                                () =>
+                                    context.push('/showroom-write/first-write'),
                             child: const Text(
                               '직접 작성하기',
                               style: TextStyle(

@@ -9,4 +9,9 @@ class ShowroomRepoImpl implements ShowroomRepository {
   Future<List<Map<String, dynamic>>> getRecentBuildings(bool hasData) async {
     return _api.getRecentBuildingsApi(hasData);
   }
+
+  @override
+  Future<Map<String, dynamic>?> getBuildingDetail(String buildId) async {
+    return _api.getBuildingDetail(buildId);
+  }
 }

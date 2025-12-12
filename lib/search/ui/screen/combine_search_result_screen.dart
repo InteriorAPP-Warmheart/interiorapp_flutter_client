@@ -500,9 +500,9 @@ class _CombineSearchResultScreenState
   }
 
   Widget _buildConstructionSectionContent(List<SearchResultModel> constructionItems, bool isFullList) {
-    final previewCount = 2; // 시공은 2개만 미리보기
+    final previewCount = 3; // 시공은 2개만 미리보기
     final itemsToShow = isFullList ? constructionItems : constructionItems.take(previewCount).toList();
-    final hasMoreItems = constructionItems.length > previewCount;
+    final hasMoreItems = constructionItems.length >= previewCount;
     
     return Column(
           crossAxisAlignment: CrossAxisAlignment.start,

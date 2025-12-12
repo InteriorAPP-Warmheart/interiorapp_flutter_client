@@ -7,4 +7,8 @@ class ShowroomUsecase {
   Future<List<Map<String, dynamic>>> getRecentBuildings(bool hasData) async {
     return _repository.getRecentBuildings(hasData);
   }
+
+  Future<Map<String, dynamic>?> getBuildingDetail(String buildId) async {
+    return _repository.getBuildingDetail(buildId);
+  }
 }

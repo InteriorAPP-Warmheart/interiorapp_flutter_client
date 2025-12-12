@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:interiorapp_flutter_client/components/components_widget/filter_chip_widget.dart';
+import 'package:interiorapp_flutter_client/components/components_widget/space_type_filter_widget.dart';
 import 'package:interiorapp_flutter_client/showroom_tab/domain/entity/filter_entity.dart';
 import 'package:interiorapp_flutter_client/showroom_tab/presentation/provider/filter_provider.dart';
 
@@ -205,14 +207,14 @@ class FilterBottomSheet extends ConsumerWidget {
     } else if (category == '예산') {
       return _buildBudgetFilter(ref, filterState);
     } else if (category == '톤앤매너') {
-      return _buildToneFilter(filterState);
+      return _buildToneFilter(ref, filterState);
     } else {
-      return _buildDefaultFilter(filterState);
+      return _buildDefaultFilter(ref, filterState);
     }
   }
 
   // 일반 필터 (스타일, 소재)
-  Widget _buildDefaultFilter(FilterState filterState) {
+  Widget _buildDefaultFilter(WidgetRef ref, FilterState filterState) {
     final items = filterState.categoryItems[filterState.selectedCategory] ?? [];
 
     return Padding(
@@ -221,7 +223,10 @@ class FilterBottomSheet extends ConsumerWidget {
         alignment: WrapAlignment.start,
         spacing: 10,
         runSpacing: 8,
-        children: items.map((item) => _FilterChip(item: item)).toList(),
+        children: items.map((item) => FilterChipWidget(
+          item: item,
+          onTap: () => ref.read(filterProvider.notifier).toggleFilter(item.id),
+        )).toList(),
       ),
     );
   }
@@ -241,144 +246,23 @@ class FilterBottomSheet extends ConsumerWidget {
               color: Colors.grey,
             ),
           ),
-          SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _buildSpaceTypeButton(
-                  ref,
-                  'residential',
-                  '주거 공간',
-                  filterState.selectedSpaceType == 'residential',
-                ),
-              ),
-              SizedBox(width: 17),
-              Expanded(
-                child: _buildSpaceTypeButton(
-                  ref,
-                  'commercial',
-                  '상업 공간',
-                  filterState.selectedSpaceType == 'commercial',
-                ),
-              ),
-            ],
+          const SizedBox(height: 10),
+          SpaceTypeFilterWidget(
+            filterState: filterState,
+            onSpaceTypeToggle: (spaceTypeId) {
+              ref.read(filterProvider.notifier).toggleSpaceType(spaceTypeId);
+            },
+            onFilterToggle: (filterId) {
+              ref.read(filterProvider.notifier).toggleFilter(filterId);
+            },
           ),
-
-          if (filterState.selectedSpaceType == 'residential') ...[
-            const SizedBox(height: 40),
-            const Text(
-              '주거 공간',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children:
-                  (filterState.categoryItems['주거_공간'] ?? [])
-                      .map((item) => _FilterChip(item: item))
-                      .toList(),
-            ),
-            const SizedBox(height: 40),
-            const Text(
-              '세부 항목',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children:
-                  (filterState.categoryItems['주거_세부'] ?? [])
-                      .map((item) => _FilterChip(item: item))
-                      .toList(),
-            ),
-          ] else if (filterState.selectedSpaceType == 'commercial') ...[
-            const SizedBox(height: 24),
-            const Text(
-              '상업 공간',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children:
-                  (filterState.categoryItems['상업_공간'] ?? [])
-                      .map((item) => _FilterChip(item: item))
-                      .toList(),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              '세부 항목',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children:
-                  (filterState.categoryItems['상업_세부'] ?? [])
-                      .map((item) => _FilterChip(item: item))
-                      .toList(),
-            ),
-          ],
         ],
       ),
     );
   }
 
-  // 주거/상업 선택 버튼 위젯
-  Widget _buildSpaceTypeButton(
-    WidgetRef ref,
-    String spaceTypeId,
-    String label,
-    bool isSelected,
-  ) {
-    return GestureDetector(
-      onTap:
-          () => ref.read(filterProvider.notifier).toggleSpaceType(spaceTypeId),
-      child: Container(
-        height: 60,
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isSelected ? Colors.black : Colors.grey[300]!,
-            width: 1.5,
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   // 톤앤매너 필터 (색상 포함)
-  Widget _buildToneFilter(FilterState filterState) {
+  Widget _buildToneFilter(WidgetRef ref, FilterState filterState) {
     final items = filterState.categoryItems['톤앤매너'] ?? [];
 
     final Map<String, Color> colorMap = {
@@ -403,7 +287,11 @@ class FilterBottomSheet extends ConsumerWidget {
         children:
             items.map((item) {
               final color = colorMap[item.id] ?? Colors.grey;
-              return _ColorFilterChip(item: item, color: color);
+              return ColorFilterChipWidget(
+                item: item,
+                color: color,
+                onTap: () => ref.read(filterProvider.notifier).toggleFilter(item.id),
+              );
             }).toList(),
       ),
     );
@@ -484,78 +372,3 @@ class FilterBottomSheet extends ConsumerWidget {
   }
 }
 
-// 일반 필터 칩
-class _FilterChip extends ConsumerWidget {
-  final FilterItem item;
-
-  const _FilterChip({required this.item});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return GestureDetector(
-      onTap: () => ref.read(filterProvider.notifier).toggleFilter(item.id),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: item.isSelected ? Colors.black : Colors.grey[300]!,
-          ),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          item.name,
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
-}
-
-// 색상이 있는 필터 칩 (톤앤매너용)
-class _ColorFilterChip extends ConsumerWidget {
-  final FilterItem item;
-  final Color color;
-
-  const _ColorFilterChip({required this.item, required this.color});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return GestureDetector(
-      onTap: () => ref.read(filterProvider.notifier).toggleFilter(item.id),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: item.isSelected ? Colors.black : Colors.grey[300]!,
-          ),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color:
-                      color == Colors.white
-                          ? Colors.grey[300]!
-                          : Colors.transparent,
-                  width: 1,
-                ),
-              ),
-            ),
-            SizedBox(width: 8),
-            Text(
-              item.name,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

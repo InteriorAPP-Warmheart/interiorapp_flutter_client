@@ -137,7 +137,9 @@ class FilterVm extends Notifier<FilterState> {
 
     // 공간 형태의 하위 카테고리들 찾기
     String? actualCategory = currentCategory;
-    if (currentCategory == '공간 형태') {
+    
+    // selectedSpaceType이 있으면 공간 형태 필터로 간주 (글쓰기 화면 등에서 사용)
+    if (currentCategory == '공간 형태' || state.selectedSpaceType != null) {
       // 주거/상업 하위 항목에서 찾기
       if (state.selectedSpaceType == 'residential') {
         // 주거_공간과 주거_세부에서 찾기
@@ -201,6 +203,49 @@ class FilterVm extends Notifier<FilterState> {
           id: filterId,
           name: item.name,
           category: _getCategoryDisplayName(actualCategory),
+        ),
+      );
+    }
+
+    state = state.copyWith(
+      categoryItems: updatedCategories,
+      selectedFilters: selectedFilters,
+    );
+  }
+
+  // 필터 토글 (카테고리 명시)
+  void toggleFilterWithCategory(String filterId, String category) {
+    final categoryItems = state.categoryItems[category] ?? [];
+    final itemIndex = categoryItems.indexWhere((item) => item.id == filterId);
+
+    if (itemIndex == -1) return;
+
+    final item = categoryItems[itemIndex];
+
+    final updatedItems = categoryItems.map((item) {
+      if (item.id == filterId) {
+        return item.copyWith(isSelected: !item.isSelected);
+      }
+      return item;
+    }).toList();
+
+    final updatedCategories = Map<String, List<FilterItem>>.from(
+      state.categoryItems,
+    );
+    updatedCategories[category] = updatedItems;
+
+    // 선택된 필터 목록 업데이트
+    List<SelectedFilter> selectedFilters = List.from(state.selectedFilters);
+    final existingIndex = selectedFilters.indexWhere((f) => f.id == filterId);
+
+    if (existingIndex != -1) {
+      selectedFilters.removeAt(existingIndex);
+    } else {
+      selectedFilters.add(
+        SelectedFilter(
+          id: filterId,
+          name: item.name,
+          category: _getCategoryDisplayName(category),
         ),
       );
     }

@@ -111,4 +111,15 @@ class ShowroomApi {
     }
   }
 
+  Future<Map<String, dynamic>?> getBuildingDetail(String buildId) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    try {
+      return recentBuildings.firstWhere(
+        (element) => element['id'] == buildId,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
 }
