@@ -31,57 +31,54 @@ class NicknameGenerator {
       case 0: // 형용사 + 동물
         final adjective = defaultAdjectives[random.nextInt(defaultAdjectives.length)];
         final animal = defaultAnimals[random.nextInt(defaultAnimals.length)];
-        return _addOptionalNumber('$adjective$animal', random);
+        return _withNumber('$adjective$animal', random);
         
       case 1: // 형용사 + 사물
         final adjective = defaultAdjectives[random.nextInt(defaultAdjectives.length)];
         final object = defaultObjects[random.nextInt(defaultObjects.length)];
-        return _addOptionalNumber('$adjective$object', random);
+        return _withNumber('$adjective$object', random);
         
       case 2: // 형용사 + 음식
         final adjective = defaultAdjectives[random.nextInt(defaultAdjectives.length)];
         final food = defaultFoods[random.nextInt(defaultFoods.length)];
-        return _addOptionalNumber('$adjective$food', random);
+        return _withNumber('$adjective$food', random);
         
       case 3: // 색상 + 동물
         final colors = ['빨간', '파란', '노란', '초록', '보라', '주황', '분홍'];
         final color = colors[random.nextInt(colors.length)];
         final animal = defaultAnimals[random.nextInt(defaultAnimals.length)];
-        return _addOptionalNumber('$color$animal', random);
+        return _withNumber('$color$animal', random);
         
       case 4: // 색상 + 음식
         final colors = ['빨간', '파란', '노란', '초록', '보라', '주황', '분홍'];
         final color = colors[random.nextInt(colors.length)];
         final food = defaultFoods[random.nextInt(defaultFoods.length)];
-        return _addOptionalNumber('$color$food', random);
+        return _withNumber('$color$food', random);
         
       case 5: // 감정형용사 + 동물
         final emotionAdj = defaultEmotionAdjectives[random.nextInt(defaultEmotionAdjectives.length)];
         final animal = defaultAnimals[random.nextInt(defaultAnimals.length)];
-        return _addOptionalNumber('$emotionAdj$animal', random);
+        return _withNumber('$emotionAdj$animal', random);
         
       case 6: // 감정형용사 + 사물
         final emotionAdj = defaultEmotionAdjectives[random.nextInt(defaultEmotionAdjectives.length)];
         final object = defaultObjects[random.nextInt(defaultObjects.length)];
-        return _addOptionalNumber('$emotionAdj$object', random);
+        return _withNumber('$emotionAdj$object', random);
         
       case 7: // 감정형용사 + 음식
         final emotionAdj = defaultEmotionAdjectives[random.nextInt(defaultEmotionAdjectives.length)];
         final food = defaultFoods[random.nextInt(defaultFoods.length)];
-        return _addOptionalNumber('$emotionAdj$food', random);
+        return _withNumber('$emotionAdj$food', random);
         
       default:
         return 'User${random.nextInt(999999)}';
     }
   }
   
-  /// 숫자 추가 (50% 확률)
-  static String _addOptionalNumber(String base, Random random) {
-    if (random.nextBool()) {
-      final number = random.nextInt(999) + 1;
-      return '$base$number';
-    }
-    return base;
+  /// 같은 단어 조합도 숫자로 갈라지도록 4자리를 항상 붙인다.
+  static String _withNumber(String base, Random random) {
+    final int number = 1000 + random.nextInt(9000);
+    return '$base$number';
   }
   
   /// 비동기 버전의 닉네임 생성 (전체 데이터 사용)
@@ -96,83 +93,83 @@ class NicknameGenerator {
       case 0: // 형용사 + 동물
         final adjective = data['adjectives']![random.nextInt(data['adjectives']!.length)];
         final animal = data['animals']![random.nextInt(data['animals']!.length)];
-        return _addOptionalNumber('$adjective$animal', random);
+        return _withNumber('$adjective$animal', random);
         
       case 1: // 형용사 + 사물
         final adjective = data['adjectives']![random.nextInt(data['adjectives']!.length)];
         final object = data['objects']![random.nextInt(data['objects']!.length)];
-        return _addOptionalNumber('$adjective$object', random);
+        return _withNumber('$adjective$object', random);
         
       case 2: // 형용사 + 음식
         final adjective = data['adjectives']![random.nextInt(data['adjectives']!.length)];
         final food = data['foods']![random.nextInt(data['foods']!.length)];
-        return _addOptionalNumber('$adjective$food', random);
+        return _withNumber('$adjective$food', random);
         
       case 3: // 색상 + 동물
         final color = data['colors']![random.nextInt(data['colors']!.length)];
         final animal = data['animals']![random.nextInt(data['animals']!.length)];
-        return _addOptionalNumber('$color$animal', random);
+        return _withNumber('$color$animal', random);
         
       case 4: // 색상 + 사물
         final color = data['colors']![random.nextInt(data['colors']!.length)];
         final object = data['objects']![random.nextInt(data['objects']!.length)];
-        return _addOptionalNumber('$color$object', random);
+        return _withNumber('$color$object', random);
         
       case 5: // 색상 + 음식
         final color = data['colors']![random.nextInt(data['colors']!.length)];
         final food = data['foods']![random.nextInt(data['foods']!.length)];
-        return _addOptionalNumber('$color$food', random);
+        return _withNumber('$color$food', random);
         
       case 6: // 감정형용사 + 동물
         final emotionAdj = data['emotion_adjectives']![random.nextInt(data['emotion_adjectives']!.length)];
         final animal = data['animals']![random.nextInt(data['animals']!.length)];
-        return _addOptionalNumber('$emotionAdj$animal', random);
+        return _withNumber('$emotionAdj$animal', random);
         
       case 7: // 감정형용사 + 사물
         final emotionAdj = data['emotion_adjectives']![random.nextInt(data['emotion_adjectives']!.length)];
         final object = data['objects']![random.nextInt(data['objects']!.length)];
-        return _addOptionalNumber('$emotionAdj$object', random);
+        return _withNumber('$emotionAdj$object', random);
         
       case 8: // 감정형용사 + 음식
         final emotionAdj = data['emotion_adjectives']![random.nextInt(data['emotion_adjectives']!.length)];
         final food = data['foods']![random.nextInt(data['foods']!.length)];
-        return _addOptionalNumber('$emotionAdj$food', random);
+        return _withNumber('$emotionAdj$food', random);
         
       case 9: // 감정 + 동물 (자연스러운 조합만)
         final emotions = data['emotions']!.where((e) => _isNaturalEmotion(e)).toList();
         if (emotions.isNotEmpty) {
           final emotion = emotions[random.nextInt(emotions.length)];
           final animal = data['animals']![random.nextInt(data['animals']!.length)];
-          return _addOptionalNumber('$emotion$animal', random);
+          return _withNumber('$emotion$animal', random);
         }
         // fallback to 형용사 + 동물
         final adjective = data['adjectives']![random.nextInt(data['adjectives']!.length)];
         final animal = data['animals']![random.nextInt(data['animals']!.length)];
-        return _addOptionalNumber('$adjective$animal', random);
+        return _withNumber('$adjective$animal', random);
         
       case 10: // 감정 + 사물 (자연스러운 조합만)
         final emotions = data['emotions']!.where((e) => _isNaturalEmotion(e)).toList();
         if (emotions.isNotEmpty) {
           final emotion = emotions[random.nextInt(emotions.length)];
           final object = data['objects']![random.nextInt(data['objects']!.length)];
-          return _addOptionalNumber('$emotion$object', random);
+          return _withNumber('$emotion$object', random);
         }
         // fallback to 형용사 + 사물
         final adjective = data['adjectives']![random.nextInt(data['adjectives']!.length)];
         final object = data['objects']![random.nextInt(data['objects']!.length)];
-        return _addOptionalNumber('$adjective$object', random);
+        return _withNumber('$adjective$object', random);
         
       case 11: // 감정 + 음식 (자연스러운 조합만)
         final emotions = data['emotions']!.where((e) => _isNaturalEmotion(e)).toList();
         if (emotions.isNotEmpty) {
           final emotion = emotions[random.nextInt(emotions.length)];
           final food = data['foods']![random.nextInt(data['foods']!.length)];
-          return _addOptionalNumber('$emotion$food', random);
+          return _withNumber('$emotion$food', random);
         }
         // fallback to 형용사 + 음식
         final adjective = data['adjectives']![random.nextInt(data['adjectives']!.length)];
         final food = data['foods']![random.nextInt(data['foods']!.length)];
-        return _addOptionalNumber('$adjective$food', random);
+        return _withNumber('$adjective$food', random);
         
       default:
         return 'User${random.nextInt(999999)}';

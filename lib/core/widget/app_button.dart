@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_theme.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
 enum AppButtonVariant { primary, secondary }
@@ -20,8 +21,8 @@ class AppButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final double fontScale = ResponsiveSize.fontScale(context);
     final bool primary = variant == AppButtonVariant.primary;
-    final Color foreground = primary ? Colors.white : const Color(0xFF111111);
-    final Color background = primary ? const Color(0xFF111111) : Colors.white;
+    final Color foreground = primary ? AppColors.white : const Color(0xFF111111);
+    final Color background = primary ? const Color(0xFF111111) : AppColors.white;
 
     return SizedBox(
       width: double.infinity,

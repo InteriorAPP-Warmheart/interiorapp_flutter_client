@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_theme.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 
@@ -29,7 +30,7 @@ class AppBottomSheet extends StatelessWidget {
       child: Align(
         alignment: Alignment.bottomCenter,
         child: Material(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           clipBehavior: Clip.antiAlias,
           child: SizedBox(

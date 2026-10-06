@@ -90,9 +90,16 @@ class SignupFormState {
 class SignupVm extends Notifier<SignupFormState> {
   @override
   SignupFormState build() {
-    // 초기 랜덤 닉네임 생성
-    final initialNickname = NicknameGenerator.generateNickname();
+    final String initialNickname = NicknameGenerator.generateNickname();
+    _replaceWithFullNickname(initialNickname);
     return SignupFormState(nickname: initialNickname);
+  }
+
+  /// JSON 전체 조합으로 바꾼다. 그 사이 사용자가 닉네임을 고치면 덮어쓰지 않는다.
+  Future<void> _replaceWithFullNickname(String seed) async {
+    final String nickname = await NicknameGenerator.generateNicknameAsync();
+    if (!ref.mounted || state.nickname != seed) return;
+    state = state.copyWith(nickname: nickname);
   }
 
   /// 닉네임 업데이트
@@ -181,8 +188,9 @@ class SignupVm extends Notifier<SignupFormState> {
   }
 
   /// 랜덤 닉네임 생성
-  void generateRandomNickname() {
-    final randomNickname = NicknameGenerator.generateNickname();
+  Future<void> generateRandomNickname() async {
+    final String randomNickname = await NicknameGenerator.generateNicknameAsync();
+    if (!ref.mounted) return;
     state = state.copyWith(
       nickname: randomNickname,
       isNicknameDuplicateChecked: false, // 새 닉네임이므로 중복확인 초기화

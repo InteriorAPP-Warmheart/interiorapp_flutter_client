@@ -80,6 +80,18 @@ class SignupScreen extends ConsumerWidget {
                         .updateNickname(value),
                 decoration: InputDecoration(
                   hintText: '닉네임',
+                  suffixIcon: signupForm.nickname.isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: '닉네임 지우기',
+                          onPressed: () {
+                            ref
+                                .read(signupFormProvider.notifier)
+                                .updateNickname('');
+                          },
+                          icon: const Icon(Icons.cancel_rounded, size: 20),
+                          color: const Color(0xFFB0B0B0),
+                        ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(color: Color(0xFFD6D6D6), width: 1),

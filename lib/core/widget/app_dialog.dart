@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_theme.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
 /// 화면 공통 다이얼로그.
@@ -19,7 +20,7 @@ class AppDialog extends StatelessWidget {
     final double fontScale = ResponsiveSize.fontScale(context);
 
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.white,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(

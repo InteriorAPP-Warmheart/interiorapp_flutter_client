@@ -22,19 +22,29 @@ class NicknameDataService {
       final String jsonString = await rootBundle.loadString(_dataPath);
       final Map<String, dynamic> jsonData = json.decode(jsonString);
       
-      _cachedAdjectives = List<String>.from(jsonData['adjectives'] ?? []);
-      _cachedAnimals = List<String>.from(jsonData['animals'] ?? []);
-      _cachedObjects = List<String>.from(jsonData['objects'] ?? []);
-      _cachedColors = List<String>.from(jsonData['colors'] ?? []);
-      _cachedEmotions = List<String>.from(jsonData['emotions'] ?? []);
-      _cachedEmotionAdjectives = List<String>.from(jsonData['emotion_adjectives'] ?? []);
-      _cachedFoods = List<String>.from(jsonData['foods'] ?? []);
+      _cachedAdjectives = _uniqueWords(jsonData['adjectives']);
+      _cachedAnimals = _uniqueWords(jsonData['animals']);
+      _cachedObjects = _uniqueWords(jsonData['objects']);
+      _cachedColors = _uniqueWords(jsonData['colors']);
+      _cachedEmotions = _uniqueWords(jsonData['emotions']);
+      _cachedEmotionAdjectives = _uniqueWords(jsonData['emotion_adjectives']);
+      _cachedFoods = _uniqueWords(jsonData['foods']);
     } catch (e) {
       // JSON 로드 실패 시 기본 데이터 사용
       _setDefaultData();
     }
   }
   
+  /// 같은 단어가 여러 번 있으면 그 닉네임만 더 자주 뽑히므로 한 번씩만 남긴다.
+  static List<String> _uniqueWords(dynamic value) {
+    final List<String> words = <String>[];
+    final Set<String> seen = <String>{};
+    for (final String word in List<String>.from(value ?? <String>[])) {
+      if (seen.add(word)) words.add(word);
+    }
+    return words;
+  }
+
   /// 기본 데이터 설정 (JSON 로드 실패 시 사용)
   static void _setDefaultData() {
     _cachedAdjectives = ['멋진', '빠른', '행복한', '푸른', '화려한'];

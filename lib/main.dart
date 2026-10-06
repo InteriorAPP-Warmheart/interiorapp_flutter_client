@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:interiorapp_flutter_client/app/router.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_theme.dart';
+import 'package:interiorapp_flutter_client/core/widget/keyboard_dismiss.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
@@ -33,15 +35,11 @@ class MainApp extends StatelessWidget {
             supportedLocales: const [Locale('ko', '')],
             debugShowCheckedModeBanner: false,
             routerConfig: AppRouter.router,
-            theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-              fontFamily: 'Pretendard',
-              // snackBarTheme: const SnackBarThemeData(
-              //   behavior: SnackBarBehavior.floating,
-              //   backgroundColor: Colors.black87,
-              //   contentTextStyle: TextStyle(color: Colors.white),
-              // ),
-            ),
+            themeMode: ThemeMode.light,
+            theme: AppTheme.light,
+            builder: (context, child) {
+              return KeyboardDismiss(child: child ?? const SizedBox.shrink());
+            },
           ),
     );
   }
