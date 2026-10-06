@@ -1,4 +1,4 @@
-import 'package:interiorapp_flutter_client/search/domain/repository/recent_search_history_repo.dart';
+import 'package:interiorapp_flutter_client/search/domain/repository/recent_search_history_repository.dart';
 import 'package:interiorapp_flutter_client/search/data/model/recent_search_keyword_model.dart';
 
 class RecentSearchHistoryUseCase {

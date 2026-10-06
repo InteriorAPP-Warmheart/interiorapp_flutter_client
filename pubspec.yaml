@@ -50,7 +50,7 @@ flutter:
 
   assets:
     - assets/images/
-    - lib/signin_signup/util/
+    - lib/auth/util/
     # - assets/json/
     # - .env
   

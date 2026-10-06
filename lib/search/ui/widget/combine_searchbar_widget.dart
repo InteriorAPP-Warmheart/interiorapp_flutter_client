@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:interiorapp_flutter_client/components/components_widget/app_searchbar.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_search_bar.dart';
 import 'package:interiorapp_flutter_client/search/presentation/provider/search_provider.dart';
 import 'package:interiorapp_flutter_client/search/presentation/provider/recent_search_history_provider.dart';
 

@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/search/data/model/search_result_model.dart';
 import 'package:interiorapp_flutter_client/search/data/model/search_suggestion_model.dart';
-import 'package:interiorapp_flutter_client/search/data/repository/search_result_impl.dart';
-import 'package:interiorapp_flutter_client/search/data/repository/search_suggestion_impl.dart';
+import 'package:interiorapp_flutter_client/search/data/repository/search_result_repository_impl.dart';
+import 'package:interiorapp_flutter_client/search/data/repository/search_suggestion_repository_impl.dart';
 import 'package:interiorapp_flutter_client/search/data/source/remote/search_result_datasource.dart';
 import 'package:interiorapp_flutter_client/search/data/source/remote/search_suggestion_remote_data_source_impl.dart';
 import 'package:interiorapp_flutter_client/search/domain/use_case/search_result_use_case.dart';

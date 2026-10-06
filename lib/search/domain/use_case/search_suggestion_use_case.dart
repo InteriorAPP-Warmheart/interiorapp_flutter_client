@@ -1,4 +1,4 @@
-import 'package:interiorapp_flutter_client/search/domain/repository/search_suggestion_repo.dart';
+import 'package:interiorapp_flutter_client/search/domain/repository/search_suggestion_repository.dart';
 import 'package:interiorapp_flutter_client/search/data/model/search_suggestion_model.dart';
 
 class SearchSuggestionUseCase {
