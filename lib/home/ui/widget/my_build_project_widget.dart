@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class MyBuildProjectWidget extends StatelessWidget {
   final bool atBottom;
@@ -6,7 +7,7 @@ class MyBuildProjectWidget extends StatelessWidget {
 
   /// 내 프로젝트 화면으로 이동한다. 화면이 생기면 이 함수에서 연결한다.
   void _openMyProject(BuildContext context) {
-    print('tapped');
+    GoRouter.of(context).push('/build/mybuild');
   }
 
   @override

@@ -7,7 +7,7 @@ import 'package:interiorapp_flutter_client/app/shell/tab_provider.dart';
 import 'package:interiorapp_flutter_client/app/shell/app_app_bar.dart';
 import 'package:interiorapp_flutter_client/favorite/ui/favorite_screen.dart';
 import 'package:interiorapp_flutter_client/home/ui/screen/home_screen.dart';
-import 'package:interiorapp_flutter_client/build/ui/build_screen.dart';
+import 'package:interiorapp_flutter_client/build/ui/screen/build_screen.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_screen.dart';
 import 'package:interiorapp_flutter_client/core/theme/tab_bar_theme.dart';
 import 'package:interiorapp_flutter_client/store/ui/store_screen.dart';
