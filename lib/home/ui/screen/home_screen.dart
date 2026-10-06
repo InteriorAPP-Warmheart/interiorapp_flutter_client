@@ -146,11 +146,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         (screenPadding.horizontal) -
         (gridGap * (gridColumns - 1));
     final double tileWidth = contentWidth / gridColumns;
+    final AppWindow window = AppWindow.of(context);
     final double cardHeight = ResponsiveSize.gridTileHeightByWidth(
       tileWidth: tileWidth,
       aspectRatio: 3 / 4,
       minHeight: 140,
-      maxHeight: 200,
+      maxHeight: window.isExpanded ? 360 : (window.isMedium ? 280 : 220),
     );
     final double childAspect = tileWidth / cardHeight;
     final double sectionGap = ResponsiveSize.sectionGap(context);
@@ -402,12 +403,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildFrontCard() {
+    final Size cardSize = ResponsiveSize.centeredCardSize(context);
     return Card(
       elevation: 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        width: 200,
-        height: 250,
+        width: cardSize.width,
+        height: cardSize.height,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           color: Colors.white,
@@ -437,12 +439,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildBackCard() {
+    final Size cardSize = ResponsiveSize.centeredCardSize(context);
     return Card(
       elevation: 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        width: 200,
-        height: 250,
+        width: cardSize.width,
+        height: cardSize.height,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           color: Colors.blueGrey[600],

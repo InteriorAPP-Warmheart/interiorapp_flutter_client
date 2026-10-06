@@ -24,8 +24,8 @@ class AdvWidget extends StatefulWidget {
     this.height = 280.0,
     this.useResponsiveHeight = true,
     this.aspectRatio, // 예: 16/9, 4/3 등
-    this.minHeight = 280.0,
-    this.maxHeight = 280.0,
+    this.minHeight = 160.0,
+    this.maxHeight = 420.0,
     this.borderRadius = 12.0,
     this.showIndicators = true,
     this.indicatorColor = Colors.white54,

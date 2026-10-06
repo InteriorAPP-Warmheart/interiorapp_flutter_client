@@ -1,4 +1,60 @@
+import 'dart:ui' show DisplayFeature, DisplayFeatureType;
+
 import 'package:flutter/material.dart';
+
+/// 화면 폭 기준. Material 창 크기 등급과 같다.
+enum AppWindowClass {
+  /// 접힌 폴더블, 일반 폰. 너비 600 미만.
+  compact,
+
+  /// 펼친 폴더블, 작은 태블릿. 너비 600 이상 840 미만.
+  medium,
+
+  /// 태블릿, 펼친 폴더블 가로. 너비 840 이상.
+  expanded,
+}
+
+/// 현재 창의 크기와 접힘선.
+class AppWindow {
+  const AppWindow({
+    required this.sizeClass,
+    required this.size,
+    required this.hasHinge,
+  });
+
+  final AppWindowClass sizeClass;
+  final Size size;
+  final bool hasHinge;
+
+  bool get isCompact => sizeClass == AppWindowClass.compact;
+  bool get isMedium => sizeClass == AppWindowClass.medium;
+  bool get isExpanded => sizeClass == AppWindowClass.expanded;
+
+  static AppWindow of(BuildContext context) {
+    final MediaQueryData media = MediaQuery.of(context);
+    final double width = media.size.width;
+    final bool hasHinge = media.displayFeatures.any(
+      (DisplayFeature feature) =>
+          feature.type == DisplayFeatureType.hinge ||
+          feature.type == DisplayFeatureType.fold,
+    );
+
+    final AppWindowClass sizeClass;
+    if (width >= 840) {
+      sizeClass = AppWindowClass.expanded;
+    } else if (width >= 600) {
+      sizeClass = AppWindowClass.medium;
+    } else {
+      sizeClass = AppWindowClass.compact;
+    }
+
+    return AppWindow(
+      sizeClass: sizeClass,
+      size: media.size,
+      hasHinge: hasHinge,
+    );
+  }
+}
 
 /// 통합 사이즈 로직 유틸
 /// - 화면 너비/방향/브레이크포인트를 고려하여 일관된 배너 높이 계산
@@ -20,21 +76,16 @@ class ResponsiveSize {
   }) {
     if (!useResponsiveHeight) return fixedHeight;
 
-    final Orientation orientation = MediaQuery.of(context).orientation;
-    final bool isLandscape = orientation == Orientation.landscape;
+    final AppWindow window = AppWindow.of(context);
 
     // 브레이크포인트 기반 화면비 결정
     double decidedAspectRatio;
     if (aspectRatio != null) {
       decidedAspectRatio = aspectRatio;
+    } else if (window.isExpanded) {
+      decidedAspectRatio = 21 / 9;
     } else {
-      if (isLandscape || maxWidth >= 900) {
-        decidedAspectRatio = 21 / 9; // 폴더블/태블릿 가로
-      } else if (maxWidth >= 600) {
-        decidedAspectRatio = 16 / 9; // 큰 폰/작은 태블릿
-      } else {
-        decidedAspectRatio = 16 / 9; // 일반 폰 기본값
-      }
+      decidedAspectRatio = 16 / 9;
     }
 
     final double responsiveHeight = (maxWidth / decidedAspectRatio)
@@ -100,50 +151,57 @@ class ResponsiveSize {
 
   /// AppBar 높이 (디바이스에 따라 약간 가변)
   static double appBarHeight(BuildContext context) {
-    final double width = MediaQuery.of(context).size.width;
-    if (width >= 900) return 64.0; // 태블릿/폴더블 와이드
-    if (width >= 600) return 60.0; // 큰 폰/작은 태블릿
-    return kToolbarHeight; // 기본 56.0
+    final AppWindow window = AppWindow.of(context);
+    if (window.isExpanded) return 64.0;
+    if (window.isMedium) return 60.0;
+    return kToolbarHeight;
   }
 
   /// BottomNavigationBar 높이 (가변)
   static double bottomNavHeight(BuildContext context) {
-    final double width = MediaQuery.of(context).size.width;
-    if (width >= 900) return 68.0;
-    if (width >= 600) return 64.0;
-    return 60.0;
+    final AppWindow window = AppWindow.of(context);
+    if (window.isExpanded) return 72.0;
+    if (window.isMedium) return 68.0;
+    return 64.0;
   }
 
   /// 반응형 패딩 (화면 너비 브레이크포인트 기반)
   static EdgeInsets responsivePadding(BuildContext context) {
-    final double width = MediaQuery.of(context).size.width;
-    if (width >= 900) return const EdgeInsets.symmetric(horizontal: 24.0);
-    if (width >= 600) return const EdgeInsets.symmetric(horizontal: 20.0);
+    final AppWindow window = AppWindow.of(context);
+    if (window.isExpanded) return const EdgeInsets.symmetric(horizontal: 24.0);
+    if (window.isMedium) return const EdgeInsets.symmetric(horizontal: 20.0);
     return const EdgeInsets.symmetric(horizontal: 16.0);
   }
 
   /// 섹션 간 기본 간격 (디바이스 폭 기준 고정 비율)
   static double sectionGap(BuildContext context) {
-    final double width = MediaQuery.of(context).size.width;
-    if (width >= 900) return 32.0; // 태블릿/폴더블 와이드
-    if (width >= 600) return 28.0; // 큰 폰/작은 태블릿
-    return 24.0; // 일반 폰
+    final AppWindow window = AppWindow.of(context);
+    if (window.isExpanded) return 32.0;
+    if (window.isMedium) return 28.0;
+    return 24.0;
   }
 
   /// 제목-컨텐츠, 요소 내부의 보조 간격 (sectionGap의 약 0.5배)
   static double subGap(BuildContext context) {
-    final double width = MediaQuery.of(context).size.width;
-    if (width >= 900) return 16.0;
-    if (width >= 600) return 14.0;
+    final AppWindow window = AppWindow.of(context);
+    if (window.isExpanded) return 16.0;
+    if (window.isMedium) return 14.0;
     return 12.0;
   }
 
-  /// 폰트 스케일 팩터 (살짝만 조정)
+  /// 폰트 스케일 팩터. 화면이 커져도 글자가 두 배로 커지지 않게 제한한다.
   static double fontScale(BuildContext context) {
-    final double width = MediaQuery.of(context).size.width;
-    if (width >= 900) return 1.08;
-    if (width >= 600) return 1.0;
+    final AppWindow window = AppWindow.of(context);
+    if (window.isExpanded) return 1.08;
+    if (window.isMedium) return 1.0;
     return 0.96;
+  }
+
+  /// 홈 카테고리 카드처럼 화면 한가운데 뜨는 카드 크기.
+  static Size centeredCardSize(BuildContext context) {
+    final double width = MediaQuery.sizeOf(context).width;
+    final double cardWidth = (width * 0.62).clamp(180.0, 320.0);
+    return Size(cardWidth, cardWidth * 1.25);
   }
 }
 

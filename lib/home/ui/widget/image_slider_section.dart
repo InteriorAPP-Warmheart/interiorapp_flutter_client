@@ -27,10 +27,16 @@ class ImageSliderSection<T> extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncItems = watchItems(ref);
+    final AppWindow window = AppWindow.of(context);
     final double width = MediaQuery.of(context).size.width;
+    final double fraction = window.isExpanded
+        ? 0.48
+        : window.isMedium
+            ? 0.78
+            : viewportFraction;
     final double height = ResponsiveSize.bannerHeight(
       context,
-      maxWidth: width,
+      maxWidth: width * fraction,
       aspectRatio: 16 / 9,
       minHeight: 160,
       maxHeight: 280,
@@ -91,7 +97,7 @@ class ImageSliderSection<T> extends ConsumerWidget {
             },
             options: CarouselOptions(
               height: cardHeight,
-              viewportFraction: viewportFraction,
+              viewportFraction: fraction,
               padEnds: false,
               disableCenter: false,
               enableInfiniteScroll: false,

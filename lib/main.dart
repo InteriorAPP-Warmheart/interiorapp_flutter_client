@@ -16,6 +16,12 @@ class MainApp extends StatelessWidget {
     return ScreenUtilInit(
       designSize: const Size(402, 874), // IPhone 16 Pro Size
       minTextAdapt: true,
+      splitScreenMode: true,
+      rebuildFactor: RebuildFactors.size,
+      fontSizeResolver: (num fontSize, ScreenUtil util) {
+        final double scale = util.scaleText.clamp(0.9, 1.15);
+        return fontSize * scale;
+      },
       builder:
           (context, child) => MaterialApp.router(
             // Localization

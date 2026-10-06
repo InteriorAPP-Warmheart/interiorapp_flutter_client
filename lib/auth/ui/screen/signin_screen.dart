@@ -8,27 +8,30 @@ class SigninScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('로그인')),
-      body: Center(
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Text(
-                    'XXX에 오신 것을\n환영합니다',
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-                  ),
-                  // === login buttons ===
-                  // Google (권장: Outlined 스타일)
-                ],
-              ),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'XXX에 오신 것을\n환영합니다',
+                          style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Column(
+                        children: [
               Padding(
-                padding: EdgeInsets.only(top: 330, bottom: 15),
+                padding: const EdgeInsets.only(bottom: 15),
                 child: SizedBox(
-                  width: MediaQuery.of(context).size.width,
+                  width: double.infinity,
                   height: 48,
                   child: FilledButton.icon(
                     onPressed: () {},
@@ -58,7 +61,7 @@ class SigninScreen extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.only(bottom: 15),
                 child: SizedBox(
-                  width: MediaQuery.of(context).size.width,
+                  width: double.infinity,
                   height: 48,
                   child: FilledButton.icon(
                     onPressed: () {},
@@ -77,9 +80,9 @@ class SigninScreen extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.only(bottom: 100),
+                padding: const EdgeInsets.only(bottom: 24),
                 child: SizedBox(
-                  width: MediaQuery.of(context).size.width,
+                  width: double.infinity,
                   height: 48,
                   child: OutlinedButton.icon(
                     onPressed: () {},
@@ -123,8 +126,14 @@ class SigninScreen extends StatelessWidget {
                   ),
                 ),
               ),
-            ],
-          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );

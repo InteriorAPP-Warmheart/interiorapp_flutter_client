@@ -87,11 +87,11 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
   Widget _buildTab() {
     return Container(
       decoration: AppTabBarTheme.decoration,
-      height: AppTabBarTheme.height,
+      height: AppTabBarTheme.height(context),
       child: TabBar(
         controller: _tabController,
         labelColor: AppTabBarTheme.selectedColor,
-        labelStyle: AppTabBarTheme.labelStyle,
+        labelStyle: AppTabBarTheme.labelStyle(context),
         indicatorColor: Colors.transparent, // 탭바 인디케이터 색상 제거
         onTap: (index) {
           HapticFeedback.lightImpact(); // 탭 클릭 시 가벼운 진동
@@ -99,26 +99,26 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
         },
         tabs: [
           Tab(
-            icon: Icon(Icons.home_rounded, size: AppTabBarTheme.iconSize),
+            icon: Icon(Icons.home_rounded, size: AppTabBarTheme.iconSize(context)),
             text: '홈',
           ),
           Tab(
-            icon: Icon(Icons.chair_rounded, size: AppTabBarTheme.iconSize),
+            icon: Icon(Icons.chair_rounded, size: AppTabBarTheme.iconSize(context)),
             text: '쇼룸',
           ),
           Tab(
             icon: Icon(
               Icons.shopping_bag_rounded,
-              size: AppTabBarTheme.iconSize,
+              size: AppTabBarTheme.iconSize(context),
             ),
             text: '스토어',
           ),
           Tab(
-            icon: Icon(Icons.build_rounded, size: AppTabBarTheme.iconSize),
+            icon: Icon(Icons.build_rounded, size: AppTabBarTheme.iconSize(context)),
             text: '시공',
           ),
           Tab(
-            icon: Icon(Icons.favorite_rounded, size: AppTabBarTheme.iconSize),
+            icon: Icon(Icons.favorite_rounded, size: AppTabBarTheme.iconSize(context)),
             text: '즐겨찾기',
           ),
         ],

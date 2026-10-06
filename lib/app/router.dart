@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:interiorapp_flutter_client/core/widget/adaptive_frame.dart';
 import 'package:interiorapp_flutter_client/app/shell/app_tab_bar.dart';
 import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_result_screen.dart';
 import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_screen.dart';
@@ -18,27 +19,29 @@ class AppRouter {
       //   builder: (context, state) => const SplashScreen(),
       // ),
       // 자동 로그인 개발 전 까지는 splash 화면 없음
-      GoRoute(path: '/', builder: (context, state) => const AppTabBar()),
+      GoRoute(path: '/', builder: (context, state) => const AdaptiveFrame(child: AppTabBar())),
       GoRoute(
         path: '/signin',
-        builder: (context, state) => const SigninScreen(),
+        builder: (context, state) => const AdaptiveFrame(child: SigninScreen()),
       ),
       GoRoute(
         path: '/signup',
-        builder: (context, state) => const SignupScreen(),
+        builder: (context, state) => const AdaptiveFrame(child: SignupScreen()),
       ),
       GoRoute(
         path: '/settings',
-        builder: (context, state) => const SettingScreen(),
+        builder: (context, state) => const AdaptiveFrame(child: SettingScreen()),
       ),
       GoRoute(
         path: '/showroom-write',
-        builder: (context, state) => const ShowroomWriteScreen(),
+        builder: (context, state) => const AdaptiveFrame(child: ShowroomWriteScreen()),
         routes: [
           GoRoute(
             path: 'first-write',
-            builder: (context, state) => ShowroomWriteDetailScreen(
-              buildId: state.uri.queryParameters['buildId'],
+            builder: (context, state) => AdaptiveFrame(
+              child: ShowroomWriteDetailScreen(
+                buildId: state.uri.queryParameters['buildId'],
+              ),
             ),
           ),
         ],
@@ -46,12 +49,11 @@ class AppRouter {
       // 검색은 라우트 계층형 구조로 구성
       GoRoute(
         path: '/search',
-        builder: (context, state) => const CombineSearchScreen(),
+        builder: (context, state) => const AdaptiveFrame(child: CombineSearchScreen()),
         routes: [
           GoRoute(
             path: 'result',
-            builder:
-                (context, state) => CombineSearchResultScreen(),
+            builder: (context, state) => const AdaptiveFrame(child: CombineSearchResultScreen()),
             routes: [
               // GoRoute(path: 'showrooms', builder: (context, state) => ShowroomWriteScreen()),
               // GoRoute(path: 'stores', builder: ...),

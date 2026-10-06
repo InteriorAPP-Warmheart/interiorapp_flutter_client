@@ -30,7 +30,13 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
               // 광고 Section
               Container(
                 color: const Color.fromARGB(255, 233, 233, 233),
-                height: 150,
+                height: ResponsiveSize.bannerHeight(
+                  context,
+                  maxWidth: MediaQuery.sizeOf(context).width,
+                  aspectRatio: 21 / 9,
+                  minHeight: 96,
+                  maxHeight: 180,
+                ),
                 width: double.infinity,
                 child: Center(
                   child: Text(
@@ -258,8 +264,10 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
         separatorBuilder: (context, index) => SizedBox(height: sectionGap),
         itemBuilder: (context, index) {
           final item = showrooms[index];
+          final double cardWidth = MediaQuery.sizeOf(context).width -
+              ResponsiveSize.responsivePadding(context).horizontal;
           return Container(
-            height: 280,
+            height: (cardWidth * 0.78).clamp(240.0, 420.0),
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
             child: Column(
               children: [
