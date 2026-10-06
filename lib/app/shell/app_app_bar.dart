@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:interiorapp_flutter_client/core/widget/layout_preview.dart';
 
 class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
   const AppAppBar({super.key});
@@ -16,8 +17,8 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
           icon: Icon(Icons.search_rounded), // 검색
         ),
         IconButton(
-          onPressed: () {},
-          icon: Icon(Icons.shopping_cart_rounded), // 장바구니
+          onPressed: () => showLayoutPreview(context),
+          icon: Icon(Icons.shopping_cart_rounded), // 장바구니 (임시 레이아웃 확인)
         ),
         IconButton(
           onPressed: () {
