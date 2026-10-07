@@ -1,7 +1,13 @@
 import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/build_screen.dart';
-import 'package:interiorapp_flutter_client/build/ui/screen/interior_prep_screen.dart';
+import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
+import 'package:interiorapp_flutter_client/build/ui/screen/prep_consult_screen.dart';
+import 'package:interiorapp_flutter_client/build/ui/screen/prep_create_screen.dart';
+import 'package:interiorapp_flutter_client/build/ui/screen/prep_detail_screen.dart';
+import 'package:interiorapp_flutter_client/build/ui/screen/prep_hub_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/space_detail_screen.dart';
+import 'package:interiorapp_flutter_client/build/ui/screen/trade_create_screen.dart';
+import 'package:interiorapp_flutter_client/build/ui/screen/trade_detail_screen.dart';
 import 'package:interiorapp_flutter_client/core/widget/adaptive_frame.dart';
 import 'package:interiorapp_flutter_client/app/shell/app_tab_bar.dart';
 import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_result_screen.dart';
@@ -41,7 +47,74 @@ class AppRouter {
         routes: [
           GoRoute(
             path: 'prep',
-            builder: (context, state) => const AdaptiveFrame(child: InteriorPrepScreen()),
+            builder: (context, state) => const AdaptiveFrame(child: PrepHubScreen()),
+            routes: [
+              GoRoute(
+                path: 'record',
+                builder: (context, state) {
+                  final Object? extra = state.extra;
+                  return AdaptiveFrame(
+                    child: PrepDetailScreen(record: extra is PrepRecord ? extra : null),
+                  );
+                },
+              ),
+              GoRoute(
+                path: 'trade',
+                builder: (context, state) {
+                  final Object? extra = state.extra;
+                  return AdaptiveFrame(
+                    child: TradeDetailScreen(candidate: extra is TradeCandidate ? extra : null),
+                  );
+                },
+                routes: [
+                  GoRoute(
+                    path: 'create',
+                    builder: (context, state) {
+                      final Object? extra = state.extra;
+                      return AdaptiveFrame(
+                        child: TradeCreateScreen(initial: extra is TradeCandidate ? extra : null),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: 'consult',
+                builder: (context, state) {
+                  final Object? extra = state.extra;
+                  final PrepRecord record = extra is PrepRecord
+                      ? extra
+                      : const PrepRecord(
+                          placeName: '상담준비',
+                          buildingType: '',
+                          address: '',
+                          detailAddress: '',
+                          area: '',
+                          buildingCondition: '',
+                          style: '',
+                          budget: '',
+                          period: '',
+                          needs: '',
+                          floorPlanLabels: [],
+                          referenceImageLabels: [],
+                        );
+                  return AdaptiveFrame(child: PrepConsultScreen(record: record));
+                },
+              ),
+              GoRoute(
+                path: 'create',
+                builder: (context, state) {
+                  final Object? extra = state.extra;
+                  final int step = int.tryParse(state.uri.queryParameters['step'] ?? '') ?? 0;
+                  return AdaptiveFrame(
+                    child: PrepCreateScreen(
+                      initial: extra is PrepRecord ? extra : null,
+                      initialStep: step,
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: ':projectId',

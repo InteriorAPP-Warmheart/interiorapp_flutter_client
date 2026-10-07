@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/search/data/model/search_result_model.dart';
 
 enum SearchResultLayout { gallery, singleThumbnail, storeGrid }
@@ -47,7 +48,13 @@ class SearchResultSection extends StatelessWidget {
           crossAxisCount: gridCrossAxisCount,
           mainAxisSpacing: gridSpacing,
           crossAxisSpacing: gridSpacing,
-          childAspectRatio: 0.75,
+          mainAxisExtent: ResponsiveSize.cardHeight(
+            context,
+            columns: gridCrossAxisCount,
+            horizontalGap: gridSpacing,
+            horizontalPadding: gridHorizontalPadding,
+            aspectRatio: 3 / 4,
+          ),
         ),
         itemCount: items.length,
         itemBuilder: (context, index) {
@@ -102,6 +109,13 @@ class _SearchResultListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final double thumbSize = ResponsiveSize.squareThumbSize(
+      context,
+      columns: 4,
+      horizontalPadding: horizontalPadding,
+      min: 64,
+      max: 96,
+    );
     final int displayedImageCount =
         item.imageUrls?.isEmpty ?? true
             ? 0
@@ -161,8 +175,8 @@ class _SearchResultListTile extends StatelessWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: SizedBox(
-                      width: 80,
-                      height: 80,
+                      width: thumbSize,
+                      height: thumbSize,
                       child:
                           displayedImageCount > 0
                               ? Image.network(

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/space_project_card.dart';
+import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
+
+/// 카드 아래 페이지 표시 높이. 개수와 상관없이 같은 칸을 비워 둔다.
+const double kOngoingPageIndicatorHeight = 6;
 
 class OngoingSpacePager extends StatefulWidget {
   const OngoingSpacePager({
@@ -40,11 +44,21 @@ class _OngoingSpacePagerState extends State<OngoingSpacePager> {
   Widget build(BuildContext context) {
     if (widget.projects.isEmpty) return const SizedBox.shrink();
 
+    final double subGap = ResponsiveSize.subGap(context);
+
     if (!_canSwipe) {
       final SpaceProject project = widget.projects.first;
-      return SpaceProjectCard(
-        project: project,
-        onTap: () => widget.onTap(project),
+      return Column(
+        children: [
+          Expanded(
+            child: SpaceProjectCard(
+              project: project,
+              onTap: () => widget.onTap(project),
+            ),
+          ),
+          SizedBox(height: subGap),
+          const SizedBox(height: kOngoingPageIndicatorHeight),
+        ],
       );
     }
 
@@ -70,8 +84,10 @@ class _OngoingSpacePagerState extends State<OngoingSpacePager> {
             },
           ),
         ),
-        const SizedBox(height: 12),
-        Row(
+        SizedBox(height: subGap),
+        SizedBox(
+          height: kOngoingPageIndicatorHeight,
+          child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             for (var i = 0; i < widget.projects.length; i++) ...[
@@ -89,6 +105,7 @@ class _OngoingSpacePagerState extends State<OngoingSpacePager> {
               ),
             ],
           ],
+        ),
         ),
       ],
     );

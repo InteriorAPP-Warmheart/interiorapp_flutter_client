@@ -124,13 +124,12 @@ Future<T?> showAppBottomSheet<T>({
   String? message,
   Widget? child,
 }) {
-  final double screenHeight = MediaQuery.sizeOf(context).height;
   final bool compact = size == AppBottomSheetSize.compact;
-  final double maxHeight = compact ? 420 : screenHeight * 0.9;
-  final double minHeight = (compact ? 280.0 : 460.0).clamp(0, maxHeight);
-  final double height = (screenHeight * (compact ? 0.42 : 0.86)).clamp(
-    minHeight,
-    maxHeight,
+  final double height = ResponsiveSize.modalMaxHeight(
+    context,
+    screenFraction: compact ? 0.42 : 0.86,
+    minHeight: compact ? 280 : 460,
+    maxHeight: compact ? 420 : 720,
   );
 
   return showModalBottomSheet<T>(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/layout_preview.dart';
 
 class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -8,6 +9,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      toolbarHeight: ResponsiveSize.appBarHeight(context),
       title: Text('Logo'),
       actions: [
         IconButton(

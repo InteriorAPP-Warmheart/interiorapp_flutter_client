@@ -10,6 +10,7 @@ import 'package:interiorapp_flutter_client/home/ui/screen/home_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/build_screen.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_screen.dart';
 import 'package:interiorapp_flutter_client/core/theme/tab_bar_theme.dart';
+import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/store/ui/store_screen.dart';
 
 class AppTabBar extends ConsumerStatefulWidget {
@@ -68,7 +69,10 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
     }
 
     return Scaffold(
-      appBar: AppAppBar(),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(ResponsiveSize.appBarHeight(context)),
+        child: const AppAppBar(),
+      ),
       body: TabBarView(
         controller: _tabController,
         physics: NeverScrollableScrollPhysics(), // 탭바 좌우 스크롤 방지 (커스텀 아이콘 넣기위해선 필수)
@@ -85,11 +89,17 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
   }
 
   Widget _buildTab() {
+    final EdgeInsets inset = ResponsiveSize.responsivePadding(context);
+    final double tabGap = ResponsiveSize.subGap(context) * 0.5;
+
     return Container(
       decoration: AppTabBarTheme.decoration,
       height: AppTabBarTheme.height(context),
+      padding: EdgeInsets.symmetric(horizontal: inset.left),
       child: TabBar(
         controller: _tabController,
+        padding: EdgeInsets.zero,
+        labelPadding: EdgeInsets.symmetric(horizontal: tabGap),
         labelColor: AppTabBarTheme.selectedColor,
         labelStyle: AppTabBarTheme.labelStyle(context),
         indicatorColor: Colors.transparent, // 탭바 인디케이터 색상 제거

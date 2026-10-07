@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
+import 'package:interiorapp_flutter_client/build/ui/screen/prep_consult_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/space_catalog.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_theme.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
@@ -32,6 +33,9 @@ class SpaceDetailScreen extends StatelessWidget {
     }
 
     final double fontScale = ResponsiveSize.fontScale(context);
+    final PrepRecord? received = project.phase == SpacePhase.consult
+        ? SpaceBoard.instance.recordFor(project.id)
+        : null;
 
     return Scaffold(
       backgroundColor: const Color(0xFFFCFCFC),
@@ -39,6 +43,7 @@ class SpaceDetailScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
+          if (received == null) ...[
           Text(
             project.statusLabel,
             style: TextStyle(
@@ -81,6 +86,7 @@ class SpaceDetailScreen extends StatelessWidget {
               ),
             ),
           ),
+          ],
           const SizedBox(height: 20),
           Text(
             '진행',
@@ -128,7 +134,10 @@ class SpaceDetailScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          for (final String section in _sections)
+          if (received != null)
+            ConsultReceivedBody(record: received)
+          else
+            for (final String section in _sections)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Material(
