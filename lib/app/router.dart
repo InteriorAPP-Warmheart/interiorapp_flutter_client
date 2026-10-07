@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/build_screen.dart';
-import 'package:interiorapp_flutter_client/build/ui/screen/my_build_screen.dart';
+import 'package:interiorapp_flutter_client/build/ui/screen/interior_prep_screen.dart';
+import 'package:interiorapp_flutter_client/build/ui/screen/space_detail_screen.dart';
 import 'package:interiorapp_flutter_client/core/widget/adaptive_frame.dart';
 import 'package:interiorapp_flutter_client/app/shell/app_tab_bar.dart';
 import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_result_screen.dart';
@@ -39,9 +40,16 @@ class AppRouter {
         builder: (context, state) => const AdaptiveFrame(child: BuildScreen()),
         routes: [
           GoRoute(
-            path: 'mybuild',
-            builder:
-                (context, state) => const AdaptiveFrame(child: MyBuildScreen()),
+            path: 'prep',
+            builder: (context, state) => const AdaptiveFrame(child: InteriorPrepScreen()),
+          ),
+          GoRoute(
+            path: ':projectId',
+            builder: (context, state) => AdaptiveFrame(
+              child: SpaceDetailScreen(
+                projectId: state.pathParameters['projectId']!,
+              ),
+            ),
           ),
         ],
       ),

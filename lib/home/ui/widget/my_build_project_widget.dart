@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:interiorapp_flutter_client/build/ui/space_catalog.dart';
+import 'package:interiorapp_flutter_client/build/ui/space_routes.dart';
 
 class MyBuildProjectWidget extends StatelessWidget {
   final bool atBottom;
   const MyBuildProjectWidget({super.key, required this.atBottom});
 
-  /// 내 프로젝트 화면으로 이동한다. 화면이 생기면 이 함수에서 연결한다.
   void _openMyProject(BuildContext context) {
-    GoRouter.of(context).push('/build/mybuild');
+    final project = SpaceCatalog.ongoing.firstOrNull;
+    if (project == null) return;
+    context.push(SpaceRoutes.detail(project.id));
   }
 
   @override

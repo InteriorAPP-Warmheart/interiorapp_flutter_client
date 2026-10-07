@@ -115,7 +115,7 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
           ),
           Tab(
             icon: Icon(Icons.build_rounded, size: AppTabBarTheme.iconSize(context)),
-            text: '시공',
+            text: '내 공간',
           ),
           Tab(
             icon: Icon(Icons.favorite_rounded, size: AppTabBarTheme.iconSize(context)),
