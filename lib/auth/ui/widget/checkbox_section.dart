@@ -90,6 +90,8 @@ class CheckboxSection extends ConsumerWidget {
     bool isTitle = false,
     bool showRequired = true,
   }) {
+    final double fontScale = ResponsiveSize.fontScale(context);
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -110,7 +112,7 @@ class CheckboxSection extends ConsumerWidget {
                   child: Text(
                     title,
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 16 * fontScale,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF000000),
                     ),
@@ -133,8 +135,8 @@ class CheckboxSection extends ConsumerWidget {
                     child: Text(
                       title,
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                      fontSize: 16 * fontScale,
+                      fontWeight: FontWeight.w500,
                         color: Color(0xFF000000),
                       ),
                     ),
@@ -145,7 +147,7 @@ class CheckboxSection extends ConsumerWidget {
                 Text(
                   isRequired ? '(필수)' : '(선택)',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 14 * fontScale,
                     fontWeight: FontWeight.w400,
                     color: Color(0xFF999999),
                   ),
