@@ -13,6 +13,8 @@ import 'package:interiorapp_flutter_client/app/shell/app_tab_bar.dart';
 import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_result_screen.dart';
 import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_screen.dart';
 import 'package:interiorapp_flutter_client/settings/ui/setting_screen.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_board_screen.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_story_screen.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_write_detail_screen.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_write_screen.dart';
 import 'package:interiorapp_flutter_client/auth/ui/screen/signin_screen.dart';
@@ -130,6 +132,26 @@ class AppRouter {
         path: '/settings',
         builder:
             (context, state) => const AdaptiveFrame(child: SettingScreen()),
+      ),
+      GoRoute(
+        path: '/showroom/:id',
+        builder:
+            (context, state) => AdaptiveFrame(
+              child: ShowroomStoryScreen(
+                showroomId: state.pathParameters['id'] ?? '',
+              ),
+            ),
+        routes: [
+          GoRoute(
+            path: 'board',
+            builder:
+                (context, state) => AdaptiveFrame(
+                  child: ShowroomBoardScreen(
+                    showroomId: state.pathParameters['id'] ?? '',
+                  ),
+                ),
+          ),
+        ],
       ),
       GoRoute(
         path: '/showroom-write',

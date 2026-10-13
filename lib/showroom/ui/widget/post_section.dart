@@ -4,10 +4,9 @@ import 'package:interiorapp_flutter_client/home/ui/widget/section.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
 class PostSection extends ConsumerWidget {
-    final String sectionTitle;
-    final VoidCallback onPressed;
-    final Widget child;
-
+  final String sectionTitle;
+  final VoidCallback onPressed;
+  final Widget child;
 
   const PostSection({
     super.key,
@@ -15,30 +14,29 @@ class PostSection extends ConsumerWidget {
     required this.onPressed,
     required this.child,
   });
-  
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final double fontScale = ResponsiveSize.fontScale(context);
-    
+    final Widget title = Text(
+      sectionTitle,
+      style: TextStyle(fontSize: 18 * fontScale, fontWeight: FontWeight.bold),
+    );
+    final Widget trailing = TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        textStyle: const TextStyle(
+          decoration: TextDecoration.underline,
+          color: Colors.black,
+        ),
+      ),
+      child: const Text('더보기', style: TextStyle(color: Colors.black)),
+    );
+
     return Section(
-      title: Text(
-        sectionTitle,
-        style: TextStyle(
-          fontSize: 18 * fontScale,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      trailing: TextButton(
-        onPressed: onPressed,
-        style: TextButton.styleFrom(
-          textStyle: const TextStyle(
-            decoration: TextDecoration.underline,
-            color: Colors.black,
-          ),
-        ),
-        child: const Text('더보기', style: TextStyle(color: Colors.black)),
-      ),
-      gap: ResponsiveSize.subGap(context) * 0,
+      title: title,
+      trailing: trailing,
+      gap: ResponsiveSize.subGap(context),
       child: child,
     );
   }

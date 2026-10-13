@@ -1,5 +1,5 @@
-import 'package:interiorapp_flutter_client/home/data/model/hot_showroom_model.dart';
-import 'package:interiorapp_flutter_client/home/domain/repository/hot_showroom_repository.dart';
+import 'package:interiorapp_flutter_client/showroom/data/model/hot_showroom_model.dart';
+import 'package:interiorapp_flutter_client/showroom/domain/repository/hot_showroom_repository.dart';
 
 class HotShowroomUseCase {
   final HotShowroomRepository _hotShowroomRepository;

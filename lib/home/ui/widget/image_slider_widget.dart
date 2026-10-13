@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:interiorapp_flutter_client/home/data/model/hot_showroom_model.dart';
+import 'package:interiorapp_flutter_client/showroom/data/model/hot_showroom_model.dart';
 import 'package:interiorapp_flutter_client/home/data/model/recommend_build_model.dart';
-import 'package:interiorapp_flutter_client/home/presentation/provider/hot_showroom_provider.dart';
+import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
 import 'package:interiorapp_flutter_client/home/presentation/provider/recommend_build_provider.dart';
 import 'package:interiorapp_flutter_client/home/ui/widget/image_slider_section.dart';
 import 'package:intl/intl.dart';
@@ -127,7 +127,9 @@ class ImageSliderWidget {
       watchItems: (ref) => AsyncValue.data(ref.watch(hotShowroomSliderVm)),
       viewportFraction: viewportFraction,
       gap: gap,
-      onIndexChange: (i) => ref.read(hotShowroomSliderIndexProvider.notifier).changeIndex(i),
+      onIndexChange:
+          (i) =>
+              ref.read(hotShowroomSliderIndexProvider.notifier).changeIndex(i),
       imageBuilder: (context, item) {
         return Stack(
           fit: StackFit.expand,
@@ -154,10 +156,14 @@ class ImageSliderWidget {
                   Expanded(child: SizedBox()),
                   IconButton(
                     onPressed: () {
-                      ref.read(hotShowroomSliderVm.notifier).toggleFavoriteByIndex(item.id);
+                      ref
+                          .read(hotShowroomSliderVm.notifier)
+                          .toggleFavoriteByIndex(item.id);
                     },
                     icon: Icon(
-                      item.favoriteStatus ? Icons.bookmark : Icons.bookmark_border,
+                      item.favoriteStatus
+                          ? Icons.bookmark
+                          : Icons.bookmark_border,
                       color: Colors.white,
                       size: 30,
                     ),
@@ -223,7 +229,11 @@ class ImageSliderWidget {
                 ),
                 const Text(
                   '좋아요',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF333333)),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF333333),
+                  ),
                 ),
                 const SizedBox(width: 2),
                 Text(
@@ -256,7 +266,8 @@ class ImageSliderWidget {
       viewportFraction: viewportFraction,
       gap: gap,
       infoHeight: infoHeight,
-      onIndexChange: (i) => ref.read(recommendBuildIndexProvider.notifier).changeIndex(i),
+      onIndexChange:
+          (i) => ref.read(recommendBuildIndexProvider.notifier).changeIndex(i),
       imageBuilder: (context, item) {
         return Stack(
           fit: StackFit.expand,
@@ -283,7 +294,9 @@ class ImageSliderWidget {
                   Expanded(child: SizedBox()),
                   IconButton(
                     onPressed: () {
-                      ref.read(recommendBuildVm.notifier).toggleFavoriteByIndex(item.id);
+                      ref
+                          .read(recommendBuildVm.notifier)
+                          .toggleFavoriteByIndex(item.id);
                     },
                     icon: Icon(
                       item.favoriteStatus
