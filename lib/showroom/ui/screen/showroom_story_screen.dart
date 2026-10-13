@@ -56,11 +56,7 @@ class ShowroomStoryScreen extends ConsumerWidget {
 }
 
 class _Beat {
-  const _Beat({
-    required this.light,
-    required this.reveal,
-    required this.build,
-  });
+  const _Beat({required this.light, required this.reveal, required this.build});
 
   final bool light;
   final Duration reveal;
@@ -85,10 +81,12 @@ class _StoryPagerState extends ConsumerState<_StoryPager>
     duration: _beats(widget.story).first.reveal,
   );
   int _index = 0;
+  final Set<int> _seen = <int>{};
 
   @override
   void initState() {
     super.initState();
+    _reveal.addStatusListener(_onRevealStatus);
     _reveal.forward();
   }
 
@@ -98,6 +96,7 @@ class _StoryPagerState extends ConsumerState<_StoryPager>
     if (oldWidget.story.id == widget.story.id) return;
     _index = 0;
     _lock.origin = 0;
+    _seen.clear();
     if (_page.hasClients) _page.jumpToPage(0);
     _play(0);
   }
@@ -109,10 +108,20 @@ class _StoryPagerState extends ConsumerState<_StoryPager>
     super.dispose();
   }
 
+  void _onRevealStatus(AnimationStatus status) {
+    if (status != AnimationStatus.completed || !mounted) return;
+    if (_seen.contains(_index)) return;
+    setState(() => _seen.add(_index));
+  }
+
   void _play(int index) {
     final List<_Beat> beats = _beats(widget.story);
     if (beats.isEmpty) return;
     final int next = index.clamp(0, beats.length - 1);
+    if (_seen.contains(next)) {
+      _reveal.value = 1;
+      return;
+    }
     _reveal.duration = beats[next].reveal;
     _reveal.forward(from: 0);
   }
@@ -142,6 +151,8 @@ class _StoryPagerState extends ConsumerState<_StoryPager>
     final int next = page.round().clamp(0, beats.length - 1);
     _lock.origin = next;
     if (next == _index) return;
+    final int previous = _index;
+    if (_reveal.value > 0) _seen.add(previous);
     setState(() => _index = next);
     _play(next);
   }
@@ -183,6 +194,7 @@ class _StoryPagerState extends ConsumerState<_StoryPager>
               itemBuilder: (context, page) {
                 return _RevealPage(
                   active: page == index,
+                  seen: _seen.contains(page),
                   reveal: _reveal,
                   beat: beats[page],
                 );
@@ -314,21 +326,28 @@ class _StoryPagerState extends ConsumerState<_StoryPager>
 class _RevealPage extends StatelessWidget {
   const _RevealPage({
     required this.active,
+    required this.seen,
     required this.reveal,
     required this.beat,
   });
 
   final bool active;
+  final bool seen;
   final Animation<double> reveal;
   final _Beat beat;
 
   @override
   Widget build(BuildContext context) {
-    if (!active) return beat.build(0);
     return AnimatedBuilder(
       animation: reveal,
       builder: (context, child) {
-        return beat.build(Curves.easeOutCubic.transform(reveal.value));
+        final double raw =
+            !active
+                ? (seen ? 1 : 0)
+                : seen
+                ? 1
+                : reveal.value;
+        return beat.build(Curves.easeOutCubic.transform(raw));
       },
     );
   }
