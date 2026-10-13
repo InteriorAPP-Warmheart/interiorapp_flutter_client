@@ -405,7 +405,7 @@ List<_Beat> _beats(ShowroomStoryModel story) {
   return <_Beat>[
     _Beat(
       light: false,
-      reveal: const Duration(milliseconds: 900),
+      reveal: const Duration(milliseconds: 520),
       build: (double progress) {
         return StoryHeroScene(story: story, progress: progress);
       },
@@ -413,7 +413,7 @@ List<_Beat> _beats(ShowroomStoryModel story) {
     if (situation != null)
       _Beat(
         light: true,
-        reveal: const Duration(milliseconds: 1500),
+        reveal: const Duration(milliseconds: 780),
         build: (double progress) {
           return StorySituationScene(situation: situation, progress: progress);
         },
@@ -432,7 +432,7 @@ List<_Beat> _beats(ShowroomStoryModel story) {
     if (cost != null)
       _Beat(
         light: false,
-        reveal: const Duration(milliseconds: 1400),
+        reveal: const Duration(milliseconds: 720),
         build: (double progress) {
           return StoryCostScene(cost: cost, progress: progress);
         },
@@ -440,7 +440,7 @@ List<_Beat> _beats(ShowroomStoryModel story) {
     for (var i = 0; i < story.process.length; i++)
       _Beat(
         light: false,
-        reveal: const Duration(milliseconds: 700),
+        reveal: const Duration(milliseconds: 420),
         build: (double progress) {
           return StoryProcessFrameScene(
             frame: story.process[i],
@@ -453,7 +453,7 @@ List<_Beat> _beats(ShowroomStoryModel story) {
     if (story.guide.isNotEmpty)
       _Beat(
         light: true,
-        reveal: const Duration(milliseconds: 1400),
+        reveal: const Duration(milliseconds: 720),
         build: (double progress) {
           return StoryGuideScene(lines: story.guide, progress: progress);
         },
