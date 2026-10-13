@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/home/ui/widget/image_slider_widget.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/filter_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/filter_bottomsheet.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/panorama_showroom_card.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/popular_showroom_card.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/post_section.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
@@ -67,36 +69,36 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
 
                       // 베스트 게시물 섹션 추가
                       _buildFilteredShowroomList(),
-                    ] else ...[
-                      SizedBox(height: sectionGap),
-
-                      // 인기 쇼룸 Section
+                    ],
+                  ],
+                ),
+              ),
+              if (!hasSelectedFilters)
+                Padding(
+                  padding: screenPadding.add(const EdgeInsets.only(top: 28)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       PostSection(
                         sectionTitle: '인기 쇼룸',
                         onPressed: () {},
-                        child: ImageSliderWidget().showroomInfo(ref: ref),
+                        child: const PopularShowroomCardList(),
                       ),
                       SizedBox(height: sectionGap),
-
-                      // 동네 게시물 Section
                       PostSection(
                         sectionTitle: '동네 게시물',
                         onPressed: () {},
-                        child: ImageSliderWidget().showroomInfo(ref: ref),
+                        child: const HotShowroomCardList(),
                       ),
                       SizedBox(height: sectionGap),
-
-                      // 추천 시공 Section
                       PostSection(
                         sectionTitle: '추천 시공',
                         onPressed: () {},
                         child: ImageSliderWidget().recommendBuildInfo(ref: ref),
                       ),
-                      SizedBox(height: sectionGap),
                     ],
-                  ],
+                  ),
                 ),
-              ),
               SizedBox(height: sectionGap + 10),
             ],
           ),
@@ -228,12 +230,12 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
                   SizedBox(width: 6),
                   GestureDetector(
                     onTap: () {
-                    ref
-                        .read(filterProvider.notifier)
-                        .removeSelectedFilter(filter.id);
-                    ref
-                        .read(filteredShowroomListProvider.notifier)
-                        .fetchFiltered();
+                      ref
+                          .read(filterProvider.notifier)
+                          .removeSelectedFilter(filter.id);
+                      ref
+                          .read(filteredShowroomListProvider.notifier)
+                          .fetchFiltered();
                     },
                     child: Icon(Icons.close, size: 16, color: Colors.grey[600]),
                   ),
@@ -247,181 +249,51 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
   }
 
   Widget _buildFilteredShowroomList() {
-  final filteredShowrooms = ref.watch(filteredShowroomListProvider);
-  final double sectionGap = ResponsiveSize.sectionGap(context);
-  
+    final filteredShowrooms = ref.watch(filteredShowroomListProvider);
 
-  return filteredShowrooms.when(
-    data: (showrooms) {
-      if (showrooms.isEmpty) {
-        return _filterEmptyPostsSection();
-      }
+    return filteredShowrooms.when(
+      data: (showrooms) {
+        if (showrooms.isEmpty) {
+          return _filterEmptyPostsSection();
+        }
 
-      return ListView.separated(
-        shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
-        itemCount: showrooms.length,
-        separatorBuilder: (context, index) => SizedBox(height: sectionGap),
-        itemBuilder: (context, index) {
-          final item = showrooms[index];
-          final double cardWidth = MediaQuery.sizeOf(context).width -
-              ResponsiveSize.responsivePadding(context).horizontal;
-          return Container(
-            height: (cardWidth * 0.78).clamp(240.0, 420.0),
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
-            child: Column(
-              children: [
-                // 이미지 영역 (showroomInfo와 동일)
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.network(item.thumbnailUrl, fit: BoxFit.cover),
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Colors.black.withValues(alpha: 0.0),
-                                Colors.black.withValues(alpha: 0.55),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          left: 0,
-                          right: 2,
-                          bottom: 0,
-                          child: Row(
-                            children: [
-                              Expanded(child: SizedBox()),
-                              IconButton(
-                                onPressed: () {
-                                  // 즐겨찾기 토글 로직
-                                  // ref.read(filteredShowroomListProvider.notifier)
-                                  //     .toggleFavorite(item.id);
-                                },
-                                icon: Icon(
-                                  item.favoriteStatus
-                                      ? Icons.bookmark
-                                      : Icons.bookmark_border,
-                                  color: Colors.white,
-                                  size: 30,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      constraints: const BoxConstraints(
-                        maxWidth: 220,
-                        minHeight: 20,
-                      ),
-                      child: Text(
-                        item.themeName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF333333),
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        CircleAvatar(
-                          backgroundImage: NetworkImage(item.userProfileUrl),
-                          radius: 12,
-                        ),
-                        const SizedBox(width: 6),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 120),
-                          child: Text(
-                            item.userName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF333333),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          height: 12,
-                          child: VerticalDivider(
-                            width: 10,
-                            thickness: 1,
-                            color: Color(0xFF333333),
-                          ),
-                        ),
-                        const Text(
-                          '좋아요',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF333333),
-                          ),
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          item.likeCount > 999
-                              ? '999+'
-                              : item.likeCount.toString(),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF333333),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
+        return ListView.separated(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemCount: showrooms.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 20),
+          itemBuilder: (context, index) {
+            final item = showrooms[index];
+            return ShowroomPostCard(
+              imageUrl: item.thumbnailUrl,
+              title: item.title,
+              themeName: item.themeName,
+              userName: item.userName,
+              userProfileUrl: item.userProfileUrl,
+              favoriteStatus: item.favoriteStatus,
+              likeCount: item.likeCount,
+              imageHeight: showroomCardImageHeight(context),
+              onFavorite: () {
+                // 즐겨찾기 토글 로직
+                // ref.read(filteredShowroomListProvider.notifier)
+                //     .toggleFavorite(item.id);
+              },
+            );
+          },
+        );
+      },
+      loading:
+          () => Center(
+            child: Padding(
+              padding: EdgeInsets.all(40),
+              child: CircularProgressIndicator(),
             ),
-          );
-        },
-      );
-    },
-    loading: () => Center(
-      child: Padding(
-        padding: EdgeInsets.all(40),
-        child: CircularProgressIndicator(),
-      ),
-    ),
-    error: (error, stack) => Center(child: Text('오류가 발생: $error')),
-  );
-}
+          ),
+      error: (error, stack) => Center(child: Text('오류가 발생: $error')),
+    );
+  }
 
-//해당하는 검색결과가 없는 PostSection
+  //해당하는 검색결과가 없는 PostSection
   Widget _filterEmptyPostsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -459,11 +331,11 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
                   margin: EdgeInsets.symmetric(horizontal: 24),
                   child: ElevatedButton(
                     onPressed: () {
-                    ref.read(filterProvider.notifier).resetFilters();
-                    ref
-                        .read(filteredShowroomListProvider.notifier)
-                        .fetchFiltered();
-                  },
+                      ref.read(filterProvider.notifier).resetFilters();
+                      ref
+                          .read(filteredShowroomListProvider.notifier)
+                          .fetchFiltered();
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.grey[300],
                       foregroundColor: Colors.black,

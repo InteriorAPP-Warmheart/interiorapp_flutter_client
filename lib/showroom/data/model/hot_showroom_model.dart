@@ -1,6 +1,7 @@
 class HotShowroomModel {
   final String id;
   final String thumbnailUrl;
+  final String title;
   final String themeName;
   final String userName;
   final String userProfileUrl;
@@ -10,6 +11,7 @@ class HotShowroomModel {
   const HotShowroomModel({
     required this.id,
     required this.thumbnailUrl,
+    required this.title,
     required this.themeName,
     required this.userName,
     required this.userProfileUrl,
@@ -53,6 +55,7 @@ class HotShowroomModel {
     return HotShowroomModel(
       id: readString('id'),
       thumbnailUrl: readString('thumbnailUrl'),
+      title: readString('title'),
       themeName: readString('themeName'),
       userName: readString('userName'),
       userProfileUrl: readString('userProfileUrl'),
@@ -63,19 +66,21 @@ class HotShowroomModel {
 
   /// Model -> JSON
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'thumbnailUrl': thumbnailUrl,
-        'themeName': themeName,
-        'userName': userName,
-        'userProfileUrl': userProfileUrl,
-        'favoriteStatus': favoriteStatus,
-        'likeCount': likeCount,
-      };
+    'id': id,
+    'thumbnailUrl': thumbnailUrl,
+    'title': title,
+    'themeName': themeName,
+    'userName': userName,
+    'userProfileUrl': userProfileUrl,
+    'favoriteStatus': favoriteStatus,
+    'likeCount': likeCount,
+  };
 
   /// 편의: 복사 후 일부 필드만 변경
   HotShowroomModel copyWith({
     String? id,
     String? thumbnailUrl,
+    String? title,
     String? themeName,
     String? userName,
     String? userProfileUrl,
@@ -85,6 +90,7 @@ class HotShowroomModel {
     return HotShowroomModel(
       id: id ?? this.id,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+      title: title ?? this.title,
       themeName: themeName ?? this.themeName,
       userName: userName ?? this.userName,
       userProfileUrl: userProfileUrl ?? this.userProfileUrl,
@@ -97,7 +103,9 @@ class HotShowroomModel {
   static List<HotShowroomModel> listFromJson(List<dynamic> data) {
     return data
         .where((e) => e is Map<String, dynamic>)
-        .map<HotShowroomModel>((e) => HotShowroomModel.fromJson(e as Map<String, dynamic>))
+        .map<HotShowroomModel>(
+          (e) => HotShowroomModel.fromJson(e as Map<String, dynamic>),
+        )
         .toList(growable: false);
   }
 
@@ -111,6 +119,7 @@ class HotShowroomModel {
     return other is HotShowroomModel &&
         other.id == id &&
         other.thumbnailUrl == thumbnailUrl &&
+        other.title == title &&
         other.themeName == themeName &&
         other.userName == userName &&
         other.userProfileUrl == userProfileUrl &&
@@ -120,12 +129,13 @@ class HotShowroomModel {
 
   @override
   int get hashCode => Object.hash(
-        id,
-        thumbnailUrl,
-        themeName,
-        userName,
-        userProfileUrl,
-        favoriteStatus,
-        likeCount,
-      );
+    id,
+    thumbnailUrl,
+    title,
+    themeName,
+    userName,
+    userProfileUrl,
+    favoriteStatus,
+    likeCount,
+  );
 }

@@ -7,83 +7,119 @@ class FilteredShowroomApi {
     {
       'id': 'showroom1',
       'thumbnailUrl': 'https://picsum.photos/seed/showroom1/900/600',
+      'title': '북유럽 거실의 오후',
       'themeName': '따뜻한 북유럽 스타일 거실',
       'userName': '디자이너 수',
       'userProfileUrl': 'https://i.pravatar.cc/150?img=1',
       'favoriteStatus': true,
       'likeCount': 245,
-      'budget': 8500000, 
+      'budget': 8500000,
       'tags': ['northern', 'apartment', 'living_room', 'white', 'wood'],
     },
     {
       'id': 'showroom2',
       'thumbnailUrl': 'https://picsum.photos/seed/showroom2/900/600',
+      'title': '선을 줄인 침실',
       'themeName': '모던',
       'userName': '인테리어 박',
       'userProfileUrl': 'https://i.pravatar.cc/150?img=2',
       'favoriteStatus': false,
       'likeCount': 189,
-      'budget': 12000000, 
+      'budget': 12000000,
       'tags': ['minimal', 'modern', 'apartment', 'bedroom', 'white', 'tile'],
     },
     {
       'id': 'showroom3',
       'thumbnailUrl': 'https://picsum.photos/seed/showroom3/900/600',
+      'title': '골목 안 작은 카페',
       'themeName': '빈티지 감성 카페 인테리어',
       'userName': '스튜디오 이현',
       'userProfileUrl': 'https://i.pravatar.cc/150?img=3',
       'favoriteStatus': true,
       'likeCount': 512,
-      'budget': 25000000, 
-      'tags': ['vintage', 'restaurant', 'store_hall', 'brown', 'wood', 'lighting'],
+      'budget': 25000000,
+      'tags': [
+        'vintage',
+        'restaurant',
+        'store_hall',
+        'brown',
+        'wood',
+        'lighting',
+      ],
     },
     {
       'id': 'showroom4',
       'thumbnailUrl': 'https://picsum.photos/seed/showroom4/900/600',
+      'title': '철과 콘크리트의 사무실',
       'themeName': '인더스트리얼 오피스 공간',
       'userName': '공간연구소',
       'userProfileUrl': 'https://i.pravatar.cc/150?img=4',
       'favoriteStatus': false,
       'likeCount': 324,
-      'budget': 18000000, 
-      'tags': ['industrial', 'office', 'work_space', 'gray', 'black', 'steel_floor'],
+      'budget': 18000000,
+      'tags': [
+        'industrial',
+        'office',
+        'work_space',
+        'gray',
+        'black',
+        'steel_floor',
+      ],
     },
     {
       'id': 'showroom5',
       'thumbnailUrl': 'https://picsum.photos/seed/showroom5/900/600',
+      'title': '창가에 둔 원룸',
       'themeName': '내추럴 원룸 인테리어',
       'userName': '홈스타일링최',
       'userProfileUrl': 'https://i.pravatar.cc/150?img=5',
       'favoriteStatus': true,
       'likeCount': 167,
-      'budget': 4500000, 
-      'tags': ['natural', 'one_room', 'living_room', 'green', 'wood', 'wallpaper'],
+      'budget': 4500000,
+      'tags': [
+        'natural',
+        'one_room',
+        'living_room',
+        'green',
+        'wood',
+        'wallpaper',
+      ],
     },
     {
       'id': 'showroom6',
       'thumbnailUrl': 'https://picsum.photos/seed/showroom6/900/600',
+      'title': '클래식한 침실',
       'themeName': '클래식 침실 디자인',
       'userName': '럭셔리홈',
       'userProfileUrl': 'https://i.pravatar.cc/150?img=6',
       'favoriteStatus': false,
       'likeCount': 431,
-      'budget': 15000000, 
+      'budget': 15000000,
       'tags': ['classic', 'villa', 'bathroom', 'white', 'brown', 'lighting'],
     },
     {
       'id': 'showroom7',
       'thumbnailUrl': 'https://picsum.photos/seed/showroom7/900/600',
+      'title': '모던 아파트의 거실',
       'themeName': '모던 아파트 거실',
       'userName': '디자인하우스',
       'userProfileUrl': 'https://i.pravatar.cc/150?img=7',
       'favoriteStatus': true,
       'likeCount': 298,
-      'budget': 9800000, 
-      'tags': ['modern', 'apartment', 'living_room', 'gray', 'tile', 'lighting'],
+      'budget': 9800000,
+      'tags': [
+        'modern',
+        'apartment',
+        'living_room',
+        'gray',
+        'tile',
+        'lighting',
+      ],
     },
     {
       'id': 'showroom8',
       'thumbnailUrl': 'https://picsum.photos/seed/showroom8/900/600',
+      'title': '호텔처럼 머무는 밤',
       'themeName': '호텔 스타일 침실',
       'userName': '프리미엄 인테리어',
       'userProfileUrl': 'https://i.pravatar.cc/150?img=8',
@@ -95,23 +131,32 @@ class FilteredShowroomApi {
     {
       'id': 'showroom9',
       'thumbnailUrl': 'https://picsum.photos/seed/showroom9/900/600',
+      'title': '색이 있는 아이 방',
       'themeName': '컬러포인트 키즈룸',
       'userName': '키즈공간연구소',
       'userProfileUrl': 'https://i.pravatar.cc/150?img=9',
       'favoriteStatus': true,
       'likeCount': 234,
-      'budget': 6500000, 
-      'tags': ['colorpoint', 'apartment', 'kids_room', 'yellow', 'blue', 'wallpaper'],
+      'budget': 6500000,
+      'tags': [
+        'colorpoint',
+        'apartment',
+        'kids_room',
+        'yellow',
+        'blue',
+        'wallpaper',
+      ],
     },
     {
       'id': 'showroom10',
       'thumbnailUrl': 'https://picsum.photos/seed/showroom10/900/600',
+      'title': '벽이 작품인 거실',
       'themeName': '아트월 거실 디자인',
       'userName': '아트인테리어',
       'userProfileUrl': 'https://i.pravatar.cc/150?img=10',
       'favoriteStatus': false,
       'likeCount': 389,
-      'budget': 11000000, 
+      'budget': 11000000,
       'tags': ['artwall', 'villa', 'living_room', 'white', 'black', 'paint'],
     },
   ];
@@ -136,47 +181,48 @@ class FilteredShowroomApi {
     }
 
     // 필터링 로직
-    final filteredList = jsonList.where((item) {
-      final tags = List<String>.from(item['tags'] as List);
-      final budget = (item['budget'] as num?)?.toDouble() ?? 0.0;
+    final filteredList =
+        jsonList.where((item) {
+          final tags = List<String>.from(item['tags'] as List);
+          final budget = (item['budget'] as num?)?.toDouble() ?? 0.0;
 
-      // 스타일 필터
-      if (styles != null && styles.isNotEmpty) {
-        if (!tags.any((tag) => styles.contains(tag))) {
-          return false;
-        }
-      }
+          // 스타일 필터
+          if (styles != null && styles.isNotEmpty) {
+            if (!tags.any((tag) => styles.contains(tag))) {
+              return false;
+            }
+          }
 
-      // 공간 형태 필터 (공간 타입 + 세부 공간 모두 포함)
-      if (spaceTypes != null && spaceTypes.isNotEmpty) {
-        if (!tags.any((tag) => spaceTypes.contains(tag))) {
-          return false;
-        }
-      }
+          // 공간 형태 필터 (공간 타입 + 세부 공간 모두 포함)
+          if (spaceTypes != null && spaceTypes.isNotEmpty) {
+            if (!tags.any((tag) => spaceTypes.contains(tag))) {
+              return false;
+            }
+          }
 
-      // 예산 필터
-      if (minBudget != null && budget < minBudget) {
-        return false;
-      }
-      if (maxBudget != null && budget > maxBudget) {
-        return false;
-      }
+          // 예산 필터
+          if (minBudget != null && budget < minBudget) {
+            return false;
+          }
+          if (maxBudget != null && budget > maxBudget) {
+            return false;
+          }
 
-      // 톤앤매너 필터
-      if (tones != null && tones.isNotEmpty) {
-        if (!tags.any((tag) => tones.contains(tag))) {
-          return false;
-        }
-      }
+          // 톤앤매너 필터
+          if (tones != null && tones.isNotEmpty) {
+            if (!tags.any((tag) => tones.contains(tag))) {
+              return false;
+            }
+          }
 
-      // 소재 필터
-      if (materials != null && materials.isNotEmpty) {
-        if (!tags.any((tag) => materials.contains(tag))) {
-          return false;
-        }
-      }
-      return true;
-    }).toList();
+          // 소재 필터
+          if (materials != null && materials.isNotEmpty) {
+            if (!tags.any((tag) => materials.contains(tag))) {
+              return false;
+            }
+          }
+          return true;
+        }).toList();
 
     return FilteredShowroomModel.listFromJson(filteredList);
   }
@@ -189,10 +235,7 @@ class FilteredShowroomApi {
     }
     final current = jsonList[idx];
     final bool currFav = (current['favoriteStatus'] == true);
-    jsonList[idx] = {
-      ...current,
-      'favoriteStatus': !currFav,
-    };
+    jsonList[idx] = {...current, 'favoriteStatus': !currFav};
     return FilteredShowroomModel.fromJson(jsonList[idx]);
   }
 }
