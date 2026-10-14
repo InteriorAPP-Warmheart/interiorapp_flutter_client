@@ -8,7 +8,7 @@ import 'package:interiorapp_flutter_client/app/shell/tab_provider.dart';
 import 'package:interiorapp_flutter_client/app/shell/app_app_bar.dart';
 import 'package:interiorapp_flutter_client/home/ui/screen/home_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/build_screen.dart';
-import 'package:interiorapp_flutter_client/settings/ui/setting_screen.dart';
+import 'package:interiorapp_flutter_client/mypage/ui/screen/mypage_screen.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_screen.dart';
 import 'package:interiorapp_flutter_client/core/theme/tab_bar_theme.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
@@ -121,7 +121,7 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
       ShellTab.showroom => const ShowroomScreen(),
       ShellTab.store => const StoreScreen(),
       ShellTab.mySpace => const BuildScreen(),
-      ShellTab.my => const SettingScreen(embedded: true),
+      ShellTab.mypage => const MyPageScreen(),
     };
   }
 }

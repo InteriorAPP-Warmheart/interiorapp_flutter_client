@@ -13,7 +13,7 @@ import 'package:interiorapp_flutter_client/app/shell/app_tab_bar.dart';
 import 'package:interiorapp_flutter_client/notification/ui/notification_center_screen.dart';
 import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_result_screen.dart';
 import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_screen.dart';
-import 'package:interiorapp_flutter_client/settings/ui/setting_screen.dart';
+import 'package:interiorapp_flutter_client/mypage/ui/screen/mypage_screen.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_board_screen.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_story_screen.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_write_detail_screen.dart';
@@ -130,9 +130,9 @@ class AppRouter {
         ],
       ),
       GoRoute(
-        path: '/settings',
+        path: '/my',
         builder:
-            (context, state) => const AdaptiveFrame(child: SettingScreen()),
+            (context, state) => const AdaptiveFrame(child: MyPageScreen()),
       ),
       GoRoute(
         path: '/notifications',
