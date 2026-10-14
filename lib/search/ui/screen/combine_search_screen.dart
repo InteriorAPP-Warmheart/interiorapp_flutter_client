@@ -227,7 +227,7 @@ class _CombineSearchScreenState extends ConsumerState<CombineSearchScreen> {
         _searchFocusNode.unfocus();
         await ref.read(recentSearchHistoryVmProvider.notifier).saveSearchKeyword(suggestion.keyword);
         if (mounted) {
-          context.push('/search/result?q=${suggestion.keyword}');
+          context.push(_searchResultLocation(suggestion.keyword));
         }
       },
       child: Padding(
@@ -282,7 +282,7 @@ class _CombineSearchScreenState extends ConsumerState<CombineSearchScreen> {
         await ref.read(recentSearchHistoryVmProvider.notifier).saveSearchKeyword(searchKeyword.keyword);
         // 검색 결과 페이지로 이동
         if (mounted) {
-          context.push('/search/result?q=${searchKeyword.keyword}');
+          context.push(_searchResultLocation(searchKeyword.keyword));
         }
       },
       child: Padding(
@@ -313,6 +313,13 @@ class _CombineSearchScreenState extends ConsumerState<CombineSearchScreen> {
         ),
       ),
     );
+  }
+
+  String _searchResultLocation(String keyword) {
+    return Uri(
+      path: '/search/result',
+      queryParameters: {'q': keyword.trim()},
+    ).toString();
   }
 
   String _formatSearchTime(DateTime dateTime) {

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/search/data/model/search_result_model.dart';
 import 'package:interiorapp_flutter_client/search/presentation/provider/search_provider.dart';
 import 'package:interiorapp_flutter_client/search/ui/widget/combine_searchbar_widget.dart';
 import 'package:interiorapp_flutter_client/search/ui/widget/search_result_section.dart';
 
 class CombineSearchResultScreen extends ConsumerStatefulWidget {
-  const CombineSearchResultScreen({super.key});
+  const CombineSearchResultScreen({super.key, this.query});
+
+  final String? query;
 
   @override
   ConsumerState<CombineSearchResultScreen> createState() =>
@@ -23,12 +24,20 @@ class _CombineSearchResultScreenState
   @override
   void initState() {
     super.initState();
-    // 라우트 상태에서 쿼리 파라미터 가져오기
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final state = GoRouterState.of(context);
-      _searchQuery = state.uri.queryParameters['q'];
-      setState(() {});
-    });
+    _searchQuery = _queryOf(widget.query);
+  }
+
+  @override
+  void didUpdateWidget(covariant CombineSearchResultScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final String? query = _queryOf(widget.query);
+    if (query == _searchQuery) return;
+    setState(() => _searchQuery = query);
+  }
+
+  String? _queryOf(String? query) {
+    final String trimmed = query?.trim() ?? '';
+    return trimmed.isEmpty ? null : trimmed;
   }
 
   @override

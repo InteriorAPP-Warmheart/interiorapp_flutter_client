@@ -10,13 +10,15 @@ class KeyboardDismiss extends StatelessWidget {
   Widget build(BuildContext context) {
     return Listener(
       behavior: HitTestBehavior.translucent,
-      onPointerDown: _dismissIfOutsideFocus,
+      // 손가락을 떼기 전에 포커스를 빼면, 포커스 중에만 보이는 최근 검색어가
+      // 탭이 전달되기 전에 사라진다.
+      onPointerUp: _dismissIfOutsideFocus,
       child: child,
     );
   }
 }
 
-void _dismissIfOutsideFocus(PointerDownEvent event) {
+void _dismissIfOutsideFocus(PointerUpEvent event) {
   final FocusNode? focus = FocusManager.instance.primaryFocus;
   if (focus == null || focus is FocusScopeNode || !focus.hasFocus) return;
 

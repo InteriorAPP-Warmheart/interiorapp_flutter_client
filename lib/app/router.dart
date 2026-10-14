@@ -187,8 +187,11 @@ class AppRouter {
           GoRoute(
             path: 'result',
             builder:
-                (context, state) =>
-                    const AdaptiveFrame(child: CombineSearchResultScreen()),
+                (context, state) => AdaptiveFrame(
+                  child: CombineSearchResultScreen(
+                    query: state.uri.queryParameters['q'],
+                  ),
+                ),
             routes: [
               // GoRoute(path: 'showrooms', builder: (context, state) => ShowroomWriteScreen()),
               // GoRoute(path: 'stores', builder: ...),
