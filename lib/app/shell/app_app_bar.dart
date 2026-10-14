@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
-import 'package:interiorapp_flutter_client/core/widget/layout_preview.dart';
 
 class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
   const AppAppBar({super.key});
@@ -10,23 +9,16 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       toolbarHeight: ResponsiveSize.appBarHeight(context),
-      title: Text('Logo'),
+      title: const Text('Logo'),
       actions: [
         IconButton(
-          onPressed: () {
-            context.push('/search');
-          },
-          icon: Icon(Icons.search_rounded), // 검색
+          onPressed: () => context.push('/search'),
+          icon: const Icon(Icons.search_rounded),
         ),
+        // 장바구니는 스토어와 함께 나중에 연다. 그때 검색과 알림 사이에 둔다.
         IconButton(
-          onPressed: () => showLayoutPreview(context),
-          icon: Icon(Icons.shopping_cart_rounded), // 장바구니 (임시 레이아웃 확인)
-        ),
-        IconButton(
-          onPressed: () {
-            context.push('/settings');
-          },
-          icon: Icon(Icons.person_rounded), // 로그인 여부에 따라 아이콘 변경
+          onPressed: () => context.push('/notifications'),
+          icon: const Icon(Icons.notifications_rounded),
         ),
       ],
     );

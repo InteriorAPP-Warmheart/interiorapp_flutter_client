@@ -3,7 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
 class SettingScreen extends StatelessWidget {
-  const SettingScreen({super.key});
+  const SettingScreen({super.key, this.embedded = false});
+
+  /// 탭 안에서는 셸 앱바를 쓰고, 단독 라우트일 때만 자체 앱바를 둔다.
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
@@ -11,10 +14,13 @@ class SettingScreen extends StatelessWidget {
     final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
 
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: ResponsiveSize.appBarHeight(context),
-        title: Text('Setting'),
-      ),
+      appBar:
+          embedded
+              ? null
+              : AppBar(
+                toolbarHeight: ResponsiveSize.appBarHeight(context),
+                title: const Text('마이'),
+              ),
       body: Center(
         child: Padding(
           padding: padding,

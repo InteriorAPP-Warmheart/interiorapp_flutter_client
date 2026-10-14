@@ -10,6 +10,7 @@ import 'package:interiorapp_flutter_client/build/ui/screen/trade_create_screen.d
 import 'package:interiorapp_flutter_client/build/ui/screen/trade_detail_screen.dart';
 import 'package:interiorapp_flutter_client/core/widget/adaptive_frame.dart';
 import 'package:interiorapp_flutter_client/app/shell/app_tab_bar.dart';
+import 'package:interiorapp_flutter_client/notification/ui/notification_center_screen.dart';
 import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_result_screen.dart';
 import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_screen.dart';
 import 'package:interiorapp_flutter_client/settings/ui/setting_screen.dart';
@@ -132,6 +133,12 @@ class AppRouter {
         path: '/settings',
         builder:
             (context, state) => const AdaptiveFrame(child: SettingScreen()),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder:
+            (context, state) =>
+                const AdaptiveFrame(child: NotificationCenterScreen()),
       ),
       GoRoute(
         path: '/showroom/:id',

@@ -3,11 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:interiorapp_flutter_client/app/shell/shell_tab.dart';
 import 'package:interiorapp_flutter_client/app/shell/tab_provider.dart';
 import 'package:interiorapp_flutter_client/app/shell/app_app_bar.dart';
-import 'package:interiorapp_flutter_client/favorite/ui/favorite_screen.dart';
 import 'package:interiorapp_flutter_client/home/ui/screen/home_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/build_screen.dart';
+import 'package:interiorapp_flutter_client/settings/ui/setting_screen.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_screen.dart';
 import 'package:interiorapp_flutter_client/core/theme/tab_bar_theme.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
@@ -30,11 +31,12 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
   @override
   void initState() {
     super.initState();
-    // Provider의 현재 상태로 초기화
+    final int lastIndex = ShellTabs.active.length - 1;
+    final int initialIndex = ref.read(tabProvider).clamp(0, lastIndex).toInt();
     _tabController = TabController(
-      length: 5,
+      length: ShellTabs.active.length,
       vsync: this,
-      initialIndex: ref.read(tabProvider),
+      initialIndex: initialIndex,
     );
 
     // TabController의 변경을 Provider에 반영
@@ -75,14 +77,9 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
       ),
       body: TabBarView(
         controller: _tabController,
-        physics: NeverScrollableScrollPhysics(), // 탭바 좌우 스크롤 방지 (커스텀 아이콘 넣기위해선 필수)
-        children: [
-          HomeScreen(),
-          ShowroomScreen(),
-          StoreScreen(),
-          BuildScreen(),
-          FavoriteScreen(),
-        ],
+        physics:
+            NeverScrollableScrollPhysics(), // 탭바 좌우 스크롤 방지 (커스텀 아이콘 넣기위해선 필수)
+        children: [for (final tab in ShellTabs.active) _pageFor(tab)],
       ),
       bottomNavigationBar: _buildTab(),
     );
@@ -108,32 +105,24 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
           ref.read(tabProvider.notifier).changeTab(index);
         },
         tabs: [
-          Tab(
-            icon: Icon(Icons.home_rounded, size: AppTabBarTheme.iconSize(context)),
-            text: '홈',
-          ),
-          Tab(
-            icon: Icon(Icons.chair_rounded, size: AppTabBarTheme.iconSize(context)),
-            text: '쇼룸',
-          ),
-          Tab(
-            icon: Icon(
-              Icons.shopping_bag_rounded,
-              size: AppTabBarTheme.iconSize(context),
+          for (final tab in ShellTabs.active)
+            Tab(
+              icon: Icon(tab.icon, size: AppTabBarTheme.iconSize(context)),
+              text: tab.label,
             ),
-            text: '스토어',
-          ),
-          Tab(
-            icon: Icon(Icons.build_rounded, size: AppTabBarTheme.iconSize(context)),
-            text: '내 공간',
-          ),
-          Tab(
-            icon: Icon(Icons.favorite_rounded, size: AppTabBarTheme.iconSize(context)),
-            text: '즐겨찾기',
-          ),
         ],
       ),
     );
+  }
+
+  Widget _pageFor(ShellTab tab) {
+    return switch (tab) {
+      ShellTab.home => const HomeScreen(),
+      ShellTab.showroom => const ShowroomScreen(),
+      ShellTab.store => const StoreScreen(),
+      ShellTab.mySpace => const BuildScreen(),
+      ShellTab.my => const SettingScreen(embedded: true),
+    };
   }
 }
 

@@ -1,18 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:interiorapp_flutter_client/app/shell/shell_tab.dart';
 
 class TabbarVM extends Notifier<int> {
   @override
   int build() {
-    return 0; // 기본값은 첫 번째 탭
+    return 0;
   }
 
-  // 탭 변경 메서드
   void changeTab(int index) {
+    if (index < 0 || index >= ShellTabs.active.length) return;
     state = index;
   }
 
-  // Future<void> moveToChat() async {
-  //   state = 1;
-  //   await Future.delayed(const Duration(milliseconds: 100));
-  // }
+  void open(ShellTab tab) {
+    changeTab(ShellTabs.indexOf(tab));
+  }
 }
