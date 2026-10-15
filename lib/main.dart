@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:interiorapp_flutter_client/app/router.dart';
@@ -6,7 +7,9 @@ import 'package:interiorapp_flutter_client/core/theme/app_theme.dart';
 import 'package:interiorapp_flutter_client/core/widget/keyboard_dismiss.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(ProviderScope(child: const MainApp()));
 }
 

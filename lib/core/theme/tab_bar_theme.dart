@@ -6,21 +6,16 @@ class AppTabBarTheme {
       20 * ResponsiveSize.fontScale(context);
 
   static TextStyle labelStyle(BuildContext context) => TextStyle(
-        fontSize: 12 * ResponsiveSize.fontScale(context),
-        fontWeight: FontWeight.w500,
-      );
+    fontSize: 12 * ResponsiveSize.fontScale(context),
+    fontWeight: FontWeight.w500,
+  );
 
   static double height(BuildContext context) =>
       ResponsiveSize.bottomNavHeight(context);
 
   static BoxDecoration get decoration => BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey.shade300,
-            width: 1.0,
-          ),
-        ),
-      );
+    border: Border(top: BorderSide(color: Colors.grey.shade300, width: 1.0)),
+  );
 
   static Color get selectedColor => Colors.blue;
   static Color get unselectedColor => Colors.grey;

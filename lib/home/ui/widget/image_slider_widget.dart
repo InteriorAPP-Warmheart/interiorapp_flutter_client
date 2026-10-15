@@ -259,7 +259,7 @@ class ImageSliderWidget {
     required WidgetRef ref,
     double viewportFraction = 0.95,
     double gap = 12.0,
-    double infoHeight = 56.0,
+    double infoHeight = 72.0,
   }) {
     return ImageSliderSection<RecommendBuildModel>(
       watchItems: (ref) => AsyncValue.data(ref.watch(recommendBuildVm)),
@@ -353,8 +353,7 @@ class ImageSliderWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.only(left: 6),
+                Flexible(
                   child: Text(
                     item.buildAddress,
                     maxLines: 1,
@@ -366,40 +365,44 @@ class ImageSliderWidget {
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: 12, // 텍스트 높이와 맞춤
+                const SizedBox(
+                  height: 12,
                   child: VerticalDivider(
-                    width: 10, // 좌우 여백 포함
+                    width: 10,
                     thickness: 1,
                     color: Color(0xFF333333),
                   ),
                 ),
-                Text(
-                  '시공기간 ${_formatBuildPeriod(item.buildPeriod)}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF333333),
+                Flexible(
+                  child: Text(
+                    '시공기간 ${_formatBuildPeriod(item.buildPeriod)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF333333),
+                    ),
                   ),
                 ),
-                SizedBox(
-                  height: 12, // 텍스트 높이와 맞춤
+                const SizedBox(
+                  height: 12,
                   child: VerticalDivider(
-                    width: 10, // 좌우 여백 포함
+                    width: 10,
                     thickness: 1,
                     color: Color(0xFF333333),
                   ),
                 ),
-                Text(
-                  '가격 약 ${_formatKrw(item.buildCost)}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF333333),
+                Flexible(
+                  child: Text(
+                    '가격 약 ${_formatKrw(item.buildCost)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF333333),
+                    ),
                   ),
                 ),
               ],

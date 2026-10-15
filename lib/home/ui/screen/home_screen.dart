@@ -44,10 +44,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
 
     // 크기 애니메이션 (1.0 ↔ 1.5)
-    _cardAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.5,
-    ).animate(
+    _cardAnimation = Tween<double>(begin: 1.0, end: 1.5).animate(
       CurvedAnimation(parent: _cardController, curve: Curves.easeInOut),
     );
 
@@ -85,11 +82,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       _isCardExpanded = true;
       _expandedCardType = type;
     });
-    
+
     // 열기 애니메이션: 크기 확대 후 회전 시작 (느린 속도)
     _cardController.duration = const Duration(milliseconds: 600);
     _rotationController.duration = const Duration(milliseconds: 800);
-    
+
     _cardController.forward();
     Future.delayed(const Duration(milliseconds: 100), () {
       _rotationController.forward();
@@ -100,7 +97,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     // 닫기 애니메이션: 빠른 속도로 설정 후 역순 실행
     _cardController.duration = const Duration(milliseconds: 300);
     _rotationController.duration = const Duration(milliseconds: 400);
-    
+
     // 먼저 회전 복원, 그 다음 크기 축소
     _rotationController.reverse().then((_) {
       _cardController.reverse().then((_) {
@@ -155,14 +152,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
     final double childAspect = tileWidth / cardHeight;
     final double sectionGap = ResponsiveSize.sectionGap(context);
+    final bool showProjectCard =
+        !_isCardExpanded && isProjectBuilding && !_atBottom;
+    // 카드는 콘텐츠 위에 떠 있고, 끝에서는 이 여백만큼 더 스크롤해 추천 시공사례가 카드 위로 올라온다.
+    final double projectCardReserve =
+        showProjectCard
+            ? MyBuildProjectWidget.expandedHeight(context) +
+                MyBuildProjectWidget.floatBottom +
+                MyBuildProjectWidget.overlayGap
+            : 0;
 
     return Scaffold(
       body: Stack(
         children: [
-          // 메인 콘텐츠
           SingleChildScrollView(
             controller: _scrollController,
-            padding: screenPadding,
+            padding: screenPadding.copyWith(bottom: projectCardReserve),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -274,22 +279,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   child: ImageSliderWidget().recommendBuildInfo(ref: ref),
                 ),
                 SizedBox(height: sectionGap),
-                // 항상 고정높이 공간을 예약해두고 콘텐츠를 스왑하는 방식
-                if (isProjectBuilding) ...[
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
-                    child:
-                        _atBottom
-                            ? Center(
-                              key: const ValueKey('footer'),
-                              child: MyBuildProjectWidget(atBottom: _atBottom),
-                            )
-                            : SizedBox(
-                              key: const ValueKey('spacer'),
-                              height: MediaQuery.of(context).size.height * 0.1,
-                            ),
-                  ),
-                  SizedBox(height: sectionGap),
+                if (isProjectBuilding && _atBottom) ...[
+                  Center(child: MyBuildProjectWidget(atBottom: true)),
+                  const SizedBox(height: 8),
                 ],
               ],
             ),
@@ -317,7 +309,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       _rotationAnimation,
                     ]),
                     builder: (context, child) {
-                      final isBackSide = _rotationAnimation.value > 1.57079632679; // π/2
+                      final isBackSide =
+                          _rotationAnimation.value > 1.57079632679; // π/2
 
                       return Transform.scale(
                         scale: _cardAnimation.value,
@@ -345,13 +338,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               ),
             ),
 
-          // FloatingActionButton (카드가 확장되지 않았을 때만 표시)
-          if (!_isCardExpanded && isProjectBuilding && !_atBottom)
+          if (showProjectCard)
             Positioned(
-              bottom: 20,
+              bottom: MyBuildProjectWidget.floatBottom,
               left: 0,
               right: 0,
-              child: Center(child: MyBuildProjectWidget(atBottom: _atBottom)),
+              child: Center(child: MyBuildProjectWidget(atBottom: false)),
             ),
         ],
       ),

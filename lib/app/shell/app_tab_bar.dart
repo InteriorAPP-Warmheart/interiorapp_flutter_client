@@ -88,11 +88,22 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
   Widget _buildTab() {
     final EdgeInsets inset = ResponsiveSize.responsivePadding(context);
     final double tabGap = ResponsiveSize.subGap(context) * 0.5;
+    // 화면을 완전히 가리는 3버튼 내비게이션만 피한다.
+    // 제스처 홈 표시처럼 얇은 여백은 탭바를 올리거나 두껍게 만들지 않는다.
+    final double obscuredBottom = MediaQuery.paddingOf(context).bottom;
+    final double systemNavigation = obscuredBottom >= 48 ? obscuredBottom : 0;
 
     return Container(
-      decoration: AppTabBarTheme.decoration,
-      height: AppTabBarTheme.height(context),
-      padding: EdgeInsets.symmetric(horizontal: inset.left),
+      decoration: AppTabBarTheme.decoration.copyWith(
+        color: Theme.of(context).scaffoldBackgroundColor,
+      ),
+      height: AppTabBarTheme.height(context) + systemNavigation,
+      padding: EdgeInsets.fromLTRB(
+        inset.left,
+        0,
+        inset.right,
+        systemNavigation,
+      ),
       child: TabBar(
         controller: _tabController,
         padding: EdgeInsets.zero,
