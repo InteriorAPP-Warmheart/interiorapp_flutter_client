@@ -94,8 +94,13 @@ class _CombineSearchbarWidgetState extends ConsumerState<CombineSearchbarWidget>
           // 최근 검색어에 저장
           await ref.read(recentSearchHistoryUseCaseProvider).saveSearchKeyword(value.trim());
           // 검색 결과 페이지로 이동
-          if(context.mounted) {
-            context.push('/search/result?q=$value');
+          if (context.mounted) {
+            context.push(
+              Uri(
+                path: '/search/result',
+                queryParameters: {'q': value.trim()},
+              ).toString(),
+            );
           }
         }
       },
