@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/build/ui/space_catalog.dart';
 import 'package:interiorapp_flutter_client/build/ui/space_routes.dart';
 
@@ -48,9 +49,8 @@ class MyBuildProjectWidget extends StatelessWidget {
                         height: imageSide,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(imageSide * 0.2),
-                          child: Image.network(
-                            'https://picsum.photos/seed/case6/900/600',
-                            fit: BoxFit.cover,
+                          child: const AppNetworkImage(
+                            url: 'https://picsum.photos/seed/case6/900/600',
                           ),
                         ),
                       ),

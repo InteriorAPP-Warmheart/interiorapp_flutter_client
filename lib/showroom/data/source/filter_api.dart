@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:interiorapp_flutter_client/showroom/data/model/filter_showroom_model.dart';
+import 'package:interiorapp_flutter_client/showroom/domain/entity/quick_filter_catalog.dart';
 
 class FilteredShowroomApi {
   // 서버 응답 형태를 가정한 JSON 리스트 (목데이터)
@@ -14,6 +15,16 @@ class FilteredShowroomApi {
       'favoriteStatus': true,
       'likeCount': 245,
       'budget': 8500000,
+      'areaPyeong': 22,
+      'industryIds': <String>[],
+      'atmosphereTags': [
+        'brightness:bright',
+        'temperature:neutral',
+        'color:achromatic',
+        'texture:smooth',
+        'impression:tidy',
+        'density:simple',
+      ],
       'tags': ['northern', 'apartment', 'living_room', 'white', 'wood'],
     },
     {
@@ -26,6 +37,16 @@ class FilteredShowroomApi {
       'favoriteStatus': false,
       'likeCount': 189,
       'budget': 12000000,
+      'areaPyeong': 14,
+      'industryIds': <String>[],
+      'atmosphereTags': [
+        'brightness:mid',
+        'temperature:neutral',
+        'color:neutral',
+        'texture:smooth',
+        'density:simple',
+        'density:balanced',
+      ],
       'tags': ['minimal', 'modern', 'apartment', 'bedroom', 'white', 'tile'],
     },
     {
@@ -38,6 +59,16 @@ class FilteredShowroomApi {
       'favoriteStatus': true,
       'likeCount': 512,
       'budget': 25000000,
+      'areaPyeong': 16,
+      'industryIds': ['fnb', 'fnb_cafe'],
+      'atmosphereTags': [
+        'brightness:mid',
+        'temperature:warm',
+        'color:wood',
+        'texture:natural',
+        'texture:wood',
+        'impression:comfortable',
+      ],
       'tags': [
         'vintage',
         'restaurant',
@@ -56,7 +87,17 @@ class FilteredShowroomApi {
       'userProfileUrl': 'https://i.pravatar.cc/150?img=4',
       'favoriteStatus': false,
       'likeCount': 324,
-      'budget': 18000000,
+      'budget': 42000000,
+      'areaPyeong': 35,
+      'industryIds': ['office', 'office_general'],
+      'atmosphereTags': [
+        'brightness:dark',
+        'temperature:cool',
+        'color:achromatic',
+        'texture:metal',
+        'texture:rough',
+        'impression:urban',
+      ],
       'tags': [
         'industrial',
         'office',
@@ -76,6 +117,15 @@ class FilteredShowroomApi {
       'favoriteStatus': true,
       'likeCount': 167,
       'budget': 4500000,
+      'areaPyeong': 7,
+      'industryIds': <String>[],
+      'atmosphereTags': [
+        'brightness:bright',
+        'temperature:warm',
+        'color:wood',
+        'texture:natural',
+        'impression:comfortable',
+      ],
       'tags': [
         'natural',
         'one_room',
@@ -95,6 +145,16 @@ class FilteredShowroomApi {
       'favoriteStatus': false,
       'likeCount': 431,
       'budget': 15000000,
+      'areaPyeong': 26,
+      'industryIds': <String>[],
+      'atmosphereTags': [
+        'brightness:mid',
+        'temperature:warm',
+        'color:wood',
+        'texture:wood',
+        'impression:classic',
+        'density:detailed',
+      ],
       'tags': ['classic', 'villa', 'bathroom', 'white', 'brown', 'lighting'],
     },
     {
@@ -107,6 +167,15 @@ class FilteredShowroomApi {
       'favoriteStatus': true,
       'likeCount': 298,
       'budget': 9800000,
+      'areaPyeong': 24,
+      'industryIds': <String>[],
+      'atmosphereTags': [
+        'brightness:bright',
+        'temperature:neutral',
+        'color:achromatic',
+        'texture:smooth',
+        'impression:tidy',
+      ],
       'tags': [
         'modern',
         'apartment',
@@ -125,7 +194,16 @@ class FilteredShowroomApi {
       'userProfileUrl': 'https://i.pravatar.cc/150?img=8',
       'favoriteStatus': false,
       'likeCount': 678,
-      'budget': 22000000,
+      'budget': 78000000,
+      'areaPyeong': 62,
+      'industryIds': ['stay', 'stay_hotel'],
+      'atmosphereTags': [
+        'brightness:dark',
+        'temperature:neutral',
+        'texture:stone',
+        'impression:luxury',
+        'density:balanced',
+      ],
       'tags': ['hotel', 'apartment', 'bathroom', 'white', 'gray', 'paint'],
     },
     {
@@ -138,6 +216,16 @@ class FilteredShowroomApi {
       'favoriteStatus': true,
       'likeCount': 234,
       'budget': 6500000,
+      'areaPyeong': 8,
+      'industryIds': <String>[],
+      'atmosphereTags': [
+        'brightness:bright',
+        'temperature:warm',
+        'color:accent',
+        'impression:character',
+        'density:detailed',
+        'color:colorful',
+      ],
       'tags': [
         'colorpoint',
         'apartment',
@@ -157,6 +245,16 @@ class FilteredShowroomApi {
       'favoriteStatus': false,
       'likeCount': 389,
       'budget': 11000000,
+      'areaPyeong': 20,
+      'industryIds': ['culture', 'culture_gallery'],
+      'atmosphereTags': [
+        'brightness:mid',
+        'temperature:warm',
+        'color:wood',
+        'texture:wood',
+        'impression:classic',
+        'density:detailed',
+      ],
       'tags': ['artwall', 'villa', 'living_room', 'white', 'black', 'paint'],
     },
   ];
@@ -168,23 +266,44 @@ class FilteredShowroomApi {
     double? maxBudget,
     List<String>? tones,
     List<String>? materials,
+    List<String>? industryIds,
+    List<String>? areaRangeIds,
+    List<String>? budgetRangeIds,
+    List<String>? styleMoodIds,
   }) async {
     await Future.delayed(const Duration(milliseconds: 500));
+
+    final bool hasQuickFilter =
+        (industryIds != null && industryIds.isNotEmpty) ||
+        (areaRangeIds != null && areaRangeIds.isNotEmpty) ||
+        (budgetRangeIds != null && budgetRangeIds.isNotEmpty) ||
+        (styleMoodIds != null && styleMoodIds.isNotEmpty);
 
     // 필터가 하나도 없으면 전체 목록 반환
     if ((styles == null || styles.isEmpty) &&
         (spaceTypes == null || spaceTypes.isEmpty) &&
         (minBudget == null && maxBudget == null) &&
         (tones == null || tones.isEmpty) &&
-        (materials == null || materials.isEmpty)) {
+        (materials == null || materials.isEmpty) &&
+        !hasQuickFilter) {
       return FilteredShowroomModel.listFromJson(jsonList);
     }
+
+    final List<String> effectiveIndustries =
+        industryIds == null ? const [] : effectiveIndustryIds(industryIds);
 
     // 필터링 로직
     final filteredList =
         jsonList.where((item) {
           final tags = List<String>.from(item['tags'] as List);
           final budget = (item['budget'] as num?)?.toDouble() ?? 0.0;
+          final area = (item['areaPyeong'] as num?)?.toDouble();
+          final itemIndustries = List<String>.from(
+            (item['industryIds'] as List?) ?? const [],
+          );
+          final atmosphereTags = List<String>.from(
+            (item['atmosphereTags'] as List?) ?? const [],
+          );
 
           // 스타일 필터
           if (styles != null && styles.isNotEmpty) {
@@ -220,6 +339,30 @@ class FilteredShowroomApi {
             if (!tags.any((tag) => materials.contains(tag))) {
               return false;
             }
+          }
+
+          if (effectiveIndustries.isNotEmpty &&
+              !itemIndustries.any(effectiveIndustries.contains)) {
+            return false;
+          }
+
+          if (areaRangeIds != null && areaRangeIds.isNotEmpty) {
+            if (area == null ||
+                !matchesAnyRange(area, areaRangeIds, areaRangeOptions)) {
+              return false;
+            }
+          }
+
+          if (budgetRangeIds != null && budgetRangeIds.isNotEmpty) {
+            if (!matchesAnyRange(budget, budgetRangeIds, budgetRangeOptions)) {
+              return false;
+            }
+          }
+
+          if (styleMoodIds != null &&
+              styleMoodIds.isNotEmpty &&
+              !matchesStyleMood(atmosphereTags, styleMoodIds)) {
+            return false;
           }
           return true;
         }).toList();

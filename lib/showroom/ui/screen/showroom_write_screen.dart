@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/showroom_write_provider.dart';
 
 class ShowroomWriteScreen extends ConsumerWidget {
@@ -110,17 +111,8 @@ class ShowroomWriteScreen extends ConsumerWidget {
                                           borderRadius: BorderRadius.circular(
                                             4,
                                           ),
-                                          child: Image.network(
-                                            data[index]['buildImage'],
-                                            fit: BoxFit.cover,
-                                            errorBuilder:
-                                                (context, error, stackTrace) =>
-                                                    Container(
-                                                      color: Colors.grey[300]!,
-                                                      child: Icon(
-                                                        Icons.broken_image,
-                                                      ),
-                                                    ),
+                                          child: AppNetworkImage(
+                                            url: data[index]['buildImage'],
                                           ),
                                         ),
                                       ),

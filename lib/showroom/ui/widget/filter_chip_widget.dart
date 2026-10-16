@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/filter_entity.dart';
 
 /// 일반 필터 칩 위젯 (재사용 가능)
@@ -22,7 +23,7 @@ class FilterChipWidget extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           border: Border.all(
-            color: item.isSelected ? Colors.black : Colors.grey[300]!,
+            color: item.isSelected ? AppColors.primary : AppColors.border,
           ),
           borderRadius: BorderRadius.circular(20),
         ),
@@ -61,7 +62,7 @@ class ColorFilterChipWidget extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           border: Border.all(
-            color: item.isSelected ? Colors.black : Colors.grey[300]!,
+            color: item.isSelected ? AppColors.primary : AppColors.border,
           ),
           borderRadius: BorderRadius.circular(20),
         ),
@@ -76,8 +77,8 @@ class ColorFilterChipWidget extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color:
-                      color == Colors.white
-                          ? Colors.grey[300]!
+                      color == AppColors.white
+                          ? AppColors.border
                           : Colors.transparent,
                   width: 1,
                 ),
@@ -97,4 +98,3 @@ class ColorFilterChipWidget extends StatelessWidget {
     );
   }
 }
-

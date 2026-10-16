@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/hot_showroom_model.dart';
 import 'package:interiorapp_flutter_client/home/data/model/recommend_build_model.dart';
@@ -6,6 +8,15 @@ import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_sh
 import 'package:interiorapp_flutter_client/home/presentation/provider/recommend_build_provider.dart';
 import 'package:interiorapp_flutter_client/home/ui/widget/image_slider_section.dart';
 import 'package:intl/intl.dart';
+
+const BoxDecoration _photoScrim = BoxDecoration(
+  gradient: LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0x00000000), Color(0x00000000), Color(0x66000000)],
+    stops: [0, 0.62, 1],
+  ),
+);
 
 /// 가격 포맷
 String _formatKrw(dynamic raw) {
@@ -134,19 +145,8 @@ class ImageSliderWidget {
         return Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(item.thumbnailUrl, fit: BoxFit.cover),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.black.withValues(alpha: 0.0),
-                    Colors.black.withValues(alpha: 0.55),
-                  ],
-                ),
-              ),
-            ),
+            AppNetworkImage(url: item.thumbnailUrl),
+            const DecoratedBox(decoration: _photoScrim),
             Positioned(
               left: 0,
               right: 2,
@@ -192,7 +192,7 @@ class ImageSliderWidget {
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF333333),
+                  color: AppColors.textPrimary,
                 ),
               ),
             ),
@@ -215,7 +215,7 @@ class ImageSliderWidget {
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF333333),
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ),
@@ -224,7 +224,7 @@ class ImageSliderWidget {
                   child: VerticalDivider(
                     width: 10, // 좌우 여백 포함
                     thickness: 1,
-                    color: Color(0xFF333333),
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const Text(
@@ -232,7 +232,7 @@ class ImageSliderWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF333333),
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(width: 2),
@@ -243,7 +243,7 @@ class ImageSliderWidget {
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF333333),
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ],
@@ -272,19 +272,8 @@ class ImageSliderWidget {
         return Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(item.thumbnailUrl, fit: BoxFit.cover),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.black.withValues(alpha: 0.0),
-                    Colors.black.withValues(alpha: 0.55),
-                  ],
-                ),
-              ),
-            ),
+            AppNetworkImage(url: item.thumbnailUrl),
+            const DecoratedBox(decoration: _photoScrim),
             Positioned(
               left: 0,
               right: 2,
@@ -336,7 +325,7 @@ class ImageSliderWidget {
                   ),
                 ),
                 const Spacer(),
-                Icon(Icons.star, color: Color(0xFF333333), size: 12),
+                const Icon(Icons.star, color: AppColors.accent, size: 12),
                 const SizedBox(width: 2),
                 Text(
                   item.rating.toString(),
@@ -345,7 +334,7 @@ class ImageSliderWidget {
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF333333),
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ],
@@ -362,7 +351,7 @@ class ImageSliderWidget {
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF333333),
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ),
@@ -371,7 +360,7 @@ class ImageSliderWidget {
                   child: VerticalDivider(
                     width: 10, // 좌우 여백 포함
                     thickness: 1,
-                    color: Color(0xFF333333),
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 Text(
@@ -381,7 +370,7 @@ class ImageSliderWidget {
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF333333),
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 SizedBox(
@@ -389,7 +378,7 @@ class ImageSliderWidget {
                   child: VerticalDivider(
                     width: 10, // 좌우 여백 포함
                     thickness: 1,
-                    color: Color(0xFF333333),
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 Text(
@@ -399,7 +388,7 @@ class ImageSliderWidget {
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF333333),
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ],

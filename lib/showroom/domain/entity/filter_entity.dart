@@ -34,6 +34,7 @@ class FilterState {
   final List<SelectedFilter> selectedFilters;
   final String? selectedSpaceType; // 주거/상업 선택 상태
   final RangeValues budgetRange; // 예산 범위
+  final String? expandedIndustryId;
 
   FilterState({
     required this.categoryItems,
@@ -41,6 +42,7 @@ class FilterState {
     this.selectedFilters = const [],
     this.selectedSpaceType,
     this.budgetRange = const RangeValues(0, 0),
+    this.expandedIndustryId,
   });
 
   FilterState copyWith({
@@ -49,20 +51,26 @@ class FilterState {
     List<SelectedFilter>? selectedFilters,
     bool clearSpaceType = false, //공간 형태 초기화 안되는 문제 떄문에 초기화하는 문제 때문에 생성
     String? selectedSpaceType,
-    
     RangeValues? budgetRange,
+    String? expandedIndustryId,
+    bool clearExpandedIndustry = false,
   }) {
     return FilterState(
       categoryItems: categoryItems ?? this.categoryItems,
       selectedCategory: selectedCategory ?? this.selectedCategory,
       selectedFilters: selectedFilters ?? this.selectedFilters,
-      selectedSpaceType: clearSpaceType ? null : (selectedSpaceType ?? this.selectedSpaceType),
+      selectedSpaceType:
+          clearSpaceType ? null : (selectedSpaceType ?? this.selectedSpaceType),
       budgetRange: budgetRange ?? this.budgetRange,
+      expandedIndustryId:
+          clearExpandedIndustry
+              ? null
+              : (expandedIndustryId ?? this.expandedIndustryId),
     );
   }
 
-//예산을 포맷된 문자열로 반환 (콤마 포함)
-String get formattedBudgetRange {
+  //예산을 포맷된 문자열로 반환 (콤마 포함)
+  String get formattedBudgetRange {
     // 초기 상태 (0원)
     if (budgetRange.start == 0 && budgetRange.end == 0) {
       return '0원';
@@ -93,9 +101,9 @@ String get formattedBudgetRange {
     if (manWon > 0) {
       // 만원에 콤마 추가
       final manWonStr = manWon.toString().replaceAllMapped(
-            RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-            (Match m) => '${m[1]},',
-          );
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+        (Match m) => '${m[1]},',
+      );
       parts.add('$manWonStr만원');
     }
 

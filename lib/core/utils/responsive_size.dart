@@ -176,9 +176,9 @@ class ResponsiveSize {
   /// 섹션 간 기본 간격 (디바이스 폭 기준 고정 비율)
   static double sectionGap(BuildContext context) {
     final AppWindow window = AppWindow.of(context);
-    if (window.isExpanded) return 32.0;
-    if (window.isMedium) return 28.0;
-    return 24.0;
+    if (window.isExpanded) return 36.0;
+    if (window.isMedium) return 32.0;
+    return 28.0;
   }
 
   /// 제목-컨텐츠, 요소 내부의 보조 간격 (sectionGap의 약 0.5배)

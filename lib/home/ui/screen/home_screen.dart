@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/home/ui/widget/my_build_project_widget.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_spacing.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_typography.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/home/ui/widget/adv_widget.dart';
 import 'package:interiorapp_flutter_client/home/ui/widget/section.dart';
@@ -44,10 +47,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
 
     // 크기 애니메이션 (1.0 ↔ 1.5)
-    _cardAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.5,
-    ).animate(
+    _cardAnimation = Tween<double>(begin: 1.0, end: 1.5).animate(
       CurvedAnimation(parent: _cardController, curve: Curves.easeInOut),
     );
 
@@ -85,11 +85,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       _isCardExpanded = true;
       _expandedCardType = type;
     });
-    
+
     // 열기 애니메이션: 크기 확대 후 회전 시작 (느린 속도)
     _cardController.duration = const Duration(milliseconds: 600);
     _rotationController.duration = const Duration(milliseconds: 800);
-    
+
     _cardController.forward();
     Future.delayed(const Duration(milliseconds: 100), () {
       _rotationController.forward();
@@ -100,7 +100,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     // 닫기 애니메이션: 빠른 속도로 설정 후 역순 실행
     _cardController.duration = const Duration(milliseconds: 300);
     _rotationController.duration = const Duration(milliseconds: 400);
-    
+
     // 먼저 회전 복원, 그 다음 크기 축소
     _rotationController.reverse().then((_) {
       _cardController.reverse().then((_) {
@@ -132,7 +132,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     ];
 
     final EdgeInsets screenPadding = ResponsiveSize.responsivePadding(context);
-    final double fontScale = ResponsiveSize.fontScale(context);
 
     final projects = ref.watch(projectListProvider);
     final bool isProjectBuilding =
@@ -181,10 +180,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 Section(
                   title: Text(
                     '관심있는 인테리어 방식이 있나요?',
-                    style: TextStyle(
-                      fontSize: 18 * fontScale,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: AppTypography.title(context),
                   ),
                   child: GridView.count(
                     shrinkWrap: true,
@@ -226,49 +222,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
                 // 인기 상품 슬라이더
                 Section(
-                  title: Text(
-                    '인기 쇼룸',
-                    style: TextStyle(
-                      fontSize: 18 * fontScale,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  title: Text('인기 쇼룸', style: AppTypography.title(context)),
                   trailing: TextButton(
                     onPressed: () {},
-                    style: TextButton.styleFrom(
-                      textStyle: const TextStyle(
-                        decoration: TextDecoration.underline,
-                        color: Colors.black,
-                      ),
-                    ),
-                    child: const Text(
-                      '더보기',
-                      style: TextStyle(color: Colors.black),
-                    ),
+                    child: Text('더보기', style: AppTypography.caption(context)),
                   ),
                   gap: ResponsiveSize.subGap(context) * 0,
                   child: ImageSliderWidget().showroomInfo(ref: ref),
                 ),
                 SizedBox(height: sectionGap),
                 Section(
-                  title: Text(
-                    '추천 시공사례',
-                    style: TextStyle(
-                      fontSize: 18 * fontScale,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  title: Text('추천 시공사례', style: AppTypography.title(context)),
                   trailing: TextButton(
                     onPressed: () {},
-                    style: TextButton.styleFrom(
-                      textStyle: const TextStyle(
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
-                    child: const Text(
-                      '더보기',
-                      style: TextStyle(color: Colors.black),
-                    ),
+                    child: Text('더보기', style: AppTypography.caption(context)),
                   ),
                   gap: ResponsiveSize.subGap(context) * 0,
                   child: ImageSliderWidget().recommendBuildInfo(ref: ref),
@@ -317,7 +284,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       _rotationAnimation,
                     ]),
                     builder: (context, child) {
-                      final isBackSide = _rotationAnimation.value > 1.57079632679; // π/2
+                      final isBackSide =
+                          _rotationAnimation.value > 1.57079632679; // π/2
 
                       return Transform.scale(
                         scale: _cardAnimation.value,
@@ -364,32 +332,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       child: Hero(
         tag: 'category_${type.name}', // 고유한 Hero 태그
         child: Card(
-          elevation: 4,
+          elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSpacing.radius),
+            side: const BorderSide(color: AppColors.border, width: 0.7),
           ),
           child: Container(
             width: double.infinity,
             height: double.infinity,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppSpacing.radius),
+              color: AppColors.surface,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: 40, color: Colors.grey[600]),
+                Icon(icon, size: 36, color: AppColors.primary),
                 const SizedBox(height: 8),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: Text(
                     title,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
+                    style: AppTypography.body(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w600),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -405,32 +372,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget _buildFrontCard() {
     final Size cardSize = ResponsiveSize.centeredCardSize(context);
     return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.radius),
+        side: const BorderSide(color: AppColors.border, width: 0.7),
+      ),
       child: Container(
         width: cardSize.width,
         height: cardSize.height,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppSpacing.radius),
+          color: AppColors.surface,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               _expandedCardType == CategoryType.self ? Icons.living : Icons.bed,
-              size: 60,
-              color: Colors.grey[600],
+              size: 48,
+              color: AppColors.primary,
             ),
             const SizedBox(height: 16),
             Text(
               _expandedCardType == CategoryType.self ? '셀프 반셀프 인테리어' : '외주 시공',
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
+              style: AppTypography.title(context),
             ),
           ],
         ),
@@ -441,14 +407,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget _buildBackCard() {
     final Size cardSize = ResponsiveSize.centeredCardSize(context);
     return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 0,
+      color: AppColors.primary,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.radius),
+      ),
       child: Container(
         width: cardSize.width,
         height: cardSize.height,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: Colors.blueGrey[600],
+          borderRadius: BorderRadius.circular(AppSpacing.radius),
+          color: AppColors.primary,
         ),
         child: Column(
           children: [

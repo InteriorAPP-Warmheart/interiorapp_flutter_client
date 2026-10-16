@@ -13,6 +13,10 @@ class FilteredShowroomUseCase {
     double? maxBudget,
     List<String>? tones,
     List<String>? materials,
+    List<String>? industryIds,
+    List<String>? areaRangeIds,
+    List<String>? budgetRangeIds,
+    List<String>? styleMoodIds,
   }) async {
     return _repository.getFilteredShowrooms(
       styles: styles,
@@ -21,6 +25,10 @@ class FilteredShowroomUseCase {
       maxBudget: maxBudget,
       tones: tones,
       materials: materials,
+      industryIds: industryIds,
+      areaRangeIds: areaRangeIds,
+      budgetRangeIds: budgetRangeIds,
+      styleMoodIds: styleMoodIds,
     );
   }
 

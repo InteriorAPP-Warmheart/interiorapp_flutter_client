@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/filter_chip_widget.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/filter_entity.dart';
 
@@ -94,7 +95,7 @@ class SpaceTypeFilterWidget extends StatelessWidget {
         height: buttonHeight ?? 60,
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected ? Colors.black : Colors.grey[300]!,
+            color: isSelected ? AppColors.primary : AppColors.border,
             width: 1.5,
           ),
           borderRadius: BorderRadius.circular(12),
@@ -103,7 +104,7 @@ class SpaceTypeFilterWidget extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              color: Colors.black,
+              color: isSelected ? AppColors.primary : AppColors.textPrimary,
               fontSize: fontSize ?? 16,
               fontWeight: FontWeight.bold,
             ),
@@ -127,23 +128,23 @@ class SpaceTypeFilterWidget extends StatelessWidget {
           style: TextStyle(
             fontSize: fontSize ?? 16,
             fontWeight: FontWeight.bold,
-            color: Colors.grey,
+            color: AppColors.textSecondary,
           ),
         ),
         SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: items.map((item) {
-            return FilterChipWidget(
-              item: item,
-              onTap: () => onFilterToggle(item.id),
-              fontSize: fontSize,
-            );
-          }).toList(),
+          children:
+              items.map((item) {
+                return FilterChipWidget(
+                  item: item,
+                  onTap: () => onFilterToggle(item.id),
+                  fontSize: fontSize,
+                );
+              }).toList(),
         ),
       ],
     );
   }
 }
-

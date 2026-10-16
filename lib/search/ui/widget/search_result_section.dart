@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/search/data/model/search_result_model.dart';
 
 enum SearchResultLayout { gallery, singleThumbnail, storeGrid }
@@ -179,19 +180,7 @@ class _SearchResultListTile extends StatelessWidget {
                       height: thumbSize,
                       child:
                           displayedImageCount > 0
-                              ? Image.network(
-                                item.imageUrls!.first,
-                                fit: BoxFit.cover,
-                                errorBuilder:
-                                    (context, error, stackTrace) => Container(
-                                      color: Colors.grey.shade200,
-                                      alignment: Alignment.center,
-                                      child: const Icon(
-                                        Icons.broken_image,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                              )
+                              ? AppNetworkImage(url: item.imageUrls!.first)
                               : Container(
                                 color: Colors.grey.shade200,
                                 alignment: Alignment.center,
@@ -317,16 +306,7 @@ class _ImageTile extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(
-              imageUrl,
-              fit: BoxFit.cover,
-              errorBuilder:
-                  (context, error, stackTrace) => Container(
-                    color: Colors.grey.shade200,
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.broken_image, color: Colors.grey),
-                  ),
-            ),
+            AppNetworkImage(url: imageUrl),
             if (overlayText != null)
               Container(
                 color: Colors.black.withValues(alpha: 0.45),
@@ -373,19 +353,7 @@ class _StoreGridTile extends StatelessWidget {
               aspectRatio: 1,
               child:
                   item.imageUrls?.isNotEmpty ?? false
-                      ? Image.network(
-                        item.imageUrls!.first,
-                        fit: BoxFit.cover,
-                        errorBuilder:
-                            (context, error, stackTrace) => Container(
-                              color: Colors.grey.shade200,
-                              alignment: Alignment.center,
-                              child: const Icon(
-                                Icons.broken_image,
-                                color: Colors.grey,
-                              ),
-                            ),
-                      )
+                      ? AppNetworkImage(url: item.imageUrls!.first)
                       : Container(
                         color: Colors.grey.shade200,
                         alignment: Alignment.center,

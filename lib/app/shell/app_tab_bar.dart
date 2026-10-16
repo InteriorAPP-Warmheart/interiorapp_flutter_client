@@ -98,8 +98,13 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
         padding: EdgeInsets.zero,
         labelPadding: EdgeInsets.symmetric(horizontal: tabGap),
         labelColor: AppTabBarTheme.selectedColor,
+        unselectedLabelColor: AppTabBarTheme.unselectedColor,
         labelStyle: AppTabBarTheme.labelStyle(context),
-        indicatorColor: Colors.transparent, // 탭바 인디케이터 색상 제거
+        unselectedLabelStyle: AppTabBarTheme.unselectedLabelStyle(context),
+        indicator: AppTabBarTheme.indicator,
+        indicatorSize: TabBarIndicatorSize.tab,
+        splashFactory: NoSplash.splashFactory,
+        overlayColor: const WidgetStatePropertyAll(Colors.transparent),
         onTap: (index) {
           HapticFeedback.lightImpact(); // 탭 클릭 시 가벼운 진동
           ref.read(tabProvider.notifier).changeTab(index);
@@ -108,6 +113,7 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
           for (final tab in ShellTabs.active)
             Tab(
               icon: Icon(tab.icon, size: AppTabBarTheme.iconSize(context)),
+              iconMargin: const EdgeInsets.only(bottom: 2),
               text: tab.label,
             ),
         ],

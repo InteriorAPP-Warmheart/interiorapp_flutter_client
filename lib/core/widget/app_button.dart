@@ -21,8 +21,8 @@ class AppButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final double fontScale = ResponsiveSize.fontScale(context);
     final bool primary = variant == AppButtonVariant.primary;
-    final Color foreground = primary ? AppColors.white : const Color(0xFF111111);
-    final Color background = primary ? const Color(0xFF111111) : AppColors.white;
+    final Color foreground = primary ? AppColors.white : AppColors.primary;
+    final Color background = primary ? AppColors.primary : AppColors.surface;
 
     return SizedBox(
       width: double.infinity,
@@ -33,13 +33,14 @@ class AppButton extends StatelessWidget {
           elevation: 0,
           backgroundColor: background,
           foregroundColor: foreground,
-          disabledBackgroundColor: const Color(0xFFE8E8E8),
-          disabledForegroundColor: const Color(0xFF9A9A9A),
+          disabledBackgroundColor: AppColors.border,
+          disabledForegroundColor: AppColors.textSecondary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: primary
-                ? BorderSide.none
-                : const BorderSide(color: Color(0xFF111111)),
+            side:
+                primary
+                    ? BorderSide.none
+                    : const BorderSide(color: AppColors.primary),
           ),
           textStyle: TextStyle(
             fontSize: 16 * fontScale,
