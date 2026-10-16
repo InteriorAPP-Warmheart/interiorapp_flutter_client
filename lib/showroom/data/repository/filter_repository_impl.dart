@@ -15,6 +15,10 @@ class FilteredShowroomImpl implements FilteredShowroomRepository {
     double? maxBudget,
     List<String>? tones,
     List<String>? materials,
+    List<String>? industryIds,
+    List<String>? areaRangeIds,
+    List<String>? budgetRangeIds,
+    List<String>? styleMoodIds,
   }) async {
     return _api.getFilteredShowrooms(
       styles: styles,
@@ -23,6 +27,10 @@ class FilteredShowroomImpl implements FilteredShowroomRepository {
       maxBudget: maxBudget,
       tones: tones,
       materials: materials,
+      industryIds: industryIds,
+      areaRangeIds: areaRangeIds,
+      budgetRangeIds: budgetRangeIds,
+      styleMoodIds: styleMoodIds,
     );
   }
 }

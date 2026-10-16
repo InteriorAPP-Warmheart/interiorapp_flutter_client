@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/home/ui/widget/image_slider_widget.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/filter_provider.dart';
-import 'package:interiorapp_flutter_client/showroom/ui/widget/filter_bottomsheet.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/panorama_showroom_card.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/quick_filter_bar.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/popular_showroom_card.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/post_section.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
@@ -21,7 +21,6 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
   Widget build(BuildContext context) {
     final double sectionGap = ResponsiveSize.sectionGap(context);
     final EdgeInsets screenPadding = ResponsiveSize.responsivePadding(context);
-    final filterState = ref.watch(filterProvider);
     final hasSelectedFilters = ref.watch(hasSelectedFiltersProvider);
 
     return Scaffold(
@@ -54,20 +53,9 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 필터링 버튼 Section
-                    _rowFilterButton('필터', '스타일'),
-                    SizedBox(height: 8),
-                    _rowFilterButton('공간 형태', '예산'),
-                    SizedBox(height: 8),
-                    _rowFilterButton('톤앤매너', '소재'),
-
-                    // 선택된 필터 칩들 (있을 경우에만 표시)
+                    const QuickFilterBar(),
                     if (hasSelectedFilters) ...[
-                      SizedBox(height: 16),
-                      _buildSelectedFiltersSection(filterState),
                       SizedBox(height: sectionGap),
-
-                      // 베스트 게시물 섹션 추가
                       _buildFilteredShowroomList(),
                     ],
                   ],
@@ -132,126 +120,24 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
     );
   }
 
-  // 필터링 버튼
-  Widget _rowFilterButton(String leftText, String rightText) {
-    final filterState = ref.watch(filterProvider);
-
-    return Row(
-      children: [
-        _buildCategoryButton(leftText, filterState),
-        SizedBox(width: 8),
-        _buildCategoryButton(rightText, filterState),
-      ],
-    );
-  }
-
-  // 카테고리 버튼
-  Widget _buildCategoryButton(String category, filterState) {
-    final hasSelection = filterState.selectedFilters.any((filter) {
-      if (category == '필터') return false;
-      if (category == '스타일') return filter.category == '스타일';
-      if (category == '공간 형태') return filter.category == '공간 형태';
-      if (category == '예산') return filter.category == '예산';
-      if (category == '톤앤매너') return filter.category == '톤앤매너';
-      if (category == '소재') return filter.category == '소재';
-      return false;
-    });
-
-    return Expanded(
-      child: InkWell(
-        onTap: () {
-          // 바텀시트 열기 전에 먼저 카테고리 설정하도록 함!
-          if (category != '필터') {
-            ref.read(filterProvider.notifier).selectCategory(category);
-          }
-
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            builder: (context) => FilterBottomSheet(),
-          );
-        },
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: hasSelection ? Colors.black : Colors.grey[400]!,
-              width: hasSelection ? 2 : 1,
-            ),
-            borderRadius: BorderRadius.circular(5),
-          ),
-          child: Text(
-            category,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: hasSelection ? FontWeight.bold : FontWeight.w500,
-              fontSize: 16,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // 선택된 필터 Section
-  Widget _buildSelectedFiltersSection(filterState) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      color: const Color.fromARGB(255, 232, 232, 232),
-      child: SizedBox(
-        height: 40,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          itemCount: filterState.selectedFilters.length,
-          separatorBuilder: (context, index) => SizedBox(width: 8),
-          itemBuilder: (context, index) {
-            final filter = filterState.selectedFilters[index];
-            return Container(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 255, 255, 255),
-                borderRadius: BorderRadius.circular(7),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    filter.name,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black,
-                    ),
-                  ),
-                  SizedBox(width: 6),
-                  GestureDetector(
-                    onTap: () {
-                      ref
-                          .read(filterProvider.notifier)
-                          .removeSelectedFilter(filter.id);
-                      ref
-                          .read(filteredShowroomListProvider.notifier)
-                          .fetchFiltered();
-                    },
-                    child: Icon(Icons.close, size: 16, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
   Widget _buildFilteredShowroomList() {
     final filteredShowrooms = ref.watch(filteredShowroomListProvider);
 
+    final showrooms = filteredShowrooms.value ?? const [];
+    if (filteredShowrooms.isLoading && showrooms.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(40),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+    if (filteredShowrooms.hasError && showrooms.isEmpty) {
+      return Center(child: Text('오류가 발생: ${filteredShowrooms.error}'));
+    }
+
     return filteredShowrooms.when(
+      skipLoadingOnReload: true,
       data: (showrooms) {
         if (showrooms.isEmpty) {
           return _filterEmptyPostsSection();

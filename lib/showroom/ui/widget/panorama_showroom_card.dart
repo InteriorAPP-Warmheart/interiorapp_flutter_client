@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/hot_showroom_model.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
 
@@ -288,13 +289,7 @@ class ShowroomPostCard extends StatelessWidget {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const ColoredBox(color: Color(0xFFE6E6E6));
-                          },
-                        ),
+                        AppNetworkImage(url: imageUrl),
                         Positioned(
                           top: dense ? 4 : 8,
                           right: dense ? 4 : 8,

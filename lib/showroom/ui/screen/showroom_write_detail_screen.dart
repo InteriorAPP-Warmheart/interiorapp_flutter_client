@@ -5,6 +5,7 @@ import 'package:interiorapp_flutter_client/showroom/ui/widget/space_type_filter_
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/showroom_write_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/vm/showroom_write_vm.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 
 class ShowroomWriteDetailScreen extends ConsumerWidget {
   const ShowroomWriteDetailScreen({super.key, this.buildId});
@@ -347,19 +348,10 @@ class ShowroomWriteDetailScreen extends ConsumerWidget {
                 if (detail['buildImage'] != null)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      detail['buildImage'],
+                    child: AppNetworkImage(
+                      url: detail['buildImage'],
                       height: 160,
                       width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder:
-                          (context, error, stackTrace) => Container(
-                            height: 160,
-                            width: double.infinity,
-                            color: Colors.grey[200],
-                            alignment: Alignment.center,
-                            child: const Icon(Icons.broken_image),
-                          ),
                     ),
                   ),
                 const SizedBox(height: 16),

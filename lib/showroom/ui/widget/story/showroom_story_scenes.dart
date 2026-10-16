@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
 
 const Color storyInk = Color(0xFF111111);
@@ -49,15 +50,11 @@ class StoryPhoto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.network(
-      url,
-      fit: BoxFit.cover,
+    return AppNetworkImage(
+      url: url,
       width: double.infinity,
       height: double.infinity,
-      gaplessPlayback: true,
-      errorBuilder: (context, error, stackTrace) {
-        return const ColoredBox(color: Color(0xFF2A2A2A));
-      },
+      placeholderColor: const Color(0xFF2A2A2A),
     );
   }
 }

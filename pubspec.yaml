@@ -51,12 +51,13 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/logo/
     - lib/auth/util/
     # - assets/json/
     # - .env
   
   
-  # fonts:
-  #   - family: omyu-pretty
-  #     fonts:
-  #       - asset: assets/fonts/omyu-pretty.ttf
+  fonts:
+    - family: Pretendard
+      fonts:
+        - asset: assets/fonts/PretendardVariable.ttf

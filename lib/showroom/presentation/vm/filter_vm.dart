@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/filter_showroom_model.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/filter_entity.dart';
+import 'package:interiorapp_flutter_client/showroom/domain/entity/quick_filter_catalog.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/filter_provider.dart';
 
 class FilterVm extends Notifier<FilterState> {
@@ -32,7 +33,11 @@ class FilterVm extends Notifier<FilterState> {
         FilterItem(id: 'studio', name: '단독주택', parentId: 'residential'),
         FilterItem(id: 'officetel', name: '오피스텔', parentId: 'residential'),
         FilterItem(id: 'one_room', name: '원룸', parentId: 'residential'),
-        FilterItem(id: 'shared_house',name: '고시원/셰어하우스',parentId: 'residential',),
+        FilterItem(
+          id: 'shared_house',
+          name: '고시원/셰어하우스',
+          parentId: 'residential',
+        ),
       ],
 
       // 상업 공간 하위 항목
@@ -40,7 +45,11 @@ class FilterVm extends Notifier<FilterState> {
         FilterItem(id: 'store', name: '상가/매장', parentId: 'commercial'),
         FilterItem(id: 'restaurant', name: '음식점/카페', parentId: 'commercial'),
         FilterItem(id: 'office', name: '사무실/오피스', parentId: 'commercial'),
-        FilterItem(id: 'other_commercial',name: '기타 상업시설',parentId: 'commercial',),
+        FilterItem(
+          id: 'other_commercial',
+          name: '기타 상업시설',
+          parentId: 'commercial',
+        ),
       ],
 
       // 주거 공간 세부 항목
@@ -54,7 +63,11 @@ class FilterVm extends Notifier<FilterState> {
         FilterItem(id: 'multi_room', name: '다용도실', parentId: 'residential'),
         FilterItem(id: 'entrance', name: '현관', parentId: 'residential'),
         FilterItem(id: 'veranda', name: '베란다/발코니', parentId: 'residential'),
-        FilterItem(id: 'interior_garden',name: '실내복도',parentId: 'residential',),
+        FilterItem(
+          id: 'interior_garden',
+          name: '실내복도',
+          parentId: 'residential',
+        ),
         FilterItem(id: 'study', name: '서재/작업실', parentId: 'residential'),
         FilterItem(id: 'storage', name: '창고/수납공간', parentId: 'residential'),
         FilterItem(id: 'attic', name: '마당', parentId: 'residential'),
@@ -105,11 +118,12 @@ class FilterVm extends Notifier<FilterState> {
         FilterItem(id: 'ceiling', name: '천장'),
         FilterItem(id: 'wood', name: '우드'),
       ],
+      ...browseFilterItems(),
     };
 
     return FilterState(
       categoryItems: categoryItems,
-      selectedCategory: '스타일',
+      selectedCategory: industryFilterLabel,
       selectedFilters: [],
       selectedSpaceType: null,
       budgetRange: const RangeValues(0, 0),
@@ -119,6 +133,56 @@ class FilterVm extends Notifier<FilterState> {
   // 카테고리 선택
   void selectCategory(String category) {
     state = state.copyWith(selectedCategory: category);
+  }
+
+  void toggleExpandedIndustry(String industryId) {
+    if (state.expandedIndustryId == industryId) {
+      state = state.copyWith(clearExpandedIndustry: true);
+      return;
+    }
+    state = state.copyWith(expandedIndustryId: industryId);
+  }
+
+  void expandIndustry(String industryId) {
+    state = state.copyWith(expandedIndustryId: industryId);
+  }
+
+  /// 대분류 전체와 세부업종이 동시에 켜지면 결과가 어긋나므로 한쪽만 남긴다.
+  void toggleIndustryMajor(String industryId) {
+    final bool turningOn = !_isFilterSelected(industryFilterLabel, industryId);
+    toggleFilterWithCategory(industryId, industryFilterLabel);
+    if (!turningOn) return;
+
+    final IndustryCategory category = industryCategories.firstWhere(
+      (item) => item.id == industryId,
+    );
+    for (final IndustryDetail detail in category.details) {
+      if (_isFilterSelected(industryDetailCategoryKey, detail.id)) {
+        toggleFilterWithCategory(detail.id, industryDetailCategoryKey);
+      }
+    }
+    expandIndustry(industryId);
+  }
+
+  void toggleIndustryDetail(String detailId) {
+    final String? parentId = parentIndustryId(detailId);
+    final bool turningOn =
+        !_isFilterSelected(industryDetailCategoryKey, detailId);
+    toggleFilterWithCategory(detailId, industryDetailCategoryKey);
+    if (parentId == null) return;
+
+    expandIndustry(parentId);
+    if (turningOn && _isFilterSelected(industryFilterLabel, parentId)) {
+      toggleFilterWithCategory(parentId, industryFilterLabel);
+    }
+  }
+
+  bool _isFilterSelected(String category, String id) {
+    final List<FilterItem> items = state.categoryItems[category] ?? const [];
+    for (final FilterItem item in items) {
+      if (item.id == id) return item.isSelected;
+    }
+    return false;
   }
 
   // 공간 형태 토글 (주거/상업 선택)
@@ -137,7 +201,7 @@ class FilterVm extends Notifier<FilterState> {
 
     // 공간 형태의 하위 카테고리들 찾기
     String? actualCategory = currentCategory;
-    
+
     // selectedSpaceType이 있으면 공간 형태 필터로 간주 (글쓰기 화면 등에서 사용)
     if (currentCategory == '공간 형태' || state.selectedSpaceType != null) {
       // 주거/상업 하위 항목에서 찾기
@@ -179,12 +243,13 @@ class FilterVm extends Notifier<FilterState> {
 
     final item = categoryItems[itemIndex];
 
-    final updatedItems = categoryItems.map((item) {
-      if (item.id == filterId) {
-        return item.copyWith(isSelected: !item.isSelected);
-      }
-      return item;
-    }).toList();
+    final updatedItems =
+        categoryItems.map((item) {
+          if (item.id == filterId) {
+            return item.copyWith(isSelected: !item.isSelected);
+          }
+          return item;
+        }).toList();
 
     final updatedCategories = Map<String, List<FilterItem>>.from(
       state.categoryItems,
@@ -222,12 +287,13 @@ class FilterVm extends Notifier<FilterState> {
 
     final item = categoryItems[itemIndex];
 
-    final updatedItems = categoryItems.map((item) {
-      if (item.id == filterId) {
-        return item.copyWith(isSelected: !item.isSelected);
-      }
-      return item;
-    }).toList();
+    final updatedItems =
+        categoryItems.map((item) {
+          if (item.id == filterId) {
+            return item.copyWith(isSelected: !item.isSelected);
+          }
+          return item;
+        }).toList();
 
     final updatedCategories = Map<String, List<FilterItem>>.from(
       state.categoryItems,
@@ -259,10 +325,10 @@ class FilterVm extends Notifier<FilterState> {
   // 예산 범위 변경
   void updateBudgetRange(RangeValues range) {
     List<SelectedFilter> selectedFilters = List.from(state.selectedFilters);
-    
+
     // 기존 예산 필터 제거
     selectedFilters.removeWhere((filter) => filter.category == '예산');
-    
+
     // 새로운 예산 범위가 0이 아니면 추가
     if (range.start != 0 || range.end != 0) {
       selectedFilters.add(
@@ -273,13 +339,13 @@ class FilterVm extends Notifier<FilterState> {
         ),
       );
     }
-    
+
     state = state.copyWith(
       budgetRange: range,
       selectedFilters: selectedFilters,
     );
   }
-  
+
   // 예산 범위 포맷팅
   String _formatBudgetRange(RangeValues range) {
     if (range.start == 0 && range.end == 0) {
@@ -287,7 +353,7 @@ class FilterVm extends Notifier<FilterState> {
     }
     return '${_formatCurrency(range.start)} ~ ${_formatCurrency(range.end)}';
   }
-  
+
   // 통화 포맷팅 함수
   String _formatCurrency(double value) {
     if (value == 0) return '0원';
@@ -305,9 +371,9 @@ class FilterVm extends Notifier<FilterState> {
 
     if (manWon > 0) {
       final manWonStr = manWon.toString().replaceAllMapped(
-            RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-            (Match m) => '${m[1]},',
-          );
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+        (Match m) => '${m[1]},',
+      );
       parts.add('$manWonStr만원');
     }
 
@@ -330,56 +396,60 @@ class FilterVm extends Notifier<FilterState> {
       selectedFilters: [],
       clearSpaceType: true,
       budgetRange: const RangeValues(0, 0),
+      clearExpandedIndustry: true,
     );
   }
 
   // 선택된 필터 제거
- void removeSelectedFilter(String filterId) {
-  // selectedFilters에서 직접 제거
-  final updatedSelectedFilters = state.selectedFilters
-      .where((filter) => filter.id != filterId)
-      .toList();
+  void removeSelectedFilter(String filterId) {
+    // selectedFilters에서 직접 제거
+    final updatedSelectedFilters =
+        state.selectedFilters.where((filter) => filter.id != filterId).toList();
 
-  // 모든 카테고리를 순회하면서 해당 필터 항목의 isSelected를 false로 변경
-  final updatedCategories = Map<String, List<FilterItem>>.from(
-    state.categoryItems,
-  );
+    // 모든 카테고리를 순회하면서 해당 필터 항목의 isSelected를 false로 변경
+    final updatedCategories = Map<String, List<FilterItem>>.from(
+      state.categoryItems,
+    );
 
-  for (var key in updatedCategories.keys) {
-    updatedCategories[key] = updatedCategories[key]!.map((item) {
-      if (item.id == filterId) {
-        return item.copyWith(isSelected: false);
-      }
-      return item;
-    }).toList();
+    for (var key in updatedCategories.keys) {
+      updatedCategories[key] =
+          updatedCategories[key]!.map((item) {
+            if (item.id == filterId) {
+              return item.copyWith(isSelected: false);
+            }
+            return item;
+          }).toList();
+    }
+
+    // 예산 필터인 경우 budgetRange도 초기화
+    RangeValues newBudgetRange = state.budgetRange;
+    if (filterId == 'budget') {
+      newBudgetRange = const RangeValues(0, 0);
+    }
+
+    state = state.copyWith(
+      categoryItems: updatedCategories,
+      selectedFilters: updatedSelectedFilters,
+      budgetRange: newBudgetRange,
+    );
   }
 
-  // 예산 필터인 경우 budgetRange도 초기화
-  RangeValues newBudgetRange = state.budgetRange;
-  if (filterId == 'budget') {
-    newBudgetRange = const RangeValues(0, 0);
-  }
-
-  state = state.copyWith(
-    categoryItems: updatedCategories,
-    selectedFilters: updatedSelectedFilters,
-    budgetRange: newBudgetRange,
-  );
-}
   // 카테고리 표시 이름 가져오기
   String _getCategoryDisplayName(String category) {
     if (category.startsWith('주거_')) return '공간 형태';
     if (category.startsWith('상업_')) return '공간 형태';
+    if (category == industryDetailCategoryKey) return industryFilterLabel;
+    if (category == budgetRangeCategoryKey) return budgetFilterLabel;
+    if (category == styleMoodCategoryKey) return styleFilterLabel;
     return category;
   }
-
-
-
-
 }
 
-  //데이터 가져오기 
-class FilteredShowroomNotifier extends AsyncNotifier<List<FilteredShowroomModel>> {
+//데이터 가져오기
+class FilteredShowroomNotifier
+    extends AsyncNotifier<List<FilteredShowroomModel>> {
+  int _requestId = 0;
+
   @override
   Future<List<FilteredShowroomModel>> build() async {
     // 초기에는 빈 리스트 반환
@@ -388,46 +458,80 @@ class FilteredShowroomNotifier extends AsyncNotifier<List<FilteredShowroomModel>
 
   // 필터링 실행
   Future<void> fetchFiltered() async {
-    // 로딩 상태로 변경
-    state = const AsyncValue.loading();
-    
+    final int requestId = ++_requestId;
+    final List<FilteredShowroomModel> previous =
+        state.asData?.value ?? const [];
+    if (previous.isEmpty) {
+      state = const AsyncValue.loading();
+    }
+
     try {
       final filterState = ref.read(filterProvider);
       final useCase = ref.read(filteredShowroomUseCaseProvider);
-      
+
       // 필터가 없으면 빈 리스트
-      if (filterState.selectedFilters.isEmpty && 
-          (filterState.budgetRange.start == 0 && filterState.budgetRange.end == 0)) {
+      if (filterState.selectedFilters.isEmpty &&
+          (filterState.budgetRange.start == 0 &&
+              filterState.budgetRange.end == 0)) {
         state = const AsyncValue.data([]);
         return;
       }
-      
+
       // 카테고리별 필터 추출
-      final styles = filterState.selectedFilters
-          .where((f) => f.category == '스타일')
-          .map((f) => f.id)
-          .toList();
-      
-      final spaceTypes = filterState.selectedFilters
-          .where((f) => f.category == '공간 형태')
-          .map((f) => f.id)
-          .toList();
-      
-      final tones = filterState.selectedFilters
-          .where((f) => f.category == '톤앤매너')
-          .map((f) => f.id)
-          .toList();
-      
-      final materials = filterState.selectedFilters
-          .where((f) => f.category == '소재')
-          .map((f) => f.id)
-          .toList();
+      final styles =
+          filterState.selectedFilters
+              .where((f) => f.category == '스타일')
+              .map((f) => f.id)
+              .toList();
+
+      final spaceTypes =
+          filterState.selectedFilters
+              .where((f) => f.category == '공간 형태')
+              .map((f) => f.id)
+              .toList();
+
+      final tones =
+          filterState.selectedFilters
+              .where((f) => f.category == '톤앤매너')
+              .map((f) => f.id)
+              .toList();
+
+      final materials =
+          filterState.selectedFilters
+              .where((f) => f.category == '소재')
+              .map((f) => f.id)
+              .toList();
+
+      final industries =
+          filterState.selectedFilters
+              .where((f) => f.category == industryFilterLabel)
+              .map((f) => f.id)
+              .toList();
+
+      final areas =
+          filterState.selectedFilters
+              .where((f) => f.category == areaFilterLabel)
+              .map((f) => f.id)
+              .toList();
+
+      final budgetRanges =
+          filterState.selectedFilters
+              .where((f) => f.category == budgetFilterLabel && f.id != 'budget')
+              .map((f) => f.id)
+              .toList();
+
+      final styleMoods =
+          filterState.selectedFilters
+              .where((f) => f.category == styleFilterLabel)
+              .map((f) => f.id)
+              .toList();
 
       // 예산 필터
       double? minBudget;
       double? maxBudget;
-      
-      if (filterState.budgetRange.start > 0 || filterState.budgetRange.end > 0) {
+
+      if (filterState.budgetRange.start > 0 ||
+          filterState.budgetRange.end > 0) {
         minBudget = filterState.budgetRange.start;
         maxBudget = filterState.budgetRange.end;
       }
@@ -440,12 +544,16 @@ class FilteredShowroomNotifier extends AsyncNotifier<List<FilteredShowroomModel>
         maxBudget: maxBudget,
         tones: tones.isEmpty ? null : tones,
         materials: materials.isEmpty ? null : materials,
+        industryIds: industries.isEmpty ? null : industries,
+        areaRangeIds: areas.isEmpty ? null : areas,
+        budgetRangeIds: budgetRanges.isEmpty ? null : budgetRanges,
+        styleMoodIds: styleMoods.isEmpty ? null : styleMoods,
       );
-      
-      // 성공 상태로 변경
+
+      if (requestId != _requestId) return;
       state = AsyncValue.data(result);
     } catch (error, stackTrace) {
-      // 에러 상태로 변경
+      if (requestId != _requestId) return;
       state = AsyncValue.error(error, stackTrace);
     }
   }

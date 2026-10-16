@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_spacing.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/hot_showroom_model.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
 
@@ -65,12 +68,12 @@ class _LookbookCard extends StatelessWidget {
       onTap: () => context.push('/showroom/${item.id}'),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: const Color(0xFFF6F4F1),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFE4DFD8)),
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSpacing.radius),
+          border: Border.all(color: AppColors.border, width: 0.7),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppSpacing.radius),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -79,13 +82,7 @@ class _LookbookCard extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.network(
-                      item.thumbnailUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const ColoredBox(color: Color(0xFFE6E6E6));
-                      },
-                    ),
+                    AppNetworkImage(url: item.thumbnailUrl),
                     Positioned(
                       top: 14,
                       right: 14,
@@ -98,8 +95,8 @@ class _LookbookCard extends StatelessWidget {
                               : Icons.favorite_border,
                           color:
                               item.favoriteStatus
-                                  ? const Color(0xFFFF4D6A)
-                                  : Colors.white,
+                                  ? AppColors.accent
+                                  : AppColors.white,
                           size: 26,
                           shadows: const [
                             Shadow(
@@ -130,7 +127,7 @@ class _LookbookCard extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.4,
                           height: 1.2,
-                          color: Color(0xFF8A8A8A),
+                          color: AppColors.accent,
                         ),
                       ),
                       SizedBox(height: 6),
@@ -143,7 +140,7 @@ class _LookbookCard extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           letterSpacing: -0.4,
                           height: 1.25,
-                          color: Color(0xFF1A1A1A),
+                          color: AppColors.textPrimary,
                         ),
                       ),
                       Spacer(),
@@ -163,7 +160,7 @@ class _LookbookCard extends StatelessWidget {
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 height: 1.2,
-                                color: Color(0xFF333333),
+                                color: AppColors.textSecondary,
                               ),
                             ),
                           ),

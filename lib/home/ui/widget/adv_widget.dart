@@ -1,5 +1,6 @@
 // == 광고 위젯 ==
 import 'package:flutter/material.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
@@ -53,9 +54,10 @@ class _ImageSliderWidgetState extends State<AdvWidget> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final double maxWidth = constraints.maxWidth.isFinite
-            ? constraints.maxWidth
-            : MediaQuery.of(context).size.width;
+        final double maxWidth =
+            constraints.maxWidth.isFinite
+                ? constraints.maxWidth
+                : MediaQuery.of(context).size.width;
 
         final double effectiveHeight = ResponsiveSize.bannerHeight(
           context,
@@ -82,41 +84,10 @@ class _ImageSliderWidgetState extends State<AdvWidget> {
                     height: effectiveHeight,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(widget.borderRadius),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(widget.borderRadius),
-                      child: Image.network(
-                        widget.imageUrls[index],
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            color: Colors.grey[200],
-                            child: const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey[300],
-                            child: const Center(
-                              child: Icon(
-                                Icons.error,
-                                color: Colors.grey,
-                                size: 50,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                      child: AppNetworkImage(url: widget.imageUrls[index]),
                     ),
                   );
                 },
@@ -143,26 +114,33 @@ class _ImageSliderWidgetState extends State<AdvWidget> {
                   top: 12,
                   right: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0,
+                      vertical: 6.0,
+                    ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.35),
+                      color: Colors.black.withValues(alpha: 0.35),
                       borderRadius: BorderRadius.circular(12.0),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
-                      children: widget.imageUrls.asMap().entries.map((entry) {
-                        return Container(
-                          width: widget.indicatorSize,
-                          height: widget.indicatorSize,
-                          margin: const EdgeInsets.symmetric(horizontal: 3.0),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _currentIndex == entry.key
-                                ? widget.activeIndicatorColor
-                                : widget.indicatorColor,
-                          ),
-                        );
-                      }).toList(),
+                      children:
+                          widget.imageUrls.asMap().entries.map((entry) {
+                            return Container(
+                              width: widget.indicatorSize,
+                              height: widget.indicatorSize,
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 3.0,
+                              ),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color:
+                                    _currentIndex == entry.key
+                                        ? widget.activeIndicatorColor
+                                        : widget.indicatorColor,
+                              ),
+                            );
+                          }).toList(),
                     ),
                   ),
                 ),

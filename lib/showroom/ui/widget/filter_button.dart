@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/filter_bottomsheet.dart';
 
 class FilterButton extends StatelessWidget {
@@ -23,14 +24,14 @@ class FilterButton extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[400]!),
+            border: Border.all(color: AppColors.border),
             borderRadius: BorderRadius.circular(5),
           ),
           child: Text(
             text,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.black,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w500,
               fontSize: 16,
             ),

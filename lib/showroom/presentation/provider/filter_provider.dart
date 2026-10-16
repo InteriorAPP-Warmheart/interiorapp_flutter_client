@@ -3,6 +3,7 @@ import 'package:interiorapp_flutter_client/showroom/data/model/filter_showroom_m
 import 'package:interiorapp_flutter_client/showroom/data/repository/filter_repository_impl.dart';
 import 'package:interiorapp_flutter_client/showroom/data/source/filter_api.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/filter_entity.dart';
+import 'package:interiorapp_flutter_client/showroom/domain/entity/quick_filter_catalog.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/repository/filter_repository.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/use_case/filter_use_case.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/vm/filter_vm.dart';
@@ -10,32 +11,29 @@ import 'package:interiorapp_flutter_client/showroom/presentation/vm/filter_vm.da
 // API -> Repository -> UseCase providers
 
 // 필터 상태 관리 VM Provider
-final filterProvider = NotifierProvider<FilterVm, FilterState>(
-  FilterVm.new,
-);
+final filterProvider = NotifierProvider<FilterVm, FilterState>(FilterVm.new);
 
 final filteredShowroomApiProvider = Provider((ref) => FilteredShowroomApi());
 
-final filteredShowroomRepositoryProvider = Provider<FilteredShowroomRepository>((ref) {
-return FilteredShowroomImpl(ref.read(filteredShowroomApiProvider));
-});
-
-
-final filteredShowroomUseCaseProvider = Provider((ref) {
-return FilteredShowroomUseCase(ref.read(filteredShowroomRepositoryProvider));
-});
-
-
-// 필터링된 쇼룸 목록 Provider
-final filteredShowroomListProvider = 
-    AsyncNotifierProvider<FilteredShowroomNotifier, List<FilteredShowroomModel>>(
-  FilteredShowroomNotifier.new,
+final filteredShowroomRepositoryProvider = Provider<FilteredShowroomRepository>(
+  (ref) {
+    return FilteredShowroomImpl(ref.read(filteredShowroomApiProvider));
+  },
 );
 
+final filteredShowroomUseCaseProvider = Provider((ref) {
+  return FilteredShowroomUseCase(ref.read(filteredShowroomRepositoryProvider));
+});
+
+// 필터링된 쇼룸 목록 Provider
+final filteredShowroomListProvider = AsyncNotifierProvider<
+  FilteredShowroomNotifier,
+  List<FilteredShowroomModel>
+>(FilteredShowroomNotifier.new);
 
 // 필터 카테고리 목록 Provider (정적 데이터)
 final filterCategoriesProvider = Provider<List<String>>((ref) {
-  return ['스타일', '공간 형태', '예산', '톤앤매너', '소재'];
+  return quickFilterLabels;
 });
 
 // 현재 선택된 카테고리의 필터 아이템들을 반환하는 Provider
@@ -44,10 +42,8 @@ final currentCategoryItemsProvider = Provider<List<FilterItem>>((ref) {
   return filterState.categoryItems[filterState.selectedCategory] ?? [];
 });
 
-
 // 선택된 필터가 있는지 확인하는 Provider
 final hasSelectedFiltersProvider = Provider<bool>((ref) {
   final filterState = ref.watch(filterProvider);
   return filterState.selectedFilters.isNotEmpty;
 });
-
