@@ -5,6 +5,7 @@ import 'package:interiorapp_flutter_client/showroom/data/model/hot_showroom_mode
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/showroom_story_provider.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_comment_section.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/story/showroom_story_scenes.dart';
 
 /// 스토리를 생략하지 않고, 같은 데이터를 구역별로 펼쳐 보여 준다.
@@ -118,11 +119,10 @@ class _Board extends StatelessWidget {
         ].where(((String, String) fact) => fact.$2.trim().isNotEmpty).toList();
     final ShowroomBeforeAfter? beforeAfter = story.beforeAfter;
     final ShowroomCost? cost = story.cost;
-    final double bottom = MediaQuery.paddingOf(context).bottom + 40;
 
-    return ListView(
-      padding: EdgeInsets.fromLTRB(16, 4, 16, bottom),
-      children: [
+    return ShowroomBoardWithComments(
+      authorName: story.userName,
+      leading: [
         _IntroCard(story: story, likes: likes),
         if (facts.isNotEmpty) ...[
           const _SectionTitle('이 공간'),
