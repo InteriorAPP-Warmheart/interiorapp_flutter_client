@@ -71,6 +71,8 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
     }
 
     return Scaffold(
+      // 본문이 탭바 뒤로 이어진다. 막대 주변 여백은 투명해서 화면이 비친다.
+      extendBody: true,
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(ResponsiveSize.appBarHeight(context)),
         child: const AppAppBar(),
@@ -88,46 +90,49 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
   Widget _buildTab() {
     final EdgeInsets inset = ResponsiveSize.responsivePadding(context);
     final double tabGap = ResponsiveSize.subGap(context) * 0.5;
-    // 화면을 완전히 가리는 3버튼 내비게이션만 피한다.
-    // 제스처 홈 표시처럼 얇은 여백은 탭바를 올리거나 두껍게 만들지 않는다.
-    final double obscuredBottom = MediaQuery.paddingOf(context).bottom;
-    final double systemNavigation = obscuredBottom >= 48 ? obscuredBottom : 0;
-
-    return Container(
-      decoration: AppTabBarTheme.decoration.copyWith(
-        color: Theme.of(context).scaffoldBackgroundColor,
-      ),
-      height: AppTabBarTheme.height(context) + systemNavigation,
+    final double barHeight = AppTabBarTheme.height(context);
+    return Padding(
       padding: EdgeInsets.fromLTRB(
         inset.left,
-        0,
+        AppTabBarTheme.floatGap,
         inset.right,
-        systemNavigation,
+        AppTabBarTheme.bottomInset(context),
       ),
-      child: TabBar(
-        controller: _tabController,
-        padding: EdgeInsets.zero,
-        labelPadding: EdgeInsets.symmetric(horizontal: tabGap),
-        labelColor: AppTabBarTheme.selectedColor,
-        unselectedLabelColor: AppTabBarTheme.unselectedColor,
-        labelStyle: AppTabBarTheme.labelStyle(context),
-        unselectedLabelStyle: AppTabBarTheme.unselectedLabelStyle(context),
-        indicator: AppTabBarTheme.indicator,
-        indicatorSize: TabBarIndicatorSize.tab,
-        splashFactory: NoSplash.splashFactory,
-        overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-        onTap: (index) {
-          HapticFeedback.lightImpact(); // 탭 클릭 시 가벼운 진동
-          ref.read(tabProvider.notifier).changeTab(index);
-        },
-        tabs: [
-          for (final tab in ShellTabs.active)
-            Tab(
-              icon: Icon(tab.icon, size: AppTabBarTheme.iconSize(context)),
-              iconMargin: const EdgeInsets.only(bottom: 2),
-              text: tab.label,
+      child: DecoratedBox(
+        decoration: AppTabBarTheme.dock(barHeight),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(barHeight / 2),
+          child: SizedBox(
+            height: barHeight,
+            child: TabBar(
+              controller: _tabController,
+              padding: EdgeInsets.zero,
+              labelPadding: EdgeInsets.symmetric(horizontal: tabGap),
+              labelColor: AppTabBarTheme.selectedColor,
+              unselectedLabelColor: AppTabBarTheme.unselectedColor,
+              labelStyle: AppTabBarTheme.labelStyle(context),
+              unselectedLabelStyle: AppTabBarTheme.unselectedLabelStyle(context),
+              indicator: AppTabBarTheme.indicator,
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              dividerHeight: 0,
+              splashFactory: NoSplash.splashFactory,
+              overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+              onTap: (index) {
+                HapticFeedback.lightImpact(); // 탭 클릭 시 가벼운 진동
+                ref.read(tabProvider.notifier).changeTab(index);
+              },
+              tabs: [
+                for (final tab in ShellTabs.active)
+                  Tab(
+                    icon: Icon(tab.icon, size: AppTabBarTheme.iconSize(context)),
+                    iconMargin: const EdgeInsets.only(bottom: 2),
+                    text: tab.label,
+                  ),
+              ],
             ),
-        ],
+          ),
+        ),
       ),
     );
   }

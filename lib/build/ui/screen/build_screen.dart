@@ -57,12 +57,19 @@ class _BuildScreenState extends State<BuildScreen> {
             : const [];
     final bool hasOngoing = ongoing.isNotEmpty;
 
+    final double tabSlot = MediaQuery.paddingOf(context).bottom;
+
     return Scaffold(
       backgroundColor: const Color(0xFFFCFCFC),
       body: Stack(
         children: [
           Padding(
-        padding: EdgeInsets.fromLTRB(padding.left, subGap, padding.right, subGap),
+        padding: EdgeInsets.fromLTRB(
+          padding.left,
+          subGap,
+          padding.right,
+          subGap + tabSlot,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

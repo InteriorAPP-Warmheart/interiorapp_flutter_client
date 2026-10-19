@@ -19,9 +19,30 @@ class AppTabBarTheme {
   static double height(BuildContext context) =>
       ResponsiveSize.bottomNavHeight(context);
 
-  static BoxDecoration get decoration => const BoxDecoration(
-    color: AppColors.surface,
-    border: Border(top: BorderSide(color: AppColors.border, width: 0.7)),
+  static const double floatGap = 8;
+
+  /// 화면을 가리는 3버튼 내비게이션만 피한다.
+  /// 제스처 홈 표시처럼 얇은 여백은 탭바를 올리지 않는다.
+  static double systemLift(BuildContext context) {
+    final double obscured = MediaQuery.viewPaddingOf(context).bottom;
+    return obscured >= 48 ? obscured : 0;
+  }
+
+  /// 화면 맨 아래에서 독 아래쪽까지의 거리.
+  static double bottomInset(BuildContext context) =>
+      systemLift(context) + floatGap;
+
+  /// 화면 가장자리에 붙지 않는 둥근 독.
+  static BoxDecoration dock(double height) => BoxDecoration(
+    color: AppColors.surface.withValues(alpha: 0.96),
+    borderRadius: BorderRadius.circular(height / 2),
+    boxShadow: const [
+      BoxShadow(
+        color: Color(0x1F000000),
+        blurRadius: 16,
+        offset: Offset(0, 6),
+      ),
+    ],
   );
 
   static Color get selectedColor => AppColors.white;

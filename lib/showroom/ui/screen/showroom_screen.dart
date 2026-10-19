@@ -25,6 +25,7 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
 
     return Scaffold(
       body: SingleChildScrollView(
+        padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
         child: Center(
           child: Column(
             children: [
@@ -94,7 +95,9 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
       ),
 
       // 글쓰기 버튼
-      floatingActionButton: SizedBox(
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
+        child: SizedBox(
         width: 100,
         height: 40,
         child: FloatingActionButton.extended(
@@ -115,6 +118,7 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
             side: BorderSide(color: Colors.white, width: 0),
           ),
           extendedIconLabelSpacing: 2,
+        ),
         ),
       ),
     );

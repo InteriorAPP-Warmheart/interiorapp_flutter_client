@@ -156,13 +156,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final double sectionGap = ResponsiveSize.sectionGap(context);
     final bool showProjectCard =
         !_isCardExpanded && isProjectBuilding && !_atBottom;
-    // 카드는 콘텐츠 위에 떠 있고, 끝에서는 이 여백만큼 더 스크롤해 추천 시공사례가 카드 위로 올라온다.
+    // extendBody가 알려 주는 탭바 실제 높이. 카드와 맨 아래 버튼은 이 위로 둔다.
+    final double tabSlot = MediaQuery.paddingOf(context).bottom;
     final double projectCardReserve =
         showProjectCard
             ? MyBuildProjectWidget.expandedHeight(context) +
                 MyBuildProjectWidget.floatBottom +
-                MyBuildProjectWidget.overlayGap
-            : 0;
+                MyBuildProjectWidget.overlayGap +
+                tabSlot
+            : tabSlot + MyBuildProjectWidget.floatBottom;
 
     return Scaffold(
       body: Stack(
@@ -310,7 +312,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
           if (showProjectCard)
             Positioned(
-              bottom: MyBuildProjectWidget.floatBottom,
+              bottom: tabSlot + MyBuildProjectWidget.floatBottom,
               left: 0,
               right: 0,
               child: Center(child: MyBuildProjectWidget(atBottom: false)),
