@@ -31,18 +31,20 @@ class ShowroomBoardScreen extends ConsumerWidget {
         actions: [
           storyAsync.maybeWhen(
             data: (ShowroomStoryModel? story) {
-              if (story == null) return const SizedBox.shrink();
+              final ShowroomStoryModel? overview =
+                  story ?? _overviewFromList(listed, showroomId);
+              if (overview == null) return const SizedBox.shrink();
               final bool favorite =
                   listed
-                      .where((HotShowroomModel item) => item.id == story.id)
+                      .where((HotShowroomModel item) => item.id == overview.id)
                       .map((HotShowroomModel item) => item.favoriteStatus)
                       .firstOrNull ??
-                  story.favoriteStatus;
+                  overview.favoriteStatus;
               return IconButton(
                 onPressed: () {
                   ref
                       .read(hotShowroomSliderVm.notifier)
-                      .toggleFavoriteByIndex(story.id);
+                      .toggleFavoriteByIndex(overview.id);
                 },
                 icon: Icon(
                   favorite ? Icons.favorite : Icons.favorite_border,
@@ -62,14 +64,37 @@ class ShowroomBoardScreen extends ConsumerWidget {
         error:
             (error, stackTrace) => const Center(child: Text('이야기를 불러오지 못했어요')),
         data: (ShowroomStoryModel? story) {
-          if (story == null) {
-            return const Center(child: Text('이야기를 찾지 못했어요'));
+          final ShowroomStoryModel? overview =
+              story ?? _overviewFromList(listed, showroomId);
+          if (overview == null) {
+            return const Center(child: Text('쇼룸을 찾지 못했어요'));
           }
-          return _Board(story: story);
+          return _Board(story: overview);
         },
       ),
     );
   }
+}
+
+/// 스토리 없이 목록 카드만 있는 쇼룸. 사진과 기본 정보만 펼친다.
+ShowroomStoryModel? _overviewFromList(
+  List<HotShowroomModel> listed,
+  String showroomId,
+) {
+  for (final HotShowroomModel item in listed) {
+    if (item.id != showroomId) continue;
+    return ShowroomStoryModel(
+      id: item.id,
+      title: item.title,
+      themeName: item.themeName,
+      thumbnailUrl: item.thumbnailUrl,
+      userName: item.userName,
+      userProfileUrl: item.userProfileUrl,
+      likeCount: item.likeCount,
+      favoriteStatus: item.favoriteStatus,
+    );
+  }
+  return null;
 }
 
 class _Board extends StatelessWidget {

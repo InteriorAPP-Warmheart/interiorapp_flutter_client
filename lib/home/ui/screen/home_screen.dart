@@ -5,7 +5,7 @@ import 'package:interiorapp_flutter_client/core/theme/app_typography.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/home/ui/widget/adv_widget.dart';
 import 'package:interiorapp_flutter_client/home/ui/widget/section.dart';
-import 'package:interiorapp_flutter_client/home/ui/widget/image_slider_widget.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/popular_showroom_card.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -97,18 +97,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: Text('더보기', style: AppTypography.caption(context)),
                   ),
                   gap: ResponsiveSize.subGap(context) * 0,
-                  child: ImageSliderWidget().showroomInfo(ref: ref),
+                  child: const PopularShowroomCardList(),
                 ),
-                SizedBox(height: sectionGap),
-                Section(
-                  title: Text('추천 시공사례', style: AppTypography.title(context)),
-                  trailing: TextButton(
-                    onPressed: () {},
-                    child: Text('더보기', style: AppTypography.caption(context)),
-                  ),
-                  gap: ResponsiveSize.subGap(context) * 0,
-                  child: ImageSliderWidget().recommendBuildInfo(ref: ref),
-                ),
+                // TODO: 추천 시공사례 - 데이터 준비 후 활성화
+                // SizedBox(height: sectionGap),
+                // Section(
+                //   title: Text('추천 시공사례', style: AppTypography.title(context)),
+                //   trailing: TextButton(
+                //     onPressed: () {},
+                //     child: Text('더보기', style: AppTypography.caption(context)),
+                //   ),
+                //   gap: ResponsiveSize.subGap(context) * 0,
+                //   child: ImageSliderWidget().recommendBuildInfo(ref: ref),
+                // ),
                 SizedBox(height: sectionGap),
                 if (isProjectBuilding && _atBottom) ...[
                   Center(child: MyBuildProjectWidget(atBottom: true)),

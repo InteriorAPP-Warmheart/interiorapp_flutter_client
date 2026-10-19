@@ -21,6 +21,27 @@ class AppNetworkImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (url.startsWith('assets/')) {
+      return Image.asset(
+        url,
+        fit: fit,
+        width: width,
+        height: height,
+        errorBuilder: (context, error, stackTrace) {
+          return ColoredBox(
+            color: placeholderColor,
+            child: const Center(
+              child: Icon(
+                Icons.image_outlined,
+                size: 28,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          );
+        },
+      );
+    }
+
     return CachedNetworkImage(
       imageUrl: url,
       fit: fit,

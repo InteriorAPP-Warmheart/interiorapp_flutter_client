@@ -9,6 +9,9 @@ class FilteredShowroomModel {
   final int likeCount;
   final List<String> tags;
 
+  /// 사진 가로 / 세로. 마소니리 카드 높이에 쓴다.
+  final double imageRatio;
+
   const FilteredShowroomModel({
     required this.id,
     required this.thumbnailUrl,
@@ -19,6 +22,7 @@ class FilteredShowroomModel {
     required this.favoriteStatus,
     required this.likeCount,
     required this.tags,
+    this.imageRatio = 0.8,
   });
 
   factory FilteredShowroomModel.fromJson(Map<String, dynamic> json) {
@@ -61,6 +65,14 @@ class FilteredShowroomModel {
       return [];
     }
 
+    double readDouble(String key, {double defaultValue = 0.8}) {
+      final dynamic value = json[key];
+      if (value == null) return defaultValue;
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? defaultValue;
+      return defaultValue;
+    }
+
     return FilteredShowroomModel(
       id: readString('id'),
       thumbnailUrl: readString('thumbnailUrl'),
@@ -71,6 +83,7 @@ class FilteredShowroomModel {
       favoriteStatus: readBool('favoriteStatus'),
       likeCount: readInt('likeCount'),
       tags: readStringList('tags'),
+      imageRatio: readDouble('imageRatio'),
     );
   }
 
@@ -84,6 +97,7 @@ class FilteredShowroomModel {
     'favoriteStatus': favoriteStatus,
     'likeCount': likeCount,
     'tags': tags,
+    'imageRatio': imageRatio,
   };
 
   FilteredShowroomModel copyWith({
@@ -96,6 +110,7 @@ class FilteredShowroomModel {
     bool? favoriteStatus,
     int? likeCount,
     List<String>? tags,
+    double? imageRatio,
   }) {
     return FilteredShowroomModel(
       id: id ?? this.id,
@@ -107,6 +122,7 @@ class FilteredShowroomModel {
       favoriteStatus: favoriteStatus ?? this.favoriteStatus,
       likeCount: likeCount ?? this.likeCount,
       tags: tags ?? this.tags,
+      imageRatio: imageRatio ?? this.imageRatio,
     );
   }
 

@@ -51,6 +51,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/showroom/
     - assets/logo/
     - lib/auth/util/
     # - assets/json/

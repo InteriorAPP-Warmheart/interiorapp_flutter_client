@@ -8,7 +8,7 @@ class ShowroomStoryApi {
           id: 'showroom1',
           title: '동탄 횟집',
           themeName: '모던 라이트',
-          thumbnailUrl: 'https://picsum.photos/seed/showroom1/900/600',
+          thumbnailUrl: 'assets/images/showroom/01.jpg',
           userName: '신짱구',
           userProfileUrl: 'https://i.pravatar.cc/100?img=1',
           likeCount: 128,
@@ -20,8 +20,8 @@ class ShowroomStoryApi {
             period: '6주',
           ),
           beforeAfter: ShowroomBeforeAfter(
-            beforeUrl: 'https://picsum.photos/id/1015/900/1400',
-            afterUrl: 'https://picsum.photos/id/1036/900/1400',
+            beforeUrl: 'assets/images/showroom/16.jpg',
+            afterUrl: 'assets/images/showroom/01.jpg',
             caption: '홀 중앙 수조와 객석',
           ),
           cost: ShowroomCost(
@@ -35,15 +35,15 @@ class ShowroomStoryApi {
           ),
           process: <ShowroomProcessFrame>[
             ShowroomProcessFrame(
-              imageUrl: 'https://picsum.photos/seed/showroom1-p1/900/1400',
+              imageUrl: 'assets/images/showroom/17.jpg',
               caption: '배수 경사를 먼저 잡았습니다.',
             ),
             ShowroomProcessFrame(
-              imageUrl: 'https://picsum.photos/seed/showroom1-p2/900/1400',
+              imageUrl: 'assets/images/showroom/05.jpg',
               caption: '수조 위치를 홀 중앙에 고정했습니다.',
             ),
             ShowroomProcessFrame(
-              imageUrl: 'https://picsum.photos/seed/showroom1-p3/900/1400',
+              imageUrl: 'assets/images/showroom/06.jpg',
               caption: '진열 조명을 선어 높이에 맞췄습니다.',
             ),
           ],
@@ -57,7 +57,7 @@ class ShowroomStoryApi {
           id: 'showroom2',
           title: '봉담 성심당',
           themeName: '내추럴 우드',
-          thumbnailUrl: 'https://picsum.photos/seed/showroom2/900/600',
+          thumbnailUrl: 'assets/images/showroom/02.jpg',
           userName: '봉미선',
           userProfileUrl: 'https://i.pravatar.cc/100?img=2',
           likeCount: 1239,
@@ -69,8 +69,8 @@ class ShowroomStoryApi {
             period: '4주',
           ),
           beforeAfter: ShowroomBeforeAfter(
-            beforeUrl: 'https://picsum.photos/id/1018/900/1400',
-            afterUrl: 'https://picsum.photos/id/1067/900/1400',
+            beforeUrl: 'assets/images/showroom/05.jpg',
+            afterUrl: 'assets/images/showroom/02.jpg',
             caption: '계산대에서 보이는 진열대',
           ),
           cost: ShowroomCost(
@@ -84,15 +84,15 @@ class ShowroomStoryApi {
           ),
           process: <ShowroomProcessFrame>[
             ShowroomProcessFrame(
-              imageUrl: 'https://picsum.photos/seed/showroom2-p1/900/1400',
+              imageUrl: 'assets/images/showroom/11.jpg',
               caption: '오븐 열기가 홀로 새지 않게 벽을 막았습니다.',
             ),
             ShowroomProcessFrame(
-              imageUrl: 'https://picsum.photos/seed/showroom2-p2/900/1400',
+              imageUrl: 'assets/images/showroom/06.jpg',
               caption: '진열대 높이를 손님 시선에 맞췄습니다.',
             ),
             ShowroomProcessFrame(
-              imageUrl: 'https://picsum.photos/seed/showroom2-p3/900/1400',
+              imageUrl: 'assets/images/showroom/08.jpg',
               caption: '계산 동선과 포장대를 분리했습니다.',
             ),
           ],
@@ -105,7 +105,7 @@ class ShowroomStoryApi {
           id: 'showroom3',
           title: '인천 야간공격센터',
           themeName: '미니멀 화이트',
-          thumbnailUrl: 'https://picsum.photos/seed/showroom3/900/600',
+          thumbnailUrl: 'assets/images/showroom/03.jpg',
           userName: '신형만',
           userProfileUrl: 'https://i.pravatar.cc/100?img=3',
           likeCount: 342,
@@ -117,8 +117,8 @@ class ShowroomStoryApi {
             period: '8주',
           ),
           beforeAfter: ShowroomBeforeAfter(
-            beforeUrl: 'https://picsum.photos/id/1043/900/1400',
-            afterUrl: 'https://picsum.photos/id/164/900/1400',
+            beforeUrl: 'assets/images/showroom/15.jpg',
+            afterUrl: 'assets/images/showroom/03.jpg',
             caption: '좌석 열과 중앙 통로',
           ),
           cost: ShowroomCost(
@@ -132,15 +132,15 @@ class ShowroomStoryApi {
           ),
           process: <ShowroomProcessFrame>[
             ShowroomProcessFrame(
-              imageUrl: 'https://picsum.photos/seed/showroom3-p1/900/1400',
+              imageUrl: 'assets/images/showroom/07.jpg',
               caption: '좌석 열의 간격을 먼저 그었습니다.',
             ),
             ShowroomProcessFrame(
-              imageUrl: 'https://picsum.photos/seed/showroom3-p2/900/1400',
+              imageUrl: 'assets/images/showroom/09.jpg',
               caption: '통로 쪽 소음이 새지 않게 벽을 보강했습니다.',
             ),
             ShowroomProcessFrame(
-              imageUrl: 'https://picsum.photos/seed/showroom3-p3/900/1400',
+              imageUrl: 'assets/images/showroom/04.jpg',
               caption: '야간 조명은 화면 밖으로만 두었습니다.',
             ),
           ],
@@ -153,7 +153,7 @@ class ShowroomStoryApi {
           id: 'showroom4',
           title: '차돈이 동탄역점',
           themeName: '미니멀 화이트',
-          thumbnailUrl: 'https://picsum.photos/seed/showroom3/900/600',
+          thumbnailUrl: 'assets/images/showroom/04.jpg',
           userName: '흰둥이',
           userProfileUrl: 'https://i.pravatar.cc/100?img=4',
           likeCount: 477,
@@ -165,8 +165,8 @@ class ShowroomStoryApi {
             period: '5주',
           ),
           beforeAfter: ShowroomBeforeAfter(
-            beforeUrl: 'https://picsum.photos/id/237/900/1400',
-            afterUrl: 'https://picsum.photos/id/292/900/1400',
+            beforeUrl: 'assets/images/showroom/09.jpg',
+            afterUrl: 'assets/images/showroom/04.jpg',
             caption: '테이블과 배기 후드',
           ),
           cost: ShowroomCost(
@@ -180,15 +180,15 @@ class ShowroomStoryApi {
           ),
           process: <ShowroomProcessFrame>[
             ShowroomProcessFrame(
-              imageUrl: 'https://picsum.photos/seed/showroom4-p1/900/1400',
+              imageUrl: 'assets/images/showroom/03.jpg',
               caption: '후드 위치를 불판 중심에 맞췄습니다.',
             ),
             ShowroomProcessFrame(
-              imageUrl: 'https://picsum.photos/seed/showroom4-p2/900/1400',
+              imageUrl: 'assets/images/showroom/07.jpg',
               caption: '기름이 남는 바닥 마감을 골랐습니다.',
             ),
             ShowroomProcessFrame(
-              imageUrl: 'https://picsum.photos/seed/showroom4-p3/900/1400',
+              imageUrl: 'assets/images/showroom/15.jpg',
               caption: '테이블 사이를 서빙 폭으로 벌렸습니다.',
             ),
           ],

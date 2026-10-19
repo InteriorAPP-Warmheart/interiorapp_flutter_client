@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
-import 'package:interiorapp_flutter_client/core/theme/app_spacing.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/hot_showroom_model.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
@@ -25,9 +24,8 @@ class PopularShowroomCardList extends ConsumerWidget {
       builder: (context, constraints) {
         final double cardWidth = constraints.maxWidth * 0.78;
         final double imageHeight = cardWidth * 5 / 4;
-        const double captionHeight = 128;
         return SizedBox(
-          height: imageHeight + captionHeight,
+          height: imageHeight,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: items.length,
@@ -66,112 +64,100 @@ class _LookbookCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () => context.push('/showroom/${item.id}'),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSpacing.radius),
-          border: Border.all(color: AppColors.border, width: 0.7),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppSpacing.radius),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AspectRatio(
-                aspectRatio: 4 / 5,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    AppNetworkImage(url: item.thumbnailUrl),
-                    Positioned(
-                      top: 14,
-                      right: 14,
-                      child: GestureDetector(
-                        onTap: onFavorite,
-                        behavior: HitTestBehavior.opaque,
-                        child: Icon(
-                          item.favoriteStatus
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color:
-                              item.favoriteStatus
-                                  ? AppColors.accent
-                                  : AppColors.white,
-                          size: 26,
-                          shadows: const [
-                            Shadow(
-                              color: Color(0x99000000),
-                              blurRadius: 6,
-                              offset: Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(
-                height: 128,
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(14, 12, 14, 14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.themeName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.4,
-                          height: 1.2,
-                          color: AppColors.accent,
-                        ),
-                      ),
-                      SizedBox(height: 6),
-                      Text(
-                        item.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.4,
-                          height: 1.25,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      Spacer(),
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundImage: NetworkImage(item.userProfileUrl),
-                            radius: 11,
-                          ),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              '${item.userName}  ·  좋아요 $likeLabel',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                height: 1.2,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            AppNetworkImage(url: item.thumbnailUrl),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 88,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.62),
+                      Colors.transparent,
                     ],
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+            Positioned(
+              top: 14,
+              right: 14,
+              child: GestureDetector(
+                onTap: onFavorite,
+                behavior: HitTestBehavior.opaque,
+                child: Icon(
+                  item.favoriteStatus ? Icons.favorite : Icons.favorite_border,
+                  color:
+                      item.favoriteStatus
+                          ? const Color(0xFFFF4D6A)
+                          : AppColors.white,
+                  size: 24,
+                  shadows: const [
+                    Shadow(
+                      color: Color(0x99000000),
+                      blurRadius: 6,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              left: 14,
+              right: 14,
+              bottom: 14,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.themeName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      height: 1.2,
+                      color: Color(0xE6FFFFFF),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    item.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.3,
+                      height: 1.2,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${item.userName}  ·  $likeLabel',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      height: 1.2,
+                      color: Color(0xCCFFFFFF),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

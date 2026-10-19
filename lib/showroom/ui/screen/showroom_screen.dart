@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:interiorapp_flutter_client/home/ui/widget/image_slider_widget.dart';
+// TODO: 추천 시공 활성화 시 다시 추가
+// import 'package:interiorapp_flutter_client/home/ui/widget/image_slider_widget.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/filter_provider.dart';
-import 'package:interiorapp_flutter_client/showroom/ui/widget/panorama_showroom_card.dart';
+// TODO: 폴라로이드 카드 다시 쓸 때 복구
+// import 'package:interiorapp_flutter_client/showroom/ui/widget/panorama_showroom_card.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/quick_filter_bar.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/popular_showroom_card.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/post_section.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_feed_segment.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
 class ShowroomScreen extends ConsumerStatefulWidget {
@@ -74,17 +78,15 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
                         child: const PopularShowroomCardList(),
                       ),
                       SizedBox(height: sectionGap),
-                      PostSection(
-                        sectionTitle: '동네 게시물',
-                        onPressed: () {},
-                        child: const HotShowroomCardList(),
-                      ),
-                      SizedBox(height: sectionGap),
-                      PostSection(
-                        sectionTitle: '추천 시공',
-                        onPressed: () {},
-                        child: ImageSliderWidget().recommendBuildInfo(ref: ref),
-                      ),
+                      // 전체 | 동네 세그먼트 탭 + 핀터레스트 마소니리 그리드
+                      const ShowroomFeedSegment(),
+                      // TODO: 추천 시공 - 데이터 준비 후 활성화
+                      // SizedBox(height: sectionGap),
+                      // PostSection(
+                      //   sectionTitle: '추천 시공',
+                      //   onPressed: () {},
+                      //   child: ImageSliderWidget().recommendBuildInfo(ref: ref),
+                      // ),
                     ],
                   ),
                 ),
@@ -94,31 +96,17 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
         ),
       ),
 
-      // 글쓰기 버튼
       floatingActionButton: Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
-        child: SizedBox(
-        width: 100,
-        height: 40,
-        child: FloatingActionButton.extended(
+        child: FloatingActionButton(
           onPressed: () => context.push('/showroom-write'),
-          icon: Icon(Icons.add, color: Colors.black, size: 18),
-          label: Text(
-            '글쓰기',
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.w700,
-              fontSize: 16,
-            ),
-          ),
-          backgroundColor: const Color.fromARGB(255, 253, 252, 252),
-          elevation: 3,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
-            side: BorderSide(color: Colors.white, width: 0),
-          ),
-          extendedIconLabelSpacing: 2,
-        ),
+          tooltip: '글쓰기',
+          elevation: 2,
+          highlightElevation: 3,
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.white,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.edit_outlined, size: 22),
         ),
       ),
     );
@@ -147,29 +135,39 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
           return _filterEmptyPostsSection();
         }
 
-        return ListView.separated(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          itemCount: showrooms.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 20),
-          itemBuilder: (context, index) {
-            final item = showrooms[index];
-            return ShowroomPostCard(
-              imageUrl: item.thumbnailUrl,
-              title: item.title,
-              themeName: item.themeName,
-              userName: item.userName,
-              userProfileUrl: item.userProfileUrl,
-              favoriteStatus: item.favoriteStatus,
-              likeCount: item.likeCount,
-              imageHeight: showroomCardImageHeight(context),
-              onFavorite: () {
-                // 즐겨찾기 토글 로직
-                // ref.read(filteredShowroomListProvider.notifier)
-                //     .toggleFavorite(item.id);
-              },
-            );
-          },
+        // TODO: 폴라로이드 한 장 리스트. 영역이 넓어 잠시 끈다.
+        // return ListView.separated(
+        //   shrinkWrap: true,
+        //   physics: NeverScrollableScrollPhysics(),
+        //   itemCount: showrooms.length,
+        //   separatorBuilder: (context, index) => const SizedBox(height: 20),
+        //   itemBuilder: (context, index) {
+        //     final item = showrooms[index];
+        //     return ShowroomPostCard(
+        //       imageUrl: item.thumbnailUrl,
+        //       title: item.title,
+        //       themeName: item.themeName,
+        //       userName: item.userName,
+        //       userProfileUrl: item.userProfileUrl,
+        //       favoriteStatus: item.favoriteStatus,
+        //       likeCount: item.likeCount,
+        //       imageHeight: showroomCardImageHeight(context),
+        //       onFavorite: () {},
+        //     );
+        //   },
+        // );
+        return ShowroomMasonryGrid(
+          items: [
+            for (final item in showrooms)
+              ShowroomMasonryEntry(
+                imageUrl: item.thumbnailUrl,
+                title: item.title,
+                imageRatio: item.imageRatio,
+                likeCount: item.likeCount,
+                favoriteStatus: item.favoriteStatus,
+                onTap: () => context.push('/showroom/${item.id}/board'),
+              ),
+          ],
         );
       },
       loading:

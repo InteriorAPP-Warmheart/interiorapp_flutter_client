@@ -7,7 +7,8 @@ class FilteredShowroomApi {
   final List<Map<String, dynamic>> jsonList = <Map<String, dynamic>>[
     {
       'id': 'showroom1',
-      'thumbnailUrl': 'https://picsum.photos/seed/showroom1/900/600',
+      'thumbnailUrl': 'assets/images/showroom/01.jpg',
+      'imageRatio': 800 / 1280,
       'title': '북유럽 거실의 오후',
       'themeName': '따뜻한 북유럽 스타일 거실',
       'userName': '디자이너 수',
@@ -29,7 +30,8 @@ class FilteredShowroomApi {
     },
     {
       'id': 'showroom2',
-      'thumbnailUrl': 'https://picsum.photos/seed/showroom2/900/600',
+      'thumbnailUrl': 'assets/images/showroom/02.jpg',
+      'imageRatio': 800 / 800,
       'title': '선을 줄인 침실',
       'themeName': '모던',
       'userName': '인테리어 박',
@@ -51,7 +53,8 @@ class FilteredShowroomApi {
     },
     {
       'id': 'showroom3',
-      'thumbnailUrl': 'https://picsum.photos/seed/showroom3/900/600',
+      'thumbnailUrl': 'assets/images/showroom/03.jpg',
+      'imageRatio': 800 / 1040,
       'title': '골목 안 작은 카페',
       'themeName': '빈티지 감성 카페 인테리어',
       'userName': '스튜디오 이현',
@@ -80,7 +83,8 @@ class FilteredShowroomApi {
     },
     {
       'id': 'showroom4',
-      'thumbnailUrl': 'https://picsum.photos/seed/showroom4/900/600',
+      'thumbnailUrl': 'assets/images/showroom/04.jpg',
+      'imageRatio': 800 / 600,
       'title': '철과 콘크리트의 사무실',
       'themeName': '인더스트리얼 오피스 공간',
       'userName': '공간연구소',
@@ -109,7 +113,8 @@ class FilteredShowroomApi {
     },
     {
       'id': 'showroom5',
-      'thumbnailUrl': 'https://picsum.photos/seed/showroom5/900/600',
+      'thumbnailUrl': 'assets/images/showroom/05.jpg',
+      'imageRatio': 800 / 1400,
       'title': '창가에 둔 원룸',
       'themeName': '내추럴 원룸 인테리어',
       'userName': '홈스타일링최',
@@ -137,7 +142,8 @@ class FilteredShowroomApi {
     },
     {
       'id': 'showroom6',
-      'thumbnailUrl': 'https://picsum.photos/seed/showroom6/900/600',
+      'thumbnailUrl': 'assets/images/showroom/06.jpg',
+      'imageRatio': 800 / 920,
       'title': '클래식한 침실',
       'themeName': '클래식 침실 디자인',
       'userName': '럭셔리홈',
@@ -159,7 +165,8 @@ class FilteredShowroomApi {
     },
     {
       'id': 'showroom7',
-      'thumbnailUrl': 'https://picsum.photos/seed/showroom7/900/600',
+      'thumbnailUrl': 'assets/images/showroom/07.jpg',
+      'imageRatio': 800 / 680,
       'title': '모던 아파트의 거실',
       'themeName': '모던 아파트 거실',
       'userName': '디자인하우스',
@@ -187,7 +194,8 @@ class FilteredShowroomApi {
     },
     {
       'id': 'showroom8',
-      'thumbnailUrl': 'https://picsum.photos/seed/showroom8/900/600',
+      'thumbnailUrl': 'assets/images/showroom/08.jpg',
+      'imageRatio': 800 / 1160,
       'title': '호텔처럼 머무는 밤',
       'themeName': '호텔 스타일 침실',
       'userName': '프리미엄 인테리어',
@@ -208,7 +216,8 @@ class FilteredShowroomApi {
     },
     {
       'id': 'showroom9',
-      'thumbnailUrl': 'https://picsum.photos/seed/showroom9/900/600',
+      'thumbnailUrl': 'assets/images/showroom/09.jpg',
+      'imageRatio': 800 / 800,
       'title': '색이 있는 아이 방',
       'themeName': '컬러포인트 키즈룸',
       'userName': '키즈공간연구소',
@@ -237,7 +246,8 @@ class FilteredShowroomApi {
     },
     {
       'id': 'showroom10',
-      'thumbnailUrl': 'https://picsum.photos/seed/showroom10/900/600',
+      'thumbnailUrl': 'assets/images/showroom/10.jpg',
+      'imageRatio': 800 / 1320,
       'title': '벽이 작품인 거실',
       'themeName': '아트월 거실 디자인',
       'userName': '아트인테리어',

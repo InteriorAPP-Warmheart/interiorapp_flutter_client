@@ -8,6 +8,9 @@ class HotShowroomModel {
   final bool favoriteStatus;
   final int likeCount;
 
+  /// 사진 가로 / 세로. 마소니리에서 카드 높이를 이 값으로 잡는다.
+  final double imageRatio;
+
   const HotShowroomModel({
     required this.id,
     required this.thumbnailUrl,
@@ -17,6 +20,7 @@ class HotShowroomModel {
     required this.userProfileUrl,
     required this.favoriteStatus,
     required this.likeCount,
+    this.imageRatio = 0.8,
   });
 
   /// 서버 JSON -> Model
@@ -52,6 +56,14 @@ class HotShowroomModel {
       return value.toString() == 'true';
     }
 
+    double readDouble(String key, {double defaultValue = 0.8}) {
+      final dynamic value = json[key];
+      if (value == null) return defaultValue;
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? defaultValue;
+      return defaultValue;
+    }
+
     return HotShowroomModel(
       id: readString('id'),
       thumbnailUrl: readString('thumbnailUrl'),
@@ -61,6 +73,7 @@ class HotShowroomModel {
       userProfileUrl: readString('userProfileUrl'),
       favoriteStatus: readBool('favoriteStatus'),
       likeCount: readInt('likeCount'),
+      imageRatio: readDouble('imageRatio'),
     );
   }
 
@@ -74,6 +87,7 @@ class HotShowroomModel {
     'userProfileUrl': userProfileUrl,
     'favoriteStatus': favoriteStatus,
     'likeCount': likeCount,
+    'imageRatio': imageRatio,
   };
 
   /// 편의: 복사 후 일부 필드만 변경
@@ -86,6 +100,7 @@ class HotShowroomModel {
     String? userProfileUrl,
     bool? favoriteStatus,
     int? likeCount,
+    double? imageRatio,
   }) {
     return HotShowroomModel(
       id: id ?? this.id,
@@ -96,6 +111,7 @@ class HotShowroomModel {
       userProfileUrl: userProfileUrl ?? this.userProfileUrl,
       favoriteStatus: favoriteStatus ?? this.favoriteStatus,
       likeCount: likeCount ?? this.likeCount,
+      imageRatio: imageRatio ?? this.imageRatio,
     );
   }
 
@@ -124,7 +140,8 @@ class HotShowroomModel {
         other.userName == userName &&
         other.userProfileUrl == userProfileUrl &&
         other.favoriteStatus == favoriteStatus &&
-        other.likeCount == likeCount;
+        other.likeCount == likeCount &&
+        other.imageRatio == imageRatio;
   }
 
   @override
@@ -137,5 +154,6 @@ class HotShowroomModel {
     userProfileUrl,
     favoriteStatus,
     likeCount,
+    imageRatio,
   );
 }
