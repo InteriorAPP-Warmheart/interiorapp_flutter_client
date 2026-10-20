@@ -5,6 +5,7 @@ import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dar
 import 'package:interiorapp_flutter_client/build/ui/space_routes.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/widget/expanding_action_button.dart';
+import 'package:interiorapp_flutter_client/showroom/domain/entity/quick_filter_catalog.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_reference_pick.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/hot_showroom_model.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
@@ -243,6 +244,11 @@ class _BoardScaffoldState extends State<_BoardScaffold> {
 
   void _submit() {
     final ShowroomStoryModel story = widget.story;
+    final ShowroomSituation? situation = story.situation;
+    final bool sameIndustry = _aspects.contains('같은 업종');
+    final bool sameBudget = _aspects.contains('동일한 예산');
+    final bool sameStyle = _aspects.contains('동일한 스타일');
+    final int? budgetWon = sameBudget ? _wonFromLabel(situation?.budget ?? '') : null;
     context.push(
       SpaceRoutes.prepCreate,
       extra: PrepRecord(
@@ -252,13 +258,13 @@ class _BoardScaffoldState extends State<_BoardScaffold> {
         detailAddress: '',
         area: '',
         buildingCondition: '',
-        style: '',
-        budget: '',
+        style: sameStyle ? _matchingStyle(story.themeName) : '',
+        budget: budgetWon == null ? '' : _groupDigits(budgetWon.toString()),
         period: '',
         needs: '',
         floorPlanLabels: const <String>[],
         referenceImageLabels: const <String>[],
-        industry: story.situation?.industry ?? '',
+        industry: sameIndustry ? (situation?.industry ?? '') : '',
         styleRef: ShowroomStyleRef(
           showroomId: story.id,
           title: story.title,
@@ -271,7 +277,6 @@ class _BoardScaffoldState extends State<_BoardScaffold> {
         ),
       ),
     );
-    widget.onPicking(false);
   }
 
   @override
@@ -1168,4 +1173,47 @@ class _Fact extends StatelessWidget {
       ),
     );
   }
+}
+
+String _matchingStyle(String themeName) {
+  for (final StyleMoodCard card in styleMoodCards) {
+    if (themeName.contains(card.title)) return card.title;
+  }
+  if (themeName.contains('내추럴') || themeName.contains('우드')) return '따뜻하고 자연스러운';
+  if (themeName.contains('다크')) return '묵직하고 도시적인';
+  if (themeName.contains('미니멀') || themeName.contains('화이트') || themeName.contains('라이트')) {
+    return '밝고 정돈된';
+  }
+  return '';
+}
+
+int? _wonFromLabel(String raw) {
+  String text = raw.replaceAll(',', '').replaceAll(' ', '').replaceAll('원', '');
+  if (text.isEmpty) return null;
+  var total = 0;
+  final RegExpMatch? eok = RegExp(r'(\d+)억').firstMatch(text);
+  if (eok != null) {
+    total += int.parse(eok.group(1)!) * 100000000;
+    text = text.replaceFirst(eok.group(0)!, '');
+  }
+  final RegExpMatch? man = RegExp(r'(\d+)만').firstMatch(text);
+  if (man != null) {
+    total += int.parse(man.group(1)!) * 10000;
+    text = text.replaceFirst(man.group(0)!, '');
+  }
+  final RegExpMatch? rest = RegExp(r'(\d+)').firstMatch(text);
+  if (rest != null) total += int.parse(rest.group(1)!);
+  return total == 0 ? null : total;
+}
+
+String _groupDigits(String digits) {
+  if (digits.isEmpty) return '';
+  final StringBuffer buffer = StringBuffer();
+  final int lead = digits.length % 3;
+  if (lead > 0) buffer.write(digits.substring(0, lead));
+  for (int index = lead; index < digits.length; index += 3) {
+    if (buffer.isNotEmpty) buffer.write(',');
+    buffer.write(digits.substring(index, index + 3));
+  }
+  return buffer.toString();
 }

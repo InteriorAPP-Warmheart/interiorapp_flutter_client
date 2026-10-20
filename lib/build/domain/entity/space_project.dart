@@ -128,7 +128,7 @@ class ShowroomStyleRef {
   final String title;
   final String imageUrl;
 
-  /// 사진에 안 보이는 참고. 가격, 같은 업종.
+  /// 사진에 안 보이는 참고. 동일한 스타일, 동일한 예산, 같은 업종.
   final List<String> aspects;
 
   /// 전체 보기에서 고른 사진과 그 일부.
@@ -165,6 +165,8 @@ class PrepRecord {
     required this.needs,
     required this.floorPlanLabels,
     required this.referenceImageLabels,
+    this.floorPlans = const <ShowroomReferenceRegion>[],
+    this.stylePhotos = const <ShowroomReferenceRegion>[],
     this.industry = '',
     this.workScope = '',
     this.contact = '',
@@ -193,6 +195,12 @@ class PrepRecord {
 
   /// 참고 이미지 라벨. 비어 있으면 라벨 없이 첨부만 있는 것이다.
   final List<String> referenceImageLabels;
+
+  /// 평수 옆에 올린 평면도. 표시와 설명이 들어 있다.
+  final List<ShowroomReferenceRegion> floorPlans;
+
+  /// 원하는 스타일 옆에 올린 사진. 표시와 설명이 들어 있다.
+  final List<ShowroomReferenceRegion> stylePhotos;
 
   /// 업종. 비어 있거나 [PrepLabels.industryUndecided]이면 정식 상담으로 넘기지 않는다.
   final String industry;

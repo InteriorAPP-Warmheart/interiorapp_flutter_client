@@ -118,6 +118,8 @@ class SpaceBoard extends ChangeNotifier {
             needs: record.needs,
             floorPlanLabels: record.floorPlanLabels,
             referenceImageLabels: record.referenceImageLabels,
+            floorPlans: record.floorPlans,
+            stylePhotos: record.stylePhotos,
             industry: record.industry,
             workScope: record.workScope,
             contact: record.contact,

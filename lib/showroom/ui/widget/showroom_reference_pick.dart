@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -8,6 +9,15 @@ import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 
 const List<String> showroomReferenceAspects = <String>['동일한 스타일', '동일한 예산', '같은 업종'];
+
+ImageProvider<Object> _referenceImageProvider(String url) {
+  if (url.startsWith('assets/')) return AssetImage(url);
+  if (url.startsWith('/') || url.startsWith('file://')) {
+    final String path = url.startsWith('file://') ? Uri.parse(url).toFilePath() : url;
+    return FileImage(File(path));
+  }
+  return CachedNetworkImageProvider(url);
+}
 
 /// 전체 보기가 참고를 고르는 동안 사진들이 읽는 상태.
 class ShowroomReferenceScope extends InheritedWidget {
@@ -168,7 +178,7 @@ class ShowroomReferenceBanner extends StatelessWidget {
           children: [
             const Expanded(
               child: Text(
-                '참고할 곳을 골라 주세요',
+                '참고할 곳을 골라 주세요\n이미지 우측상단의 버튼을 눌러주세요',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -305,12 +315,17 @@ Future<ShowroomReferenceRegion?> showShowroomReferenceEditor(
   BuildContext context,
   ShowroomReferenceRegion region, {
   String? title,
+  String saveLabel = '이 메모를 담기',
 }) {
   return showModalBottomSheet<ShowroomReferenceRegion>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (BuildContext sheetContext) => _RegionEditor(region: region, title: title),
+    builder: (BuildContext sheetContext) => _RegionEditor(
+      region: region,
+      title: title,
+      saveLabel: saveLabel,
+    ),
   );
 }
 
@@ -384,10 +399,11 @@ const List<int> _markColors = <int>[
 ];
 
 class _RegionEditor extends StatefulWidget {
-  const _RegionEditor({required this.region, this.title});
+  const _RegionEditor({required this.region, this.title, this.saveLabel = '이 메모를 담기'});
 
   final ShowroomReferenceRegion region;
   final String? title;
+  final String saveLabel;
 
   @override
   State<_RegionEditor> createState() => _RegionEditorState();
@@ -425,10 +441,7 @@ class _RegionEditorState extends State<_RegionEditor> {
   @override
   void initState() {
     super.initState();
-    final String url = widget.region.imageUrl;
-    final ImageProvider provider = url.startsWith('assets/')
-        ? AssetImage(url)
-        : CachedNetworkImageProvider(url);
+    final ImageProvider provider = _referenceImageProvider(widget.region.imageUrl);
     final ImageStream stream = provider.resolve(const ImageConfiguration());
     final ImageStreamListener listener = ImageStreamListener((ImageInfo info, bool _) {
       if (!mounted) return;
@@ -1014,7 +1027,7 @@ class _RegionEditorState extends State<_RegionEditor> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  AppButton(label: '이 메모를 담기', onPressed: _save),
+                  AppButton(label: widget.saveLabel, onPressed: _save),
                 ],
               ),
             ),

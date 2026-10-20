@@ -6,8 +6,8 @@ import 'package:interiorapp_flutter_client/build/ui/space_routes.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
-import 'package:interiorapp_flutter_client/core/widget/app_dialog.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_dialog.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_reference_pick.dart';
 
 /// 저장해 둔 상담준비 한 건. 허브에서 열고, 작성 직후에도 같은 화면을 쓴다.
@@ -23,12 +23,12 @@ class PrepDetailScreen extends StatelessWidget {
 
     if (current == null) {
       return Scaffold(
-        backgroundColor: const Color(0xFFFCFCFC),
+        backgroundColor: AppColors.background,
         appBar: AppBar(title: const Text('상담준비')),
         body: Center(
           child: Text(
             '상담준비를 찾을 수 없어요',
-            style: TextStyle(fontSize: 16 * fontScale, color: const Color(0xFF1A1A1A)),
+            style: TextStyle(fontSize: 16 * fontScale, color: AppColors.textPrimary),
           ),
         ),
       );
@@ -53,7 +53,7 @@ class _PrepDetailScaffold extends StatelessWidget {
     final double subGap = ResponsiveSize.subGap(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFCFCFC),
+      backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('상담준비')),
       body: SafeArea(
         child: Padding(
@@ -68,7 +68,7 @@ class _PrepDetailScaffold extends StatelessWidget {
   }
 }
 
-/// 현장, 조건, 첨부를 한 스크롤로 보여 준다.
+/// 현장과 조건을 한 스크롤로 보여 준다.
 class PrepDetailView extends StatelessWidget {
   const PrepDetailView({
     super.key,
@@ -152,6 +152,10 @@ class PrepDetailView extends StatelessWidget {
           fontScale: fontScale,
           onEdit: () => onEdit(0),
         ),
+        if (record.styleRef case final ShowroomStyleRef reference) ...[
+          SizedBox(height: sectionGap),
+          ShowroomStyleReferenceTile(reference: reference, fontScale: fontScale),
+        ],
         SizedBox(height: sectionGap),
         _ReviewSection(
           title: '조건',
@@ -171,10 +175,36 @@ class PrepDetailView extends StatelessWidget {
                 _ValueChip(label: '스타일', value: record.style, fontScale: fontScale),
               ],
             ),
+            if (record.floorPlans.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _AttachedPhotoBlock(label: '평면도', regions: record.floorPlans, fontScale: fontScale),
+            ] else if (record.floorPlanLabels.any((String label) => label.trim().isNotEmpty)) ...[
+              const SizedBox(height: 16),
+              _AttachmentPreview(
+                label: '평면도',
+                labels: record.floorPlanLabels,
+                emptyLabel: '올린 평면도가 없어요',
+                fontScale: fontScale,
+                icon: Icons.map_outlined,
+              ),
+            ],
+            if (record.stylePhotos.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _AttachedPhotoBlock(label: '스타일 사진', regions: record.stylePhotos, fontScale: fontScale),
+            ] else if (record.referenceImageLabels.any((String label) => label.trim().isNotEmpty)) ...[
+              const SizedBox(height: 16),
+              _AttachmentPreview(
+                label: '스타일 사진',
+                labels: record.referenceImageLabels,
+                emptyLabel: '올린 참고 이미지가 없어요',
+                fontScale: fontScale,
+                icon: Icons.image_outlined,
+              ),
+            ],
             const SizedBox(height: 20),
             _EmphasisLine(label: '예산', value: record.budget, fontScale: fontScale),
             const SizedBox(height: 16),
-            _EmphasisLine(label: '기간', value: record.period, fontScale: fontScale),
+            _EmphasisLine(label: '희망공사기간', value: record.period, fontScale: fontScale),
             if (record.workScope == PrepLabels.partialWork) ...[
               const SizedBox(height: 16),
               _EmphasisLine(
@@ -192,36 +222,9 @@ class PrepDetailView extends StatelessWidget {
           ],
         ),
         SizedBox(height: sectionGap),
-        _ReviewSection(
-          title: '첨부',
-          fontScale: fontScale,
-          onEdit: () => onEdit(2),
-          children: [
-            _AttachmentPreview(
-              label: '평면도',
-              labels: record.floorPlanLabels,
-              emptyLabel: '올린 평면도가 없어요',
-              fontScale: fontScale,
-              icon: Icons.map_outlined,
-            ),
-            const SizedBox(height: 20),
-            if (record.styleRef case final ShowroomStyleRef reference) ...[
-              ShowroomStyleReferenceTile(reference: reference, fontScale: fontScale),
-              const SizedBox(height: 20),
-            ],
-            _AttachmentPreview(
-              label: '참고 이미지',
-              labels: record.referenceImageLabels,
-              emptyLabel: '올린 참고 이미지가 없어요',
-              fontScale: fontScale,
-              icon: Icons.image_outlined,
-            ),
-          ],
-        ),
-        SizedBox(height: sectionGap),
         Text(
           '날짜 안내 테스트',
-          style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700, color: const Color(0xFF1A1A1A)),
+          style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -295,8 +298,9 @@ class _PlaceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: const Color(0xFFF6F3EE),
-        borderRadius: BorderRadius.circular(24),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 18, 16, 18),
@@ -310,31 +314,36 @@ class _PlaceCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12 * fontScale,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1A1A1A),
+                    color: AppColors.primary,
                   ),
                 ),
                 const Spacer(),
                 _EditPill(
                   fontScale: fontScale,
                   onTap: onEdit,
-                  background: const Color(0xFFFFFFFF),
+                  background: AppColors.background,
                 ),
               ],
             ),
             const SizedBox(height: 14),
             Text(
               placeName,
-              style: TextStyle(fontSize: 26 * fontScale, fontWeight: FontWeight.w700, height: 1.2),
+              style: TextStyle(
+                fontSize: 26 * fontScale,
+                fontWeight: FontWeight.w700,
+                height: 1.2,
+                color: AppColors.textPrimary,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               address,
-              style: TextStyle(fontSize: 14 * fontScale, height: 1.4, color: const Color(0xFF1A1A1A)),
+              style: TextStyle(fontSize: 14 * fontScale, height: 1.4, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 2),
             Text(
               detailAddress,
-              style: TextStyle(fontSize: 13 * fontScale, color: const Color(0xFF1A1A1A)),
+              style: TextStyle(fontSize: 13 * fontScale, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 16),
             Row(
@@ -371,8 +380,8 @@ class _Stat extends StatelessWidget {
     return Expanded(
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: const Color(0xFFFFFFFF),
-          borderRadius: BorderRadius.circular(16),
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -383,12 +392,12 @@ class _Stat extends StatelessWidget {
                 value,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 16 * fontScale, fontWeight: FontWeight.w700),
+                style: TextStyle(fontSize: 16 * fontScale, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
               ),
               const SizedBox(height: 2),
               Text(
                 label,
-                style: TextStyle(fontSize: 12 * fontScale, fontWeight: FontWeight.w600, color: const Color(0xFF1A1A1A)),
+                style: TextStyle(fontSize: 12 * fontScale, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
               ),
             ],
           ),
@@ -415,11 +424,9 @@ class _ReviewSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
-          BoxShadow(color: Color(0x0F000000), blurRadius: 24, offset: Offset(0, 10)),
-        ],
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 18, 16, 20),
@@ -431,7 +438,7 @@ class _ReviewSection extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: TextStyle(fontSize: 16 * fontScale, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontSize: 16 * fontScale, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                   ),
                 ),
                 _EditPill(fontScale: fontScale, onTap: onEdit),
@@ -450,7 +457,7 @@ class _EditPill extends StatelessWidget {
   const _EditPill({
     required this.fontScale,
     required this.onTap,
-    this.background = const Color(0xFFF6F3EE),
+    this.background = AppColors.background,
   });
 
   final double fontScale;
@@ -469,7 +476,7 @@ class _EditPill extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           child: Text(
             '수정',
-            style: TextStyle(fontSize: 12 * fontScale, fontWeight: FontWeight.w700, color: const Color(0xFF1A1A1A)),
+            style: TextStyle(fontSize: 12 * fontScale, fontWeight: FontWeight.w700, color: AppColors.primary),
           ),
         ),
       ),
@@ -488,7 +495,7 @@ class _ValueChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: const Color(0xFF111111),
+        color: AppColors.primary,
         borderRadius: BorderRadius.circular(99),
       ),
       child: Padding(
@@ -498,11 +505,11 @@ class _ValueChip extends StatelessWidget {
             children: [
               TextSpan(
                 text: '$label  ',
-                style: TextStyle(fontSize: 12 * fontScale, fontWeight: FontWeight.w600, color: const Color(0xFFFFFFFF)),
+                style: TextStyle(fontSize: 12 * fontScale, fontWeight: FontWeight.w600, color: AppColors.white),
               ),
               TextSpan(
                 text: value,
-                style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700, color: const Color(0xFFFFFFFF)),
+                style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700, color: AppColors.white),
               ),
             ],
           ),
@@ -526,12 +533,12 @@ class _EmphasisLine extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w600, color: const Color(0xFF1A1A1A)),
+          style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
         ),
         const SizedBox(height: 2),
         Text(
           value,
-          style: TextStyle(fontSize: 20 * fontScale, fontWeight: FontWeight.w700, height: 1.3),
+          style: TextStyle(fontSize: 20 * fontScale, fontWeight: FontWeight.w700, height: 1.3, color: AppColors.textPrimary),
         ),
       ],
     );
@@ -549,11 +556,11 @@ class _NoteBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: const Color(0xFFF6F3EE),
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 220),
+        constraints: const BoxConstraints(minHeight: 96),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
           child: Column(
@@ -561,12 +568,12 @@ class _NoteBlock extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(fontSize: 12 * fontScale, fontWeight: FontWeight.w700, color: const Color(0xFF1A1A1A)),
+                style: TextStyle(fontSize: 12 * fontScale, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 10),
               Text(
                 value,
-                style: TextStyle(fontSize: 16 * fontScale, height: 1.6),
+                style: TextStyle(fontSize: 16 * fontScale, height: 1.6, color: AppColors.textPrimary),
               ),
             ],
           ),
@@ -600,12 +607,12 @@ class _AttachmentPreview extends StatelessWidget {
           children: [
             Text(
               label,
-              style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
             ),
             const SizedBox(width: 6),
             Text(
               labels.isEmpty ? '없음' : '${labels.length}',
-              style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w600, color: const Color(0xFF1A1A1A)),
+              style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -616,12 +623,12 @@ class _AttachmentPreview extends StatelessWidget {
             height: 112,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: const Color(0xFFF7F5F2),
+              color: AppColors.background,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
               emptyLabel,
-              style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w600, color: const Color(0xFF1A1A1A)),
+              style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
             ),
           )
         else
@@ -664,23 +671,113 @@ class _PhotoFrame extends StatelessWidget {
           child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFFF3EFE8), Color(0xFFD9D1C7)],
-              ),
+              color: AppColors.imagePlaceholder,
             ),
-            child: Icon(icon, color: const Color(0xFF8C7358)),
+            child: Icon(icon, color: AppColors.textSecondary),
           ),
         ),
         if (label.isNotEmpty) ...[
           const SizedBox(height: 6),
           Text(
             label,
-            style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w600, height: 1.3),
+            style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w600, height: 1.3, color: AppColors.textPrimary),
           ),
         ],
       ],
+    );
+  }
+}
+
+class _AttachedPhotoBlock extends StatelessWidget {
+  const _AttachedPhotoBlock({
+    required this.label,
+    required this.regions,
+    required this.fontScale,
+  });
+
+  final String label;
+  final List<ShowroomReferenceRegion> regions;
+  final double fontScale;
+
+  @override
+  Widget build(BuildContext context) {
+    final double pad = ResponsiveSize.subGap(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(pad),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13 * fontScale,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            SizedBox(height: pad * 0.5),
+            PrepPhotoStrip(regions: regions, fontScale: fontScale),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 조건에 올린 평면도나 스타일 사진. 화면 폭에 맞춰 한 줄에 보이는 장 수가 달라진다.
+class PrepPhotoStrip extends StatelessWidget {
+  const PrepPhotoStrip({
+    super.key,
+    required this.regions,
+    required this.fontScale,
+    this.onTap,
+    this.onDelete,
+  });
+
+  final List<ShowroomReferenceRegion> regions;
+  final double fontScale;
+  final ValueChanged<ShowroomReferenceRegion>? onTap;
+  final ValueChanged<ShowroomReferenceRegion>? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool caption = regions.any((ShowroomReferenceRegion region) => region.note.trim().isNotEmpty);
+    final AppWindow window = AppWindow.of(context);
+    final int visible = window.isExpanded ? 6 : window.isMedium ? 5 : 4;
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        const double gap = 8;
+        final double tile = (constraints.maxWidth - gap * (visible - 1)) / visible;
+        final double captionHeight = 4 + 13 * fontScale * 1.3 * 2;
+        final double height = tile + (caption ? captionHeight : 0);
+        return SizedBox(
+          height: height,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: regions.length > visible
+                ? const BouncingScrollPhysics()
+                : const NeverScrollableScrollPhysics(),
+            itemCount: regions.length,
+            separatorBuilder: (BuildContext context, int index) => const SizedBox(width: gap),
+            itemBuilder: (BuildContext context, int index) {
+              final ShowroomReferenceRegion region = regions[index];
+              return _ReferenceImageTile(
+                region: region,
+                width: tile,
+                fontScale: fontScale,
+                showCaption: caption,
+                onTap: onTap == null ? null : () => onTap!(region),
+                onDelete: onDelete == null ? null : () => onDelete!(region),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
@@ -693,81 +790,94 @@ class ShowroomStyleReferenceTile extends StatelessWidget {
     required this.fontScale,
     this.onRegionTap,
     this.onRegionDelete,
+    this.inset = false,
   });
 
   final ShowroomStyleRef reference;
   final double fontScale;
   final ValueChanged<ShowroomReferenceRegion>? onRegionTap;
   final ValueChanged<ShowroomReferenceRegion>? onRegionDelete;
+  final bool inset;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF6F3EE),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: SizedBox(
-                    width: 72,
-                    height: 72,
-                    child: AppNetworkImage(
-                      url: reference.imageUrl,
-                      width: 72,
-                      height: 72,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '참고한 쇼룸',
-                        style: TextStyle(
-                          fontSize: 12 * fontScale,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF6E6E6E),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '참고한 쇼룸',
+          style: TextStyle(
+            fontSize: 16 * fontScale,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: inset ? AppColors.background : AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AspectRatio(
+                aspectRatio: 2,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    AppNetworkImage(url: reference.imageUrl),
+                    const DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: <Color>[
+                            Color(0x000B1F38),
+                            Color(0x660B1F38),
+                            Color(0xE60B1F38),
+                          ],
+                          stops: <double>[0.35, 0.62, 1],
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
+                    ),
+                    Positioned(
+                      left: 14,
+                      right: 14,
+                      bottom: 12,
+                      child: Text(
                         reference.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 15 * fontScale,
+                          fontSize: 22 * fontScale,
                           fontWeight: FontWeight.w700,
-                          height: 1.3,
-                          color: const Color(0xFF1A1A1A),
+                          height: 1.25,
+                          letterSpacing: -0.3,
+                          color: AppColors.white,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              if (reference.regions.isNotEmpty ||
+                  reference.aspects.isNotEmpty ||
+                  reference.note.trim().isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
             if (reference.regions.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              for (final ShowroomReferenceRegion region in reference.regions) ...[
-                _ReferenceRegionLine(
-                  region: region,
-                  fontScale: fontScale,
-                  onTap: onRegionTap == null ? null : () => onRegionTap!(region),
-                  onDelete: onRegionDelete == null ? null : () => onRegionDelete!(region),
-                ),
-                const SizedBox(height: 8),
-              ],
+              _ReferenceImageStrip(
+                regions: reference.regions,
+                fontScale: fontScale,
+                onTap: onRegionTap,
+                onDelete: onRegionDelete,
+              ),
             ],
             if (reference.aspects.isNotEmpty) ...[
               const SizedBox(height: 4),
@@ -778,7 +888,7 @@ class ShowroomStyleReferenceTile extends StatelessWidget {
                   for (final String aspect in reference.aspects)
                     DecoratedBox(
                       decoration: BoxDecoration(
-                        color: AppColors.white,
+                        color: AppColors.primary.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(99),
                       ),
                       child: Padding(
@@ -803,82 +913,148 @@ class ShowroomStyleReferenceTile extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13 * fontScale,
                   height: 1.45,
-                  color: const Color(0xFF1A1A1A),
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
-          ],
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
 
-class _ReferenceRegionLine extends StatelessWidget {
-  const _ReferenceRegionLine({
-    required this.region,
+class _ReferenceImageStrip extends StatelessWidget {
+  const _ReferenceImageStrip({
+    required this.regions,
     required this.fontScale,
     this.onTap,
     this.onDelete,
   });
 
-  final ShowroomReferenceRegion region;
+  final List<ShowroomReferenceRegion> regions;
   final double fontScale;
+  final ValueChanged<ShowroomReferenceRegion>? onTap;
+  final ValueChanged<ShowroomReferenceRegion>? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool caption = regions.any((ShowroomReferenceRegion region) => region.note.trim().isNotEmpty);
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        const double gap = 8;
+        final double tile = (constraints.maxWidth - gap * 3) / 4;
+        final double height = tile + (caption ? 40 : 0);
+        return SizedBox(
+          height: height,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: regions.length > 4
+                ? const BouncingScrollPhysics()
+                : const NeverScrollableScrollPhysics(),
+            itemCount: regions.length,
+            separatorBuilder: (BuildContext context, int index) => const SizedBox(width: gap),
+            itemBuilder: (BuildContext context, int index) {
+              final ShowroomReferenceRegion region = regions[index];
+              return _ReferenceImageTile(
+                region: region,
+                width: tile,
+                fontScale: fontScale,
+                showCaption: caption,
+                onTap: onTap == null ? null : () => onTap!(region),
+                onDelete: onDelete == null ? null : () => onDelete!(region),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ReferenceImageTile extends StatelessWidget {
+  const _ReferenceImageTile({
+    required this.region,
+    required this.width,
+    required this.fontScale,
+    required this.showCaption,
+    this.onTap,
+    this.onDelete,
+  });
+
+  final ShowroomReferenceRegion region;
+  final double width;
+  final double fontScale;
+  final bool showCaption;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
     final String detail = region.note.trim();
-    final Widget line = Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: SizedBox(
-            width: 56,
-            height: 56,
-            child: ShowroomReferenceMarkView(
-              imageUrl: region.imageUrl,
-              crop: region.crop,
-              marks: region.marks,
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: detail.isEmpty
-              ? const SizedBox(height: 56)
-              : Text(
-                  detail,
-                  style: TextStyle(
-                    fontSize: 13 * fontScale,
-                    height: 1.4,
-                    color: const Color(0xFF1A1A1A),
+    return SizedBox(
+      width: width,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: width,
+            height: width,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: onTap,
+                      borderRadius: BorderRadius.circular(10),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: ShowroomReferenceMarkView(
+                          imageUrl: region.imageUrl,
+                          crop: region.crop,
+                          marks: region.marks,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-        ),
-        if (onDelete != null)
-          TextButton(
-            onPressed: onDelete,
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.textSecondary,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              textStyle: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700),
+                if (onDelete != null)
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: GestureDetector(
+                      onTap: onDelete,
+                      child: const DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          shape: BoxShape.circle,
+                        ),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: Icon(Icons.close, size: 14, color: AppColors.textPrimary),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            child: const Text('삭제'),
           ),
-      ],
-    );
-    if (onTap == null) return line;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: line,
+          if (showCaption) ...[
+            const SizedBox(height: 4),
+            Text(
+              detail,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 11 * fontScale, height: 1.3, color: AppColors.textSecondary),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -896,8 +1072,8 @@ class _DateTestButton extends StatelessWidget {
     return OutlinedButton(
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
-        foregroundColor: const Color(0xFF1A1A1A),
-        side: const BorderSide(color: Color(0xFF1A1A1A)),
+        foregroundColor: AppColors.primary,
+        side: const BorderSide(color: AppColors.primary),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)),
       ),
@@ -909,6 +1085,7 @@ class _DateTestButton extends StatelessWidget {
 String _areaLabel(String area) {
   if (area.isEmpty) return '미입력';
   if (area == PrepLabels.areaUnknown) return area;
+  if (area.endsWith('평') || area.endsWith('㎡')) return area;
   return '$area평';
 }
 

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
@@ -21,24 +23,24 @@ class AppNetworkImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (url.startsWith('/') || url.startsWith('file://')) {
+      final String path = url.startsWith('file://') ? Uri.parse(url).toFilePath() : url;
+      return Image.file(
+        File(path),
+        fit: fit,
+        width: width,
+        height: height,
+        errorBuilder: (context, error, stackTrace) => _imageFallback(placeholderColor),
+      );
+    }
+
     if (url.startsWith('assets/')) {
       return Image.asset(
         url,
         fit: fit,
         width: width,
         height: height,
-        errorBuilder: (context, error, stackTrace) {
-          return ColoredBox(
-            color: placeholderColor,
-            child: const Center(
-              child: Icon(
-                Icons.image_outlined,
-                size: 28,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          );
-        },
+        errorBuilder: (context, error, stackTrace) => _imageFallback(placeholderColor),
       );
     }
 
@@ -49,18 +51,16 @@ class AppNetworkImage extends StatelessWidget {
       height: height,
       fadeInDuration: const Duration(milliseconds: 180),
       placeholder: (context, imageUrl) => ColoredBox(color: placeholderColor),
-      errorWidget: (context, imageUrl, error) {
-        return ColoredBox(
-          color: placeholderColor,
-          child: const Center(
-            child: Icon(
-              Icons.image_outlined,
-              size: 28,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        );
-      },
+      errorWidget: (context, imageUrl, error) => _imageFallback(placeholderColor),
     );
   }
+}
+
+Widget _imageFallback(Color color) {
+  return ColoredBox(
+    color: color,
+    child: const Center(
+      child: Icon(Icons.image_outlined, size: 28, color: AppColors.textSecondary),
+    ),
+  );
 }
