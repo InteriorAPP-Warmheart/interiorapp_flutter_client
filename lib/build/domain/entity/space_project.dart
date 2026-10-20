@@ -36,6 +36,108 @@ class SpaceProject {
   int get filledSteps => phase.index + 1;
 }
 
+enum ShowroomReferenceMarkKind { stroke, rect, ellipse }
+
+/// 그린 선의 한 점. 값은 이미지 가로·세로 대비 0~1이다.
+class ShowroomReferencePoint {
+  const ShowroomReferencePoint(this.x, this.y);
+
+  final double x;
+  final double y;
+}
+
+/// 사진 위에 그린 선, 사각형, 원.
+class ShowroomReferenceMark {
+  const ShowroomReferenceMark.stroke(this.points, {this.color = 0xFFFFFFFF})
+    : kind = ShowroomReferenceMarkKind.stroke,
+      left = null,
+      top = null,
+      width = null,
+      height = null;
+
+  const ShowroomReferenceMark.shape({
+    required this.kind,
+    required this.left,
+    required this.top,
+    required this.width,
+    required this.height,
+    this.color = 0xFFFFFFFF,
+  }) : points = const <ShowroomReferencePoint>[];
+
+  final ShowroomReferenceMarkKind kind;
+  final double? left;
+  final double? top;
+  final double? width;
+  final double? height;
+  final List<ShowroomReferencePoint> points;
+
+  /// 선과 도형에 쓰는 색. ARGB.
+  final int color;
+}
+
+/// 사진 안에서 고른 영역. 값은 이미지 가로·세로 대비 0~1이다.
+class ShowroomReferenceCrop {
+  const ShowroomReferenceCrop({
+    required this.left,
+    required this.top,
+    required this.width,
+    required this.height,
+  });
+
+  final double left;
+  final double top;
+  final double width;
+  final double height;
+}
+
+/// 쇼룸 사진 한 장, 또는 그 사진의 일부.
+class ShowroomReferenceRegion {
+  const ShowroomReferenceRegion({
+    required this.id,
+    required this.label,
+    required this.imageUrl,
+    this.crop,
+    this.marks = const <ShowroomReferenceMark>[],
+    this.asIs = false,
+    this.note = '',
+  });
+
+  final String id;
+  final String label;
+  final String imageUrl;
+  final ShowroomReferenceCrop? crop;
+  final List<ShowroomReferenceMark> marks;
+  final bool asIs;
+  final String note;
+
+  bool get hasMark => marks.isNotEmpty || crop != null;
+}
+
+/// 쇼룸 게시글을 상담의 참고 사례로 넘길 때 붙는 정보.
+class ShowroomStyleRef {
+  const ShowroomStyleRef({
+    required this.showroomId,
+    required this.title,
+    required this.imageUrl,
+    this.aspects = const <String>[],
+    this.regions = const <ShowroomReferenceRegion>[],
+    this.note = '',
+  });
+
+  final String showroomId;
+  final String title;
+  final String imageUrl;
+
+  /// 사진에 안 보이는 참고. 가격, 같은 업종.
+  final List<String> aspects;
+
+  /// 전체 보기에서 고른 사진과 그 일부.
+  final List<ShowroomReferenceRegion> regions;
+
+  /// 고객이 직접 적은 참고 설명.
+  final String note;
+}
+
 /// 상담 전에 정리해 둔 사전준비 한 건.
 abstract final class PrepLabels {
   static const String industryUndecided = '아직 정하지 못했어요';
@@ -67,6 +169,7 @@ class PrepRecord {
     this.workScope = '',
     this.contact = '',
     this.workPlace = '',
+    this.styleRef,
   });
 
   final String id;
@@ -102,6 +205,9 @@ class PrepRecord {
 
   /// 부분공사일 때 손볼 곳. 전체공사이면 비어 있다.
   final String workPlace;
+
+  /// 쇼룸에서 골라 온 참고 사례. 없으면 일반 상담준비다.
+  final ShowroomStyleRef? styleRef;
 
   bool get industryReady => industry.isNotEmpty && industry != PrepLabels.industryUndecided;
 

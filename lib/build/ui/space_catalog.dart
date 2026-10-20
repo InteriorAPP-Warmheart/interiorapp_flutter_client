@@ -122,6 +122,7 @@ class SpaceBoard extends ChangeNotifier {
             workScope: record.workScope,
             contact: record.contact,
             workPlace: record.workPlace,
+            styleRef: record.styleRef,
           );
     consults.removeWhere((PrepRecord item) => item.id == stored.id);
     final SpaceProject project = SpaceProject(

@@ -196,9 +196,9 @@ class StoryHeroScene extends StatelessWidget {
                       radius: 14,
                     ),
                     const SizedBox(width: 10),
-                    Expanded(
+                    Flexible(
                       child: Text(
-                        '${story.userName}  ·  좋아요 $likes',
+                        story.userName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -206,6 +206,17 @@ class StoryHeroScene extends StatelessWidget {
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Icon(Icons.favorite, size: 15, color: Colors.white),
+                    const SizedBox(width: 4),
+                    Text(
+                      likes,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -514,13 +525,11 @@ class StoryProcessFrameScene extends StatelessWidget {
     required this.frame,
     required this.index,
     required this.count,
-    required this.progress,
   });
 
   final ShowroomProcessFrame frame;
   final int index;
   final int count;
-  final double progress;
 
   @override
   Widget build(BuildContext context) {
@@ -536,34 +545,30 @@ class StoryProcessFrameScene extends StatelessWidget {
           left: 28,
           right: 28,
           bottom: bottom,
-          child: _Rise(
-            progress: progress,
-            start: 0.08,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${index + 1} / $count',
-                  style: const TextStyle(
-                    color: Color(0xE6FFFFFF),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
-                  ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${index + 1} / $count',
+                style: const TextStyle(
+                  color: Color(0xE6FFFFFF),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  frame.caption,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    height: 1.35,
-                    letterSpacing: -0.3,
-                  ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                frame.caption,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  height: 1.35,
+                  letterSpacing: -0.3,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ],

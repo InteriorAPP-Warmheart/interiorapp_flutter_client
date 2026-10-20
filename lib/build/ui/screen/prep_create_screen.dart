@@ -8,6 +8,7 @@ import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_bottom_sheet.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_dialog.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_reference_pick.dart';
 
 /// 상담준비 작성. 현장, 조건, 첨부 순서로 나눈다.
 class PrepCreateScreen extends StatefulWidget {
@@ -24,7 +25,14 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> {
   static const List<String> _steps = ['현장', '조건', '첨부'];
   static const String _commercial = '상가';
   static const String _residential = '주거';
-  static const List<String> _styles = ['모던', '내추럴', '미니멀', '북유럽', '빈티지', '아직 모르겠어요'];
+  static const List<String> _styles = [
+    '모던',
+    '내추럴',
+    '미니멀',
+    '북유럽',
+    '빈티지',
+    '아직 모르겠어요',
+  ];
   static const String _industryOther = '기타';
   static const List<String> _industries = [
     '카페',
@@ -38,8 +46,16 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> {
     _industryOther,
     PrepLabels.industryUndecided,
   ];
-  static const List<String> _workScopes = [PrepLabels.fullWork, PrepLabels.partialWork];
-  static const List<String> _periods = ['1개월 이내', '1개월', '2개월', PrepLabels.periodUndecided];
+  static const List<String> _workScopes = [
+    PrepLabels.fullWork,
+    PrepLabels.partialWork,
+  ];
+  static const List<String> _periods = [
+    '1개월 이내',
+    '1개월',
+    '2개월',
+    PrepLabels.periodUndecided,
+  ];
   static const List<String> _buildingConditions = ['전체 철거', '부분 철거', '철거 없음'];
 
   final TextEditingController _address = TextEditingController();
@@ -66,6 +82,7 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> {
   bool _budgetUndecided = false;
   DateTimeRange? _targetRange;
   String? _error;
+  ShowroomStyleRef? _styleRef;
 
   @override
   void initState() {
@@ -73,6 +90,7 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> {
     final PrepRecord? initial = widget.initial;
     if (initial == null) return;
     _recordId = initial.id;
+    _styleRef = initial.styleRef;
     _address.text = initial.address;
     _detailAddress.text = initial.detailAddress;
     _buildingName.text = initial.placeName;
@@ -91,16 +109,20 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> {
       _industry = _industryOther;
       _industryNote.text = savedIndustry;
     }
-    _workScope = _workScopes.contains(initial.workScope)
-        ? initial.workScope
-        : initial.workScope == '전체 인테리어'
+    _workScope =
+        _workScopes.contains(initial.workScope)
+            ? initial.workScope
+            : initial.workScope == '전체 인테리어'
             ? PrepLabels.fullWork
             : null;
     _workPlace.text = initial.workPlace;
     _buildingCondition = initial.buildingCondition;
     _style = initial.style;
     if (initial.periodStart != null && initial.periodEnd != null) {
-      _targetRange = DateTimeRange(start: initial.periodStart!, end: initial.periodEnd!);
+      _targetRange = DateTimeRange(
+        start: initial.periodStart!,
+        end: initial.periodEnd!,
+      );
     } else {
       _period = initial.period;
     }
@@ -140,7 +162,8 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> {
       return;
     }
     if (_step >= _steps.length - 1) {
-      if (_recordId.isEmpty) _recordId = 'consult-${DateTime.now().microsecondsSinceEpoch}';
+      if (_recordId.isEmpty)
+        _recordId = 'consult-${DateTime.now().microsecondsSinceEpoch}';
       SpaceBoard.instance.saveConsult(_currentRecord);
     }
     setState(() {
@@ -158,17 +181,21 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> {
       if (_address.text.trim().isEmpty) return '주소를 검색해 주세요';
       if (_buildingName.text.trim().isEmpty) return '건물 이름을 적어 주세요';
       if (_industry == null) return '업종을 골라 주세요';
-      if (_industry == _industryOther && _industryNote.text.trim().isEmpty) return '업종을 적어 주세요';
+      if (_industry == _industryOther && _industryNote.text.trim().isEmpty)
+        return '업종을 적어 주세요';
     }
     if (_step == 1) {
-      if (!_areaUnknown && _area.text.trim().isEmpty) return '평수를 적거나, 정확히 모른다고 골라 주세요';
+      if (!_areaUnknown && _area.text.trim().isEmpty)
+        return '평수를 적거나, 정확히 모른다고 골라 주세요';
       if (_workScope == null) return '공사 형태를 골라 주세요';
-      if (_workScope == PrepLabels.partialWork && _workPlace.text.trim().isEmpty) {
+      if (_workScope == PrepLabels.partialWork &&
+          _workPlace.text.trim().isEmpty) {
         return '부분공사로 손볼 곳을 적어 주세요';
       }
       if (_buildingCondition == null) return '철거 여부를 골라 주세요';
       if (_style == null) return '원하는 스타일을 골라 주세요';
-      if (!_budgetUndecided && _budget.text.trim().isEmpty) return '예산을 적거나, 아직 정하지 못했다고 골라 주세요';
+      if (!_budgetUndecided && _budget.text.trim().isEmpty)
+        return '예산을 적거나, 아직 정하지 못했다고 골라 주세요';
       if (_period == null && _targetRange == null) return '기간을 골라 주세요';
     }
     return null;
@@ -208,18 +235,68 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> {
       area: _areaUnknown ? PrepLabels.areaUnknown : _area.text.trim(),
       buildingCondition: _buildingCondition ?? '',
       style: _style ?? '',
-      budget: _budgetUndecided ? PrepLabels.budgetUndecided : _budget.text.trim(),
+      budget:
+          _budgetUndecided ? PrepLabels.budgetUndecided : _budget.text.trim(),
       period: range != null ? _formatDateRange(range) : (_period ?? ''),
       periodStart: range?.start,
       periodEnd: range?.end,
       needs: _needs.text.trim(),
-      floorPlanLabels: [for (final TextEditingController item in _floorPlanLabels) item.text.trim()],
-      referenceImageLabels: [for (final TextEditingController item in _referenceImageLabels) item.text.trim()],
-      industry: _industry == _industryOther ? _industryNote.text.trim() : (_industry ?? ''),
+      floorPlanLabels: [
+        for (final TextEditingController item in _floorPlanLabels)
+          item.text.trim(),
+      ],
+      referenceImageLabels: [
+        for (final TextEditingController item in _referenceImageLabels)
+          item.text.trim(),
+      ],
+      industry:
+          _industry == _industryOther
+              ? _industryNote.text.trim()
+              : (_industry ?? ''),
       workScope: _workScope ?? '',
       contact: _contact.text.trim(),
-      workPlace: _workScope == PrepLabels.partialWork ? _workPlace.text.trim() : '',
+      workPlace:
+          _workScope == PrepLabels.partialWork ? _workPlace.text.trim() : '',
+      styleRef: _styleRef,
     );
+  }
+
+  ShowroomStyleRef _withRegions(ShowroomStyleRef reference, List<ShowroomReferenceRegion> regions) {
+    return ShowroomStyleRef(
+      showroomId: reference.showroomId,
+      title: reference.title,
+      imageUrl: reference.imageUrl,
+      aspects: reference.aspects,
+      regions: regions,
+      note: reference.note,
+    );
+  }
+
+  Future<void> _editReferenceRegion(ShowroomReferenceRegion region) async {
+    final ShowroomReferenceRegion? saved = await showShowroomReferenceEditor(
+      context,
+      region,
+      title: '참고 메모',
+    );
+    final ShowroomStyleRef? reference = _styleRef;
+    if (!mounted || saved == null || reference == null) return;
+    setState(() {
+      _styleRef = _withRegions(reference, [
+        for (final ShowroomReferenceRegion item in reference.regions)
+          if (item.id == saved.id) saved else item,
+      ]);
+    });
+  }
+
+  void _deleteReferenceRegion(ShowroomReferenceRegion region) {
+    final ShowroomStyleRef? reference = _styleRef;
+    if (reference == null) return;
+    setState(() {
+      _styleRef = _withRegions(reference, [
+        for (final ShowroomReferenceRegion item in reference.regions)
+          if (item.id != region.id) item,
+      ]);
+    });
   }
 
   Future<void> _searchAddress() async {
@@ -243,8 +320,13 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> {
               for (final TradeCandidate candidate in SpaceBoard.instance.trades)
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text(candidate.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                  subtitle: Text('${candidate.industry} · ${candidate.address}'),
+                  title: Text(
+                    candidate.name,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  subtitle: Text(
+                    '${candidate.industry} · ${candidate.address}',
+                  ),
                   onTap: () => Navigator.of(sheetContext).pop(candidate),
                 ),
             ],
@@ -279,9 +361,13 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> {
       context: context,
       title: '주거는 아직이에요',
       message: '지금은 상가 공간만 상담준비를 진행할 수 있어요.',
-      actions: (BuildContext dialogContext) => [
-        AppButton(label: '확인', onPressed: () => Navigator.of(dialogContext).pop()),
-      ],
+      actions:
+          (BuildContext dialogContext) => [
+            AppButton(
+              label: '확인',
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+          ],
     );
   }
 
@@ -300,120 +386,182 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> {
       appBar: AppBar(title: const Text('상담준비')),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.fromLTRB(padding.left, subGap, padding.right, subGap),
-          child: _saved
-              ? PrepDetailView(
-                  record: _currentRecord,
-                  onEdit: (int step) => setState(() {
-                    _saved = false;
-                    _step = step;
-                    _error = null;
-                  }),
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _StepHeader(steps: _steps, index: _step, fontScale: fontScale),
-                    SizedBox(height: sectionGap),
-                    Expanded(
-                      child: ListView(
-                        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                        padding: EdgeInsets.only(bottom: keyboardInset),
-                        children: [
-                          if (_step == 0)
-                            _SiteStep(
-                              fontScale: fontScale,
-                              subGap: subGap,
-                              sectionGap: sectionGap,
-                              address: _address,
-                              detailAddress: _detailAddress,
-                              buildingName: _buildingName,
-                              onSearchAddress: _searchAddress,
-                              industry: _industry,
-                              industries: _industries,
-                              industryNote: _industryNote,
-                              contact: _contact,
-                              onIndustry: (String value) => setState(() => _industry = value),
-                              onSpaceKind: _onSpaceKind,
-                              onImport: SpaceBoard.instance.trades.isEmpty ? null : _importTrade,
-                            ),
-                          if (_step == 1)
-                            _NeedsStep(
-                              fontScale: fontScale,
-                              subGap: subGap,
-                              sectionGap: sectionGap,
-                              styles: _styles,
-                              periods: _periods,
-                              buildingConditions: _buildingConditions,
-                              workScopes: _workScopes,
-                              style: _style,
-                              period: _period,
-                              buildingCondition: _buildingCondition,
-                              workScope: _workScope,
-                              areaUnknown: _areaUnknown,
-                              budgetUndecided: _budgetUndecided,
-                              workPlace: _workPlace,
-                              targetRange: _targetRange,
-                              area: _area,
-                              budget: _budget,
-                              needs: _needs,
-                              onStyle: (String value) => setState(() => _style = value),
-                              onBuildingCondition: (String value) => setState(() => _buildingCondition = value),
-                              onWorkScope: (String value) => setState(() => _workScope = value),
-                              onAreaUnknown: () => setState(() {
-                                _areaUnknown = !_areaUnknown;
-                                if (_areaUnknown) _area.clear();
-                              }),
-                              onAreaChanged: (String value) {
-                                if (value.trim().isNotEmpty && _areaUnknown) {
-                                  setState(() => _areaUnknown = false);
-                                }
-                              },
-                              onBudgetUndecided: () => setState(() {
-                                _budgetUndecided = !_budgetUndecided;
-                                if (_budgetUndecided) _budget.clear();
-                              }),
-                              onBudgetChanged: (String value) {
-                                if (value.trim().isNotEmpty && _budgetUndecided) {
-                                  setState(() => _budgetUndecided = false);
-                                }
-                              },
-                              onPeriod: (String value) => setState(() {
-                                _period = value;
-                                _targetRange = null;
-                              }),
-                              onPickDate: _pickTargetRange,
-                              onClearDate: () => setState(() => _targetRange = null),
-                            ),
-                          if (_step == 2)
-                            _FloorPlanStep(
-                              fontScale: fontScale,
-                              subGap: subGap,
-                              sectionGap: sectionGap,
-                              floorPlanLabels: _floorPlanLabels,
-                              referenceImageLabels: _referenceImageLabels,
-                              onAddFloorPlan: () => setState(() => _floorPlanLabels.add(TextEditingController())),
-                              onAddReferenceImage: () => setState(() => _referenceImageLabels.add(TextEditingController())),
-                              onRemoveFloorPlan: (int index) => setState(() => _floorPlanLabels.removeAt(index).dispose()),
-                              onRemoveReferenceImage: (int index) =>
-                                  setState(() => _referenceImageLabels.removeAt(index).dispose()),
-                            ),
-                        ],
+          padding: EdgeInsets.fromLTRB(
+            padding.left,
+            subGap,
+            padding.right,
+            subGap,
+          ),
+          child:
+              _saved
+                  ? PrepDetailView(
+                    record: _currentRecord,
+                    onEdit:
+                        (int step) => setState(() {
+                          _saved = false;
+                          _step = step;
+                          _error = null;
+                        }),
+                  )
+                  : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _StepHeader(
+                        steps: _steps,
+                        index: _step,
+                        fontScale: fontScale,
                       ),
-                    ),
-                    if (_error != null) ...[
-                      Text(
-                        _error!,
-                        style: TextStyle(fontSize: 13 * fontScale, color: const Color(0xFFB42318)),
+                      SizedBox(height: sectionGap),
+                      Expanded(
+                        child: ListView(
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          padding: EdgeInsets.only(bottom: keyboardInset),
+                          children: [
+                            if (_styleRef case final ShowroomStyleRef reference) ...[
+                              ShowroomStyleReferenceTile(
+                                reference: reference,
+                                fontScale: fontScale,
+                                onRegionTap: _editReferenceRegion,
+                                onRegionDelete: _deleteReferenceRegion,
+                              ),
+                              SizedBox(height: sectionGap),
+                            ],
+                            if (_step == 0)
+                              _SiteStep(
+                                fontScale: fontScale,
+                                subGap: subGap,
+                                sectionGap: sectionGap,
+                                address: _address,
+                                detailAddress: _detailAddress,
+                                buildingName: _buildingName,
+                                onSearchAddress: _searchAddress,
+                                industry: _industry,
+                                industries: _industries,
+                                industryNote: _industryNote,
+                                contact: _contact,
+                                onIndustry:
+                                    (String value) =>
+                                        setState(() => _industry = value),
+                                onSpaceKind: _onSpaceKind,
+                                onImport:
+                                    SpaceBoard.instance.trades.isEmpty
+                                        ? null
+                                        : _importTrade,
+                              ),
+                            if (_step == 1)
+                              _NeedsStep(
+                                fontScale: fontScale,
+                                subGap: subGap,
+                                sectionGap: sectionGap,
+                                styles: _styles,
+                                periods: _periods,
+                                buildingConditions: _buildingConditions,
+                                workScopes: _workScopes,
+                                style: _style,
+                                period: _period,
+                                buildingCondition: _buildingCondition,
+                                workScope: _workScope,
+                                areaUnknown: _areaUnknown,
+                                budgetUndecided: _budgetUndecided,
+                                workPlace: _workPlace,
+                                targetRange: _targetRange,
+                                area: _area,
+                                budget: _budget,
+                                needs: _needs,
+                                onStyle:
+                                    (String value) =>
+                                        setState(() => _style = value),
+                                onBuildingCondition:
+                                    (String value) => setState(
+                                      () => _buildingCondition = value,
+                                    ),
+                                onWorkScope:
+                                    (String value) =>
+                                        setState(() => _workScope = value),
+                                onAreaUnknown:
+                                    () => setState(() {
+                                      _areaUnknown = !_areaUnknown;
+                                      if (_areaUnknown) _area.clear();
+                                    }),
+                                onAreaChanged: (String value) {
+                                  if (value.trim().isNotEmpty && _areaUnknown) {
+                                    setState(() => _areaUnknown = false);
+                                  }
+                                },
+                                onBudgetUndecided:
+                                    () => setState(() {
+                                      _budgetUndecided = !_budgetUndecided;
+                                      if (_budgetUndecided) _budget.clear();
+                                    }),
+                                onBudgetChanged: (String value) {
+                                  if (value.trim().isNotEmpty &&
+                                      _budgetUndecided) {
+                                    setState(() => _budgetUndecided = false);
+                                  }
+                                },
+                                onPeriod:
+                                    (String value) => setState(() {
+                                      _period = value;
+                                      _targetRange = null;
+                                    }),
+                                onPickDate: _pickTargetRange,
+                                onClearDate:
+                                    () => setState(() => _targetRange = null),
+                              ),
+                            if (_step == 2)
+                              _FloorPlanStep(
+                                fontScale: fontScale,
+                                subGap: subGap,
+                                sectionGap: sectionGap,
+                                floorPlanLabels: _floorPlanLabels,
+                                referenceImageLabels: _referenceImageLabels,
+                                onAddFloorPlan:
+                                    () => setState(
+                                      () => _floorPlanLabels.add(
+                                        TextEditingController(),
+                                      ),
+                                    ),
+                                onAddReferenceImage:
+                                    () => setState(
+                                      () => _referenceImageLabels.add(
+                                        TextEditingController(),
+                                      ),
+                                    ),
+                                onRemoveFloorPlan:
+                                    (int index) => setState(
+                                      () =>
+                                          _floorPlanLabels
+                                              .removeAt(index)
+                                              .dispose(),
+                                    ),
+                                onRemoveReferenceImage:
+                                    (int index) => setState(
+                                      () =>
+                                          _referenceImageLabels
+                                              .removeAt(index)
+                                              .dispose(),
+                                    ),
+                              ),
+                          ],
+                        ),
                       ),
-                      SizedBox(height: subGap),
+                      if (_error != null) ...[
+                        Text(
+                          _error!,
+                          style: TextStyle(
+                            fontSize: 13 * fontScale,
+                            color: const Color(0xFFB42318),
+                          ),
+                        ),
+                        SizedBox(height: subGap),
+                      ],
+                      AppButton(
+                        label: _step == _steps.length - 1 ? '상담준비 저장' : '다음',
+                        onPressed: _next,
+                      ),
                     ],
-                    AppButton(
-                      label: _step == _steps.length - 1 ? '상담준비 저장' : '다음',
-                      onPressed: _next,
-                    ),
-                  ],
-                ),
+                  ),
         ),
       ),
     );
@@ -421,7 +569,11 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> {
 }
 
 class _StepHeader extends StatelessWidget {
-  const _StepHeader({required this.steps, required this.index, required this.fontScale});
+  const _StepHeader({
+    required this.steps,
+    required this.index,
+    required this.fontScale,
+  });
 
   final List<String> steps;
   final int index;
@@ -442,7 +594,10 @@ class _StepHeader extends StatelessWidget {
                   curve: Curves.easeOut,
                   height: 3,
                   decoration: BoxDecoration(
-                    color: i <= index ? const Color(0xFF1A1A1A) : const Color(0xFFE4E4E4),
+                    color:
+                        i <= index
+                            ? const Color(0xFF1A1A1A)
+                            : const Color(0xFFE4E4E4),
                     borderRadius: BorderRadius.circular(99),
                   ),
                 ),
@@ -452,9 +607,10 @@ class _StepHeader extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12 * fontScale,
                     fontWeight: i == index ? FontWeight.w700 : FontWeight.w500,
-                    color: i == index
-                        ? const Color(0xFF1A1A1A)
-                        : i < index
+                    color:
+                        i == index
+                            ? const Color(0xFF1A1A1A)
+                            : i < index
                             ? const Color(0xFF6E6E6E)
                             : const Color(0xFFB0B0B0),
                   ),
@@ -507,14 +663,15 @@ class _SiteStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _StepTitle(
-          title: '어느 공간을 정리할까요',
-          body: '상가 공간을 기준으로 주소와 업종, 연락처를 적어 두면 상담으로 이어갈 수 있어요. 업종을 아직 모르면 그렇게 골라도 돼요.',
+          title: '공간을 정해주세요',
+          body:
+              '상가 공간을 기준으로 주소와 업종, 연락처를 적어 두면 상담으로 이어갈 수 있어요. 업종을 아직 모르면 그렇게 골라도 돼요.',
           fontScale: fontScale,
         ),
         if (onImport != null) ...[
           SizedBox(height: subGap),
           Align(
-            alignment: Alignment.centerLeft,
+            alignment: Alignment.center,
             child: TextButton(
               onPressed: onImport,
               style: TextButton.styleFrom(
@@ -525,7 +682,10 @@ class _SiteStep extends StatelessWidget {
               ),
               child: Text(
                 '상권 후보지에서 불러오기',
-                style: TextStyle(fontSize: 14 * fontScale, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  fontSize: 16 * fontScale,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
@@ -534,7 +694,10 @@ class _SiteStep extends StatelessWidget {
         _FieldLabel(label: '공간', fontScale: fontScale),
         SizedBox(height: subGap),
         _OptionSegment(
-          values: const [_PrepCreateScreenState._commercial, _PrepCreateScreenState._residential],
+          values: const [
+            _PrepCreateScreenState._commercial,
+            _PrepCreateScreenState._residential,
+          ],
           selected: _PrepCreateScreenState._commercial,
           fontScale: fontScale,
           onSelected: onSpaceKind,
@@ -542,7 +705,11 @@ class _SiteStep extends StatelessWidget {
         SizedBox(height: subGap),
         Text(
           '지금은 상가 공간만 진행할 수 있어요.',
-          style: TextStyle(fontSize: 13 * fontScale, height: 1.4, color: const Color(0xFF1A1A1A)),
+          style: TextStyle(
+            fontSize: 13 * fontScale,
+            height: 1.4,
+            color: const Color(0xFF1A1A1A),
+          ),
         ),
         SizedBox(height: sectionGap),
         _FieldLabel(label: '주소', fontScale: fontScale),
@@ -565,7 +732,11 @@ class _SiteStep extends StatelessWidget {
         SizedBox(height: subGap),
         Text(
           '자주 있는 업종만 골랐어요. 없으면 기타에 직접 적어 주세요.',
-          style: TextStyle(fontSize: 13 * fontScale, height: 1.4, color: const Color(0xFF1A1A1A)),
+          style: TextStyle(
+            fontSize: 13 * fontScale,
+            height: 1.4,
+            color: const Color(0xFF1A1A1A),
+          ),
         ),
         SizedBox(height: subGap),
         _ChoiceWrap(
@@ -583,7 +754,11 @@ class _SiteStep extends StatelessWidget {
         SizedBox(height: subGap),
         Text(
           '하이픈 없이 숫자만 적어 주세요. 010-0000-0000 형태로 보여 드려요.',
-          style: TextStyle(fontSize: 13 * fontScale, height: 1.4, color: const Color(0xFF1A1A1A)),
+          style: TextStyle(
+            fontSize: 13 * fontScale,
+            height: 1.4,
+            color: const Color(0xFF1A1A1A),
+          ),
         ),
         SizedBox(height: subGap),
         _PrepTextField(
@@ -664,7 +839,10 @@ class _OptionSegment extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 15 * fontScale,
                                   fontWeight: FontWeight.w700,
-                                  color: value == selected ? const Color(0xFFFFFFFF) : const Color(0xFF1A1A1A),
+                                  color:
+                                      value == selected
+                                          ? const Color(0xFFFFFFFF)
+                                          : const Color(0xFF1A1A1A),
                                 ),
                               ),
                             ),
@@ -738,7 +916,11 @@ class _FloorPlanStep extends StatelessWidget {
         SizedBox(height: subGap),
         Text(
           '참고할 사진이 있으면 올려 두세요. 없어도 돼요.',
-          style: TextStyle(fontSize: 13 * fontScale, height: 1.4, color: const Color(0xFF6E6E6E)),
+          style: TextStyle(
+            fontSize: 13 * fontScale,
+            height: 1.4,
+            color: const Color(0xFF6E6E6E),
+          ),
         ),
         SizedBox(height: subGap),
         _AttachmentRow(
@@ -796,9 +978,7 @@ class _LabeledAttachment extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Expanded(
-          child: _PrepTextField(controller: controller, hint: hint),
-        ),
+        Expanded(child: _PrepTextField(controller: controller, hint: hint)),
         IconButton(
           onPressed: onRemove,
           icon: const Icon(Icons.close, size: 18, color: Color(0xFF8C7358)),
@@ -835,15 +1015,25 @@ class _AttachmentRow extends StatelessWidget {
               onTap: onAdd,
               borderRadius: BorderRadius.circular(12),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: attached ? const Color(0xFF8C7358) : const Color(0xFFE4E4E4)),
+                  border: Border.all(
+                    color:
+                        attached
+                            ? const Color(0xFF8C7358)
+                            : const Color(0xFFE4E4E4),
+                  ),
                 ),
                 child: Row(
                   children: [
                     Icon(
-                      attached ? Icons.check_circle_outline : Icons.upload_file_outlined,
+                      attached
+                          ? Icons.check_circle_outline
+                          : Icons.upload_file_outlined,
                       size: 18,
                       color: const Color(0xFF8C7358),
                     ),
@@ -851,7 +1041,10 @@ class _AttachmentRow extends StatelessWidget {
                     Expanded(
                       child: Text(
                         attached ? '첨부됨' : label,
-                        style: TextStyle(fontSize: 15 * fontScale, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 15 * fontScale,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -886,7 +1079,11 @@ class _AttachmentCount extends StatelessWidget {
         children: [
           Text(
             '$count개',
-            style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700, color: const Color(0xFF8C7358)),
+            style: TextStyle(
+              fontSize: 13 * fontScale,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF8C7358),
+            ),
           ),
         ],
       ),
@@ -898,9 +1095,10 @@ String _formatDateRange(DateTimeRange range) {
   final DateTime start = range.start;
   final DateTime end = range.end;
   final String startLabel = '${start.year}년 ${start.month}월 ${start.day}일';
-  final String endLabel = start.year == end.year
-      ? '${end.month}월 ${end.day}일'
-      : '${end.year}년 ${end.month}월 ${end.day}일';
+  final String endLabel =
+      start.year == end.year
+          ? '${end.month}월 ${end.day}일'
+          : '${end.year}년 ${end.month}월 ${end.day}일';
   return '$startLabel – $endLabel';
 }
 
@@ -967,7 +1165,8 @@ class _NeedsStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String dateLabel = targetRange == null ? '기간 상세 지정' : _formatDateRange(targetRange!);
+    final String dateLabel =
+        targetRange == null ? '기간 상세 지정' : _formatDateRange(targetRange!);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -990,7 +1189,11 @@ class _NeedsStep extends StatelessWidget {
           SizedBox(height: subGap),
           Text(
             '주방, 홀처럼 손볼 곳을 간단히 적어 주세요.',
-            style: TextStyle(fontSize: 13 * fontScale, height: 1.4, color: const Color(0xFF1A1A1A)),
+            style: TextStyle(
+              fontSize: 13 * fontScale,
+              height: 1.4,
+              color: const Color(0xFF1A1A1A),
+            ),
           ),
           SizedBox(height: subGap),
           _PrepTextField(controller: workPlace, hint: '예: 주방, 홀', maxLines: 2),
@@ -1023,11 +1226,20 @@ class _NeedsStep extends StatelessWidget {
         SizedBox(height: sectionGap),
         _FieldLabel(label: '원하는 스타일', fontScale: fontScale),
         SizedBox(height: subGap),
-        _ChoiceWrap(values: styles, selected: style, fontScale: fontScale, onSelected: onStyle),
+        _ChoiceWrap(
+          values: styles,
+          selected: style,
+          fontScale: fontScale,
+          onSelected: onStyle,
+        ),
         SizedBox(height: sectionGap),
         _FieldLabel(label: '예산', fontScale: fontScale),
         SizedBox(height: subGap),
-        _PrepTextField(controller: budget, hint: '예: 3,000만 원 (대략적으로도 돼요)', onChanged: onBudgetChanged),
+        _PrepTextField(
+          controller: budget,
+          hint: '예: 3,000만 원 (대략적으로도 돼요)',
+          onChanged: onBudgetChanged,
+        ),
         SizedBox(height: subGap),
         _ChoiceWrap(
           values: const [PrepLabels.budgetUndecided],
@@ -1040,10 +1252,19 @@ class _NeedsStep extends StatelessWidget {
         SizedBox(height: subGap),
         Text(
           '대략 고르거나, 시작과 끝 날짜로 기간을 지정할 수 있어요. 아직 정하지 못했어도 돼요.',
-          style: TextStyle(fontSize: 13 * fontScale, height: 1.4, color: const Color(0xFF1A1A1A)),
+          style: TextStyle(
+            fontSize: 13 * fontScale,
+            height: 1.4,
+            color: const Color(0xFF1A1A1A),
+          ),
         ),
         SizedBox(height: subGap),
-        _ChoiceWrap(values: periods, selected: period, fontScale: fontScale, onSelected: onPeriod),
+        _ChoiceWrap(
+          values: periods,
+          selected: period,
+          fontScale: fontScale,
+          onSelected: onPeriod,
+        ),
         SizedBox(height: subGap),
         _DatePickField(
           label: dateLabel,
@@ -1055,7 +1276,11 @@ class _NeedsStep extends StatelessWidget {
         SizedBox(height: sectionGap),
         _FieldLabel(label: '상담에서 말하고 싶은 점', fontScale: fontScale),
         SizedBox(height: subGap),
-        _PrepTextField(controller: needs, hint: '예: 주방을 넓히고, 수납을 늘리고 싶어요', maxLines: 4),
+        _PrepTextField(
+          controller: needs,
+          hint: '예: 주방을 넓히고, 수납을 늘리고 싶어요',
+          maxLines: 4,
+        ),
         const SizedBox(height: 88),
       ],
     );
@@ -1090,14 +1315,20 @@ class _DatePickField extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: selected ? const Color(0xFF1A1A1A) : const Color(0xFFE4E4E4)),
+            border: Border.all(
+              color:
+                  selected ? const Color(0xFF1A1A1A) : const Color(0xFFE4E4E4),
+            ),
           ),
           child: Row(
             children: [
               Icon(
                 Icons.calendar_today_outlined,
                 size: 18,
-                color: selected ? const Color(0xFF1A1A1A) : const Color(0xFF8C7358),
+                color:
+                    selected
+                        ? const Color(0xFF1A1A1A)
+                        : const Color(0xFF8C7358),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -1106,14 +1337,21 @@ class _DatePickField extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 15 * fontScale,
                     fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                    color: selected ? const Color(0xFF1A1A1A) : const Color(0xFFB0B0B0),
+                    color:
+                        selected
+                            ? const Color(0xFF1A1A1A)
+                            : const Color(0xFFB0B0B0),
                   ),
                 ),
               ),
               if (selected)
                 GestureDetector(
                   onTap: onClear,
-                  child: const Icon(Icons.close, size: 16, color: Color(0xFF8C7358)),
+                  child: const Icon(
+                    Icons.close,
+                    size: 16,
+                    color: Color(0xFF8C7358),
+                  ),
                 ),
             ],
           ),
@@ -1123,9 +1361,12 @@ class _DatePickField extends StatelessWidget {
   }
 }
 
-
 class _StepTitle extends StatelessWidget {
-  const _StepTitle({required this.title, required this.body, required this.fontScale});
+  const _StepTitle({
+    required this.title,
+    required this.body,
+    required this.fontScale,
+  });
 
   final String title;
   final String body;
@@ -1138,12 +1379,19 @@ class _StepTitle extends StatelessWidget {
       children: [
         Text(
           title,
-          style: TextStyle(fontSize: 22 * fontScale, fontWeight: FontWeight.w700, height: 1.3),
+          style: TextStyle(
+            fontSize: 22 * fontScale,
+            fontWeight: FontWeight.w700,
+            height: 1.3,
+          ),
         ),
         const SizedBox(height: 8),
         Text(
           body,
-          style: TextStyle(fontSize: 14 * fontScale, height: 1.4, color: const Color(0xFF6E6E6E)),
+          style: TextStyle(
+            fontSize: 14 * fontScale,
+            height: 1.4,
+          ),
         ),
       ],
     );
@@ -1200,7 +1448,10 @@ class _AddressSearchField extends StatelessWidget {
                   empty ? '주소 검색' : address,
                   style: TextStyle(
                     fontSize: 15 * fontScale,
-                    color: empty ? const Color(0xFFB0B0B0) : const Color(0xFF1A1A1A),
+                    color:
+                        empty
+                            ? const Color(0xFFB0B0B0)
+                            : const Color(0xFF1A1A1A),
                   ),
                 ),
               ),
@@ -1217,7 +1468,8 @@ String _formatKoreanMobile(String raw) {
   final String digits = raw.replaceAll(RegExp(r'\D'), '');
   final String clipped = digits.length > 11 ? digits.substring(0, 11) : digits;
   if (clipped.length <= 3) return clipped;
-  if (clipped.length <= 7) return '${clipped.substring(0, 3)}-${clipped.substring(3)}';
+  if (clipped.length <= 7)
+    return '${clipped.substring(0, 3)}-${clipped.substring(3)}';
   return '${clipped.substring(0, 3)}-${clipped.substring(3, 7)}-${clipped.substring(7)}';
 }
 
@@ -1225,11 +1477,18 @@ class _KoreanMobileFormatter extends TextInputFormatter {
   const _KoreanMobileFormatter();
 
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     var digits = newValue.text.replaceAll(RegExp(r'\D'), '');
-    var digitCursor = _digitsBefore(newValue.text, newValue.selection.extentOffset);
+    var digitCursor = _digitsBefore(
+      newValue.text,
+      newValue.selection.extentOffset,
+    );
     final String oldDigits = oldValue.text.replaceAll(RegExp(r'\D'), '');
-    final bool removedSeparatorOnly = digits == oldDigits && newValue.text.length < oldValue.text.length;
+    final bool removedSeparatorOnly =
+        digits == oldDigits && newValue.text.length < oldValue.text.length;
     if (removedSeparatorOnly && digitCursor > 0) {
       final int removeAt = digitCursor - 1;
       digits = digits.substring(0, removeAt) + digits.substring(removeAt + 1);
@@ -1240,7 +1499,9 @@ class _KoreanMobileFormatter extends TextInputFormatter {
     final String formatted = _formatKoreanMobile(digits);
     return TextEditingValue(
       text: formatted,
-      selection: TextSelection.collapsed(offset: _offsetAfterDigits(formatted, digitCursor)),
+      selection: TextSelection.collapsed(
+        offset: _offsetAfterDigits(formatted, digitCursor),
+      ),
     );
   }
 
@@ -1293,10 +1554,16 @@ class _PrepTextField extends StatelessWidget {
       style: TextStyle(fontSize: 15 * fontScale),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(fontSize: 15 * fontScale, color: const Color(0xFFB0B0B0)),
+        hintStyle: TextStyle(
+          fontSize: 15 * fontScale,
+          color: const Color(0xFFB0B0B0),
+        ),
         filled: true,
         fillColor: const Color(0xFFFFFFFF),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFFE4E4E4)),
@@ -1341,18 +1608,25 @@ class _ChoiceWrap extends StatelessWidget {
             labelStyle: TextStyle(
               fontSize: 14 * fontScale,
               fontWeight: FontWeight.w600,
-              color: selected == value ? const Color(0xFFFFFFFF) : const Color(0xFF1A1A1A),
+              color:
+                  selected == value
+                      ? const Color(0xFFFFFFFF)
+                      : const Color(0xFF1A1A1A),
             ),
             selectedColor: const Color(0xFF111111),
             backgroundColor: const Color(0xFFFFFFFF),
             side: BorderSide(
-              color: selected == value ? const Color(0xFF111111) : const Color(0xFFE4E4E4),
+              color:
+                  selected == value
+                      ? const Color(0xFF111111)
+                      : const Color(0xFFE4E4E4),
             ),
             showCheckmark: false,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(99),
+            ),
           ),
       ],
     );
   }
 }
-

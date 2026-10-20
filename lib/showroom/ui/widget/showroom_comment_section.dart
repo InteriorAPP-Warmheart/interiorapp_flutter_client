@@ -424,7 +424,7 @@ class _CommentCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _CommentRow(
             comment: comment,
@@ -541,19 +541,6 @@ class _CommentRow extends StatelessWidget {
                         ),
                       ),
                     ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: onReport,
-                    behavior: HitTestBehavior.opaque,
-                    child: const Padding(
-                      padding: EdgeInsets.only(left: 8),
-                      child: Icon(
-                        Icons.more_horiz,
-                        size: 18,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(height: 4),
@@ -594,6 +581,18 @@ class _CommentRow extends StatelessWidget {
                 ],
               ),
             ],
+          ),
+        ),
+        GestureDetector(
+          onTap: onReport,
+          behavior: HitTestBehavior.opaque,
+          child: const Padding(
+            padding: EdgeInsets.only(left: 12, top: 1),
+            child: Icon(
+              Icons.more_horiz,
+              size: 18,
+              color: AppColors.textSecondary,
+            ),
           ),
         ),
       ],

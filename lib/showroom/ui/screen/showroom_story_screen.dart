@@ -28,10 +28,15 @@ class ShowroomStoryScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: storyInk,
       body: storyAsync.when(
-        loading:
-            () => const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            ),
+        loading: () {
+          final HotShowroomModel? listed =
+              ref
+                  .watch(hotShowroomSliderVm)
+                  .where((HotShowroomModel item) => item.id == showroomId)
+                  .firstOrNull;
+          if (listed == null) return const SizedBox.shrink();
+          return StoryPhoto(url: listed.thumbnailUrl);
+        },
         error:
             (error, stackTrace) => const Center(
               child: Text(
@@ -81,11 +86,13 @@ class _StoryPagerState extends ConsumerState<_StoryPager>
     duration: _beats(widget.story).first.reveal,
   );
   int _index = 0;
+  final ValueNotifier<int> _rail = ValueNotifier<int>(0);
   final Set<int> _seen = <int>{};
 
   @override
   void initState() {
     super.initState();
+    _page.addListener(_onPage);
     _reveal.addStatusListener(_onRevealStatus);
     _reveal.forward();
   }
@@ -95,6 +102,7 @@ class _StoryPagerState extends ConsumerState<_StoryPager>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.story.id == widget.story.id) return;
     _index = 0;
+    _rail.value = 0;
     _lock.origin = 0;
     _seen.clear();
     if (_page.hasClients) _page.jumpToPage(0);
@@ -103,9 +111,21 @@ class _StoryPagerState extends ConsumerState<_StoryPager>
 
   @override
   void dispose() {
+    _page.removeListener(_onPage);
+    _rail.dispose();
     _reveal.dispose();
     _page.dispose();
     super.dispose();
+  }
+
+  void _onPage() {
+    if (!_page.hasClients) return;
+    final double? page = _page.page;
+    if (page == null) return;
+    final int last = _beats(widget.story).length - 1;
+    final int next = page.round().clamp(0, last < 0 ? 0 : last);
+    if (next == _rail.value) return;
+    _rail.value = next;
   }
 
   void _onRevealStatus(AnimationStatus status) {
@@ -216,7 +236,7 @@ class _StoryPagerState extends ConsumerState<_StoryPager>
                     child: Row(
                       children: [
                         IconButton(
-                          onPressed: () => context.pop(),
+                          onPressed: () => Navigator.of(context).pop(),
                           icon: Icon(
                             Icons.arrow_back,
                             color: iconColor,
@@ -261,10 +281,16 @@ class _StoryPagerState extends ConsumerState<_StoryPager>
                       top: 0,
                       bottom: 0,
                       child: IgnorePointer(
-                        child: _IndexRail(
-                          count: beats.length,
-                          index: index,
-                          light: light,
+                        child: ValueListenableBuilder<int>(
+                          valueListenable: _rail,
+                          builder: (context, rail, child) {
+                            final int safe = rail.clamp(0, beats.length - 1);
+                            return _IndexRail(
+                              count: beats.length,
+                              index: safe,
+                              light: beats[safe].light,
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -376,9 +402,7 @@ class _IndexRail extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         for (var i = 0; i < count; i++)
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutCubic,
+          Container(
             width: 4,
             height: i == index ? 18 : 4,
             margin: const EdgeInsets.symmetric(vertical: 3),
@@ -446,7 +470,6 @@ List<_Beat> _beats(ShowroomStoryModel story) {
             frame: story.process[i],
             index: i,
             count: story.process.length,
-            progress: progress,
           );
         },
       ),

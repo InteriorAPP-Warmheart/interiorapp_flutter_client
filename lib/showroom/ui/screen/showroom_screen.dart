@@ -160,12 +160,12 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
           items: [
             for (final item in showrooms)
               ShowroomMasonryEntry(
+                id: item.id,
                 imageUrl: item.thumbnailUrl,
                 title: item.title,
                 imageRatio: item.imageRatio,
                 likeCount: item.likeCount,
                 favoriteStatus: item.favoriteStatus,
-                onTap: () => context.push('/showroom/${item.id}/board'),
               ),
           ],
         );

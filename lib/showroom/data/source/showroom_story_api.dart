@@ -200,7 +200,6 @@ class ShowroomStoryApi {
       };
 
   Future<ShowroomStoryModel?> getStory(String id) async {
-    await Future.delayed(const Duration(milliseconds: 350));
     return _stories[id];
   }
 }

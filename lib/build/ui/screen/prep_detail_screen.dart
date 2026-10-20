@@ -3,9 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/build/ui/space_catalog.dart';
 import 'package:interiorapp_flutter_client/build/ui/space_routes.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_dialog.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_reference_pick.dart';
 
 /// 저장해 둔 상담준비 한 건. 허브에서 열고, 작성 직후에도 같은 화면을 쓴다.
 class PrepDetailScreen extends StatelessWidget {
@@ -202,6 +205,10 @@ class PrepDetailView extends StatelessWidget {
               icon: Icons.map_outlined,
             ),
             const SizedBox(height: 20),
+            if (record.styleRef case final ShowroomStyleRef reference) ...[
+              ShowroomStyleReferenceTile(reference: reference, fontScale: fontScale),
+              const SizedBox(height: 20),
+            ],
             _AttachmentPreview(
               label: '참고 이미지',
               labels: record.referenceImageLabels,
@@ -674,6 +681,205 @@ class _PhotoFrame extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// 쇼룸에서 넘어온 참고 사례. 상담준비 작성과 저장 내역에서 같이 쓴다.
+class ShowroomStyleReferenceTile extends StatelessWidget {
+  const ShowroomStyleReferenceTile({
+    super.key,
+    required this.reference,
+    required this.fontScale,
+    this.onRegionTap,
+    this.onRegionDelete,
+  });
+
+  final ShowroomStyleRef reference;
+  final double fontScale;
+  final ValueChanged<ShowroomReferenceRegion>? onRegionTap;
+  final ValueChanged<ShowroomReferenceRegion>? onRegionDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF6F3EE),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(
+                    width: 72,
+                    height: 72,
+                    child: AppNetworkImage(
+                      url: reference.imageUrl,
+                      width: 72,
+                      height: 72,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '참고한 쇼룸',
+                        style: TextStyle(
+                          fontSize: 12 * fontScale,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF6E6E6E),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        reference.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 15 * fontScale,
+                          fontWeight: FontWeight.w700,
+                          height: 1.3,
+                          color: const Color(0xFF1A1A1A),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (reference.regions.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              for (final ShowroomReferenceRegion region in reference.regions) ...[
+                _ReferenceRegionLine(
+                  region: region,
+                  fontScale: fontScale,
+                  onTap: onRegionTap == null ? null : () => onRegionTap!(region),
+                  onDelete: onRegionDelete == null ? null : () => onRegionDelete!(region),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ],
+            if (reference.aspects.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final String aspect in reference.aspects)
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        child: Text(
+                          aspect,
+                          style: TextStyle(
+                            fontSize: 12 * fontScale,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+            if (reference.note.trim().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                reference.note.trim(),
+                style: TextStyle(
+                  fontSize: 13 * fontScale,
+                  height: 1.45,
+                  color: const Color(0xFF1A1A1A),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReferenceRegionLine extends StatelessWidget {
+  const _ReferenceRegionLine({
+    required this.region,
+    required this.fontScale,
+    this.onTap,
+    this.onDelete,
+  });
+
+  final ShowroomReferenceRegion region;
+  final double fontScale;
+  final VoidCallback? onTap;
+  final VoidCallback? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final String detail = region.note.trim();
+    final Widget line = Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: SizedBox(
+            width: 56,
+            height: 56,
+            child: ShowroomReferenceMarkView(
+              imageUrl: region.imageUrl,
+              crop: region.crop,
+              marks: region.marks,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: detail.isEmpty
+              ? const SizedBox(height: 56)
+              : Text(
+                  detail,
+                  style: TextStyle(
+                    fontSize: 13 * fontScale,
+                    height: 1.4,
+                    color: const Color(0xFF1A1A1A),
+                  ),
+                ),
+        ),
+        if (onDelete != null)
+          TextButton(
+            onPressed: onDelete,
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.textSecondary,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              textStyle: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700),
+            ),
+            child: const Text('삭제'),
+          ),
+      ],
+    );
+    if (onTap == null) return line;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: line,
+      ),
     );
   }
 }

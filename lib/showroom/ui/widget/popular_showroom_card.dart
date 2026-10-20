@@ -1,10 +1,12 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/hot_showroom_model.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_story_screen.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/story/showroom_story_scenes.dart';
 
 /// 인기 쇼룸. 대표 사진 한 장을 가로로 넘긴다.
 class PopularShowroomCardList extends ConsumerWidget {
@@ -34,12 +36,30 @@ class PopularShowroomCardList extends ConsumerWidget {
               final HotShowroomModel item = items[index];
               return SizedBox(
                 width: cardWidth,
-                child: _LookbookCard(
-                  item: item,
-                  onFavorite: () {
-                    ref
-                        .read(hotShowroomSliderVm.notifier)
-                        .toggleFavoriteByIndex(item.id);
+                child: OpenContainer(
+                  useRootNavigator: true,
+                  tappable: false,
+                  closedElevation: 0,
+                  openElevation: 0,
+                  closedColor: storyInk,
+                  openColor: storyInk,
+                  closedShape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  openShape: const RoundedRectangleBorder(),
+                  closedBuilder: (BuildContext context, VoidCallback open) {
+                    return _LookbookCard(
+                      item: item,
+                      onOpen: open,
+                      onFavorite: () {
+                        ref
+                            .read(hotShowroomSliderVm.notifier)
+                            .toggleFavoriteByIndex(item.id);
+                      },
+                    );
+                  },
+                  openBuilder: (BuildContext context, VoidCallback close) {
+                    return ShowroomStoryScreen(showroomId: item.id);
                   },
                 ),
               );
@@ -52,9 +72,14 @@ class PopularShowroomCardList extends ConsumerWidget {
 }
 
 class _LookbookCard extends StatelessWidget {
-  const _LookbookCard({required this.item, required this.onFavorite});
+  const _LookbookCard({
+    required this.item,
+    required this.onOpen,
+    required this.onFavorite,
+  });
 
   final HotShowroomModel item;
+  final VoidCallback onOpen;
   final VoidCallback onFavorite;
 
   @override
@@ -63,7 +88,7 @@ class _LookbookCard extends StatelessWidget {
         item.likeCount > 999 ? '999+' : item.likeCount.toString();
 
     return GestureDetector(
-      onTap: () => context.push('/showroom/${item.id}'),
+      onTap: onOpen,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: Stack(
@@ -142,17 +167,47 @@ class _LookbookCard extends StatelessWidget {
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${item.userName}  ·  $likeLabel',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      height: 1.2,
-                      color: Color(0xCCFFFFFF),
-                    ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      ClipOval(
+                        child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: AppNetworkImage(url: item.userProfileUrl),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          item.userName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            height: 1.2,
+                            color: Color(0xCCFFFFFF),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.favorite,
+                        size: 13,
+                        color: Color(0xCCFFFFFF),
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        likeLabel,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          height: 1.2,
+                          color: Color(0xCCFFFFFF),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

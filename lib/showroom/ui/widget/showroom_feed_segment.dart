@@ -1,10 +1,11 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/hot_showroom_model.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_board_screen.dart';
 
 enum _FeedType { all, neighborhood }
 
@@ -169,12 +170,12 @@ class _ShowroomMasonryGrid extends ConsumerWidget {
       items: [
         for (final HotShowroomModel item in items)
           ShowroomMasonryEntry(
+            id: item.id,
             imageUrl: item.thumbnailUrl,
             title: item.title,
             imageRatio: item.imageRatio,
             likeCount: item.likeCount,
             favoriteStatus: item.favoriteStatus,
-            onTap: () => context.push('/showroom/${item.id}/board'),
           ),
       ],
     );
@@ -184,20 +185,20 @@ class _ShowroomMasonryGrid extends ConsumerWidget {
 /// 핀터레스트 마소니리에 올릴 카드 한 장.
 class ShowroomMasonryEntry {
   const ShowroomMasonryEntry({
+    required this.id,
     required this.imageUrl,
     required this.title,
     required this.imageRatio,
     required this.likeCount,
     required this.favoriteStatus,
-    this.onTap,
   });
 
+  final String id;
   final String imageUrl;
   final String title;
   final double imageRatio;
   final int likeCount;
   final bool favoriteStatus;
-  final VoidCallback? onTap;
 }
 
 /// 사진 비율대로 높이가 다른 3열 그리드.
@@ -272,8 +273,18 @@ class _MasonryCard extends StatelessWidget {
     final String likeLabel =
         item.likeCount > 999 ? '999+' : item.likeCount.toString();
 
-    return GestureDetector(
-      onTap: item.onTap,
+    return OpenContainer(
+      useRootNavigator: true,
+      tappable: false,
+      closedElevation: 0,
+      openElevation: 0,
+      closedColor: AppColors.background,
+      openColor: AppColors.background,
+      closedShape: const RoundedRectangleBorder(),
+      openShape: const RoundedRectangleBorder(),
+      closedBuilder: (BuildContext context, VoidCallback open) {
+        return GestureDetector(
+      onTap: open,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -347,6 +358,11 @@ class _MasonryCard extends StatelessWidget {
           ),
         ],
       ),
+        );
+      },
+      openBuilder: (BuildContext context, VoidCallback close) {
+        return ShowroomBoardScreen(showroomId: item.id);
+      },
     );
   }
 }
