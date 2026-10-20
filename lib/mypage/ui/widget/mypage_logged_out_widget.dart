@@ -12,9 +12,11 @@ class MyPageLoggedOutWidget extends StatelessWidget {
     final double fontScale = ResponsiveSize.fontScale(context);
     final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
 
+    final double tabSlot = MediaQuery.paddingOf(context).bottom;
+
     return Center(
       child: Padding(
-        padding: padding,
+        padding: padding.copyWith(bottom: tabSlot),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

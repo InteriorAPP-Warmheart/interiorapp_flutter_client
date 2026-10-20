@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
+import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 import 'package:interiorapp_flutter_client/search/data/model/search_result_model.dart';
 import 'package:interiorapp_flutter_client/search/presentation/provider/search_provider.dart';
 import 'package:interiorapp_flutter_client/search/ui/widget/combine_searchbar_widget.dart';
@@ -49,6 +52,7 @@ class _CombineSearchResultScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: CombineSearchbarWidget(
           focusNode: _searchFocusNode,
@@ -65,11 +69,27 @@ class _CombineSearchResultScreenState
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.search_off, size: 80, color: Colors.grey),
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.08),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.search_off,
+                        size: 36,
+                        color: AppColors.primary,
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       '검색어가 없습니다',
-                      style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                      style: TextStyle(
+                        fontSize: 16 * ResponsiveSize.fontScale(context),
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                   ],
                 ),
@@ -95,7 +115,13 @@ class _CombineSearchResultScreenState
       
       if (hasError) {
         return Center(
-          child: Text('검색 중 오류가 발생했습니다'),
+          child: Text(
+            '검색 중 오류가 발생했습니다',
+            style: TextStyle(
+              fontSize: 14 * ResponsiveSize.fontScale(context),
+              color: AppColors.textSecondary,
+            ),
+          ),
         );
       }
       
@@ -118,27 +144,30 @@ class _CombineSearchResultScreenState
   }
 
   Widget _buildSearchResultsWithCategories() {
+    final double fontScale = ResponsiveSize.fontScale(context);
+    final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: padding.copyWith(top: 16, bottom: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 검색어 표시
           Row(
             children: [
               Text(
                 '"$_searchQuery"',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                style: TextStyle(
+                  fontSize: 16 * fontScale,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2,
+                  color: AppColors.textPrimary,
                 ),
               ),
-              const Text(
+              Text(
                 ' 검색 결과',
                 style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.black87,
+                  fontSize: 16 * fontScale,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
@@ -168,35 +197,45 @@ class _CombineSearchResultScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.search_off,
-              size: 80,
-              color: Colors.grey[400],
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.search_off,
+                size: 36,
+                color: AppColors.primary,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
               '"$_searchQuery"에 대한',
+              textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[600],
+                fontSize: 17 * ResponsiveSize.fontScale(context),
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               '검색 결과가 없습니다',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[600],
+                fontSize: 17 * ResponsiveSize.fontScale(context),
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Text(
               '다른 검색어로 시도해보세요',
               style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
+                fontSize: 13 * ResponsiveSize.fontScale(context),
+                color: AppColors.textSecondary,
               ),
             ),
           ],
@@ -212,7 +251,7 @@ class _CombineSearchResultScreenState
     return searchResultAsync.when(
       data: (data) {
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: ResponsiveSize.responsivePadding(context).copyWith(top: 16, bottom: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -232,7 +271,13 @@ class _CombineSearchResultScreenState
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => Center(
-        child: Text('데이터를 불러오는 중 오류가 발생했습니다: $error'),
+        child: Text(
+          '데이터를 불러오는 중 오류가 발생했습니다',
+          style: TextStyle(
+            fontSize: 14 * ResponsiveSize.fontScale(context),
+            color: AppColors.textSecondary,
+          ),
+        ),
       ),
     );
   }
@@ -242,6 +287,7 @@ class _CombineSearchResultScreenState
   }
 
   Widget _buildCategoryTabs() {
+    final double fontScale = ResponsiveSize.fontScale(context);
     final List<String> categories = const ['전체', '쇼룸', '스토어', '시공'];
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -260,10 +306,9 @@ class _CombineSearchResultScreenState
                       decoration: BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
-                            color:
-                                _selectedCategory == label
-                                    ? Colors.black
-                                    : Colors.transparent,
+                            color: _selectedCategory == label
+                                ? AppColors.primary
+                                : Colors.transparent,
                             width: 2,
                           ),
                         ),
@@ -271,15 +316,13 @@ class _CombineSearchResultScreenState
                       child: Text(
                         label,
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight:
-                              _selectedCategory == label
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                          color:
-                              _selectedCategory == label
-                                  ? Colors.black
-                                  : Colors.black54,
+                          fontSize: 14 * fontScale,
+                          fontWeight: _selectedCategory == label
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: _selectedCategory == label
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
                         ),
                       ),
                     ),
@@ -288,8 +331,25 @@ class _CombineSearchResultScreenState
             ],
           ),
         ),
-        Container(height: 1, color: Colors.grey.withValues(alpha: 0.3)),
+        const Divider(height: 1, thickness: 0.7, color: AppColors.border),
       ],
+    );
+  }
+
+  TextStyle _sectionTitle(double fontScale) {
+    return TextStyle(
+      fontSize: 17 * fontScale,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.3,
+      color: AppColors.textPrimary,
+    );
+  }
+
+  Widget _moreButton(String label, String category) {
+    return AppButton(
+      label: label,
+      variant: AppButtonVariant.secondary,
+      onPressed: () => setState(() => _selectedCategory = category),
     );
   }
 
@@ -336,13 +396,9 @@ class _CombineSearchResultScreenState
           children: [
             Row(
               children: [
-                const Text(
+                Text(
                   '쇼룸',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
+                  style: _sectionTitle(ResponsiveSize.fontScale(context)),
                 ),
                 const Spacer(),
               ],
@@ -358,24 +414,7 @@ class _CombineSearchResultScreenState
             ),
             if (!isFullList && hasMoreItems) ...[
               const SizedBox(height: 8),
-              Center(
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.85,
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _selectedCategory = '쇼룸';
-                      });
-                    },
-                    child: const Text('쇼룸 결과 더보기'),
-                  ),
-                ),
-              ),
+              _moreButton('쇼룸 결과 더보기', '쇼룸'),
             ],
           ],
         );
@@ -425,13 +464,9 @@ class _CombineSearchResultScreenState
           children: [
             Row(
               children: [
-                const Text(
+                Text(
                   '스토어',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
+                  style: _sectionTitle(ResponsiveSize.fontScale(context)),
                 ),
                 const Spacer(),
               ],
@@ -450,24 +485,7 @@ class _CombineSearchResultScreenState
             ),
             if (!isFullList && hasMoreItems) ...[
               const SizedBox(height: 12),
-              Center(
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.85,
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _selectedCategory = '스토어';
-                      });
-                    },
-                    child: const Text('스토어 결과 더보기'),
-                  ),
-                ),
-              ),
+              _moreButton('스토어 결과 더보기', '스토어'),
             ],
           ],
         );
@@ -518,13 +536,9 @@ class _CombineSearchResultScreenState
           children: [
             Row(
               children: [
-                const Text(
+                Text(
                   '시공',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
+                  style: _sectionTitle(ResponsiveSize.fontScale(context)),
                 ),
                 const Spacer(),
               ],
@@ -542,24 +556,7 @@ class _CombineSearchResultScreenState
             ),
             if (!isFullList && hasMoreItems) ...[
               const SizedBox(height: 8),
-              Center(
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.85,
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _selectedCategory = '시공';
-                      });
-                    },
-                    child: const Text('시공 결과 더보기'),
-                  ),
-                ),
-              ),
+              _moreButton('시공 결과 더보기', '시공'),
             ],
           ],
         );

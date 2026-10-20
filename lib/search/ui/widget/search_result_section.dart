@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/search/data/model/search_result_model.dart';
@@ -109,7 +110,21 @@ class _SearchResultListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final double fontScale = ResponsiveSize.fontScale(context);
+    final TextStyle titleStyle = TextStyle(
+      fontSize: 15 * fontScale,
+      fontWeight: FontWeight.w700,
+      color: AppColors.textPrimary,
+    );
+    final TextStyle bodyStyle = TextStyle(
+      fontSize: 13 * fontScale,
+      color: AppColors.textSecondary,
+    );
+    final TextStyle nameStyle = TextStyle(
+      fontSize: 12 * fontScale,
+      fontWeight: FontWeight.w600,
+      color: AppColors.textSecondary,
+    );
     final double thumbSize = ResponsiveSize.squareThumbSize(
       context,
       columns: 4,
@@ -158,9 +173,9 @@ class _SearchResultListTile extends StatelessWidget {
                                     overlayText: overlayText,
                                   )
                                   : ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Container(
-                                      color: Colors.grey.shade200,
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: const ColoredBox(
+                                      color: AppColors.imagePlaceholder,
                                     ),
                                   ),
                         ),
@@ -174,7 +189,7 @@ class _SearchResultListTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                     child: SizedBox(
                       width: thumbSize,
                       height: thumbSize,
@@ -182,11 +197,11 @@ class _SearchResultListTile extends StatelessWidget {
                           displayedImageCount > 0
                               ? AppNetworkImage(url: item.imageUrls!.first)
                               : Container(
-                                color: Colors.grey.shade200,
+                                color: AppColors.imagePlaceholder,
                                 alignment: Alignment.center,
                                 child: const Icon(
                                   Icons.image_not_supported,
-                                  color: Colors.grey,
+                                  color: AppColors.textSecondary,
                                 ),
                               ),
                     ),
@@ -199,38 +214,25 @@ class _SearchResultListTile extends StatelessWidget {
                         _HighlightText(
                           text: item.title!,
                           searchQuery: searchQuery,
-                          style: theme.textTheme.titleMedium,
+                          style: titleStyle,
                           maxLines: 1,
                         ),
                         const SizedBox(height: 2),
                         _HighlightText(
                           text: item.contentSnippet!,
                           searchQuery: searchQuery,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.textTheme.bodyMedium?.color
-                                ?.withValues(alpha: 0.8),
-                          ),
+                          style: bodyStyle,
                           maxLines: 1,
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            CircleAvatar(
-                              radius: 12,
-                              backgroundImage:
-                                  item.publisherAvatarUrl == null
-                                      ? null
-                                      : NetworkImage(item.publisherAvatarUrl!),
-                              child:
-                                  item.publisherAvatarUrl == null
-                                      ? const Icon(Icons.person, size: 14)
-                                      : null,
-                            ),
+                            _PublisherAvatar(url: item.publisherAvatarUrl),
                             const SizedBox(width: 8),
                             Flexible(
                               child: Text(
                                 item.publisherNickname!,
-                                style: theme.textTheme.labelMedium,
+                                style: nameStyle,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -247,37 +249,25 @@ class _SearchResultListTile extends StatelessWidget {
               _HighlightText(
                 text: item.title!,
                 searchQuery: searchQuery,
-                style: theme.textTheme.titleMedium,
+                style: titleStyle,
                 maxLines: 1,
               ),
               const SizedBox(height: 3),
               _HighlightText(
                 text: item.contentSnippet!,
                 searchQuery: searchQuery,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
-                ),
+                style: bodyStyle,
                 maxLines: 1,
               ),
               const SizedBox(height: 6),
               Row(
                 children: [
-                  CircleAvatar(
-                    radius: 12,
-                    backgroundImage:
-                        item.publisherAvatarUrl == null
-                            ? null
-                            : NetworkImage(item.publisherAvatarUrl!),
-                    child:
-                        item.publisherAvatarUrl == null
-                            ? const Icon(Icons.person, size: 14)
-                            : null,
-                  ),
+                  _PublisherAvatar(url: item.publisherAvatarUrl),
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
                       item.publisherNickname!,
-                      style: theme.textTheme.labelMedium,
+                      style: nameStyle,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -291,6 +281,24 @@ class _SearchResultListTile extends StatelessWidget {
   }
 }
 
+class _PublisherAvatar extends StatelessWidget {
+  const _PublisherAvatar({this.url});
+
+  final String? url;
+
+  @override
+  Widget build(BuildContext context) {
+    return CircleAvatar(
+      radius: 12,
+      backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+      backgroundImage: url == null ? null : NetworkImage(url!),
+      child: url == null
+          ? const Icon(Icons.person, size: 14, color: AppColors.primary)
+          : null,
+    );
+  }
+}
+
 class _ImageTile extends StatelessWidget {
   const _ImageTile({required this.imageUrl, this.overlayText});
 
@@ -300,7 +308,7 @@ class _ImageTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(12),
       child: AspectRatio(
         aspectRatio: 1,
         child: Stack(
@@ -309,13 +317,13 @@ class _ImageTile extends StatelessWidget {
             AppNetworkImage(url: imageUrl),
             if (overlayText != null)
               Container(
-                color: Colors.black.withValues(alpha: 0.45),
+                color: const Color(0xE60B1F38),
                 alignment: Alignment.center,
                 child: Text(
                   overlayText!,
                   style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w700,
                     fontSize: 18,
                   ),
                 ),
@@ -340,7 +348,7 @@ class _StoreGridTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final double fontScale = ResponsiveSize.fontScale(context);
     return InkWell(
       onTap: onTap == null ? null : () => onTap!(item),
       child: Column(
@@ -348,35 +356,40 @@ class _StoreGridTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
             child: AspectRatio(
               aspectRatio: 1,
               child:
                   item.imageUrls?.isNotEmpty ?? false
                       ? AppNetworkImage(url: item.imageUrls!.first)
                       : Container(
-                        color: Colors.grey.shade200,
+                        color: AppColors.imagePlaceholder,
                         alignment: Alignment.center,
                         child: const Icon(
                           Icons.image_not_supported,
-                          color: Colors.grey,
+                          color: AppColors.textSecondary,
                         ),
                       ),
             ),
           ),
-          const SizedBox(height: 3),
+          const SizedBox(height: 8),
           Text(
-            item.publisherNickname!, // brand
-            style: theme.textTheme.labelLarge,
+            item.publisherNickname!,
+            style: TextStyle(
+              fontSize: 14 * fontScale,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 1),
+          const SizedBox(height: 2),
           _HighlightText(
             text: item.contentSnippet!,
             searchQuery: searchQuery,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.85),
+            style: TextStyle(
+              fontSize: 12 * fontScale,
+              color: AppColors.textSecondary,
             ),
             maxLines: 1,
           ),
@@ -438,11 +451,13 @@ class _HighlightText extends StatelessWidget {
 
     // 하이라이트 스타일
     final highlightStyle = style?.copyWith(
-      backgroundColor: Colors.yellow.withValues(alpha: 0.5),
-      fontWeight: FontWeight.bold,
-    ) ?? TextStyle(
-      backgroundColor: Colors.yellow.withValues(alpha: 0.5),
-      fontWeight: FontWeight.bold,
+      backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+      fontWeight: FontWeight.w700,
+      color: AppColors.primary,
+    ) ?? const TextStyle(
+      backgroundColor: Color(0x1F0B1F38),
+      fontWeight: FontWeight.w700,
+      color: AppColors.primary,
     );
 
     // TextSpan 리스트 생성

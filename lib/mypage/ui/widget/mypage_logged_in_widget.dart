@@ -21,12 +21,14 @@ class MyPageLoggedInWidget extends ConsumerWidget {
     final completedProjects = ref.watch(completedProjectVmProvider);
     // ignore: unused_local_variable – savedContents·recentContents는 콘텐츠 기록 배지에서 사용
 
+    final double tabSlot = MediaQuery.paddingOf(context).bottom;
+
     return ListView(
       padding: EdgeInsets.fromLTRB(
         padding.left,
         subGap,
         padding.right,
-        48,
+        tabSlot + subGap,
       ),
       children: [
         // ── 프로필 카드 ───────────────────────────────────

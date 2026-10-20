@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
+import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/search/ui/widget/combine_searchbar_widget.dart';
 import 'package:interiorapp_flutter_client/search/presentation/vm/recent_search_history_vm.dart';
 import 'package:interiorapp_flutter_client/search/data/model/recent_search_keyword_model.dart';
@@ -55,6 +57,7 @@ class _CombineSearchScreenState extends ConsumerState<CombineSearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: CombineSearchbarWidget(
           focusNode: _searchFocusNode,
@@ -69,18 +72,52 @@ class _CombineSearchScreenState extends ConsumerState<CombineSearchScreen> {
   }
 
   Widget _buildDefaultScreen() {
+    final double fontScale = ResponsiveSize.fontScale(context);
+    final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
+
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.search_rounded, size: 80, color: Colors.grey),
-          const SizedBox(height: 16),
-          const Text(
-            '궁금한 인테리어,\n무엇이든 검색하세요\n\n테스트를 위해서 "전체검색"을 검색하면\n모든 카테고리별 검색결과를 확인할 수 있습니다.',
-            style: TextStyle(fontSize: 18, color: Colors.black),
-            textAlign: TextAlign.center,
-          ),
-        ],
+      child: Padding(
+        padding: padding,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.search_rounded,
+                size: 36,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              '궁금한 인테리어,\n무엇이든 검색하세요',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 17 * fontScale,
+                fontWeight: FontWeight.w700,
+                height: 1.4,
+                letterSpacing: -0.3,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '테스트를 위해서 "전체검색"을 검색하면\n모든 카테고리별 검색결과를 확인할 수 있습니다.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13 * fontScale,
+                height: 1.5,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -95,32 +132,38 @@ class _CombineSearchScreenState extends ConsumerState<CombineSearchScreen> {
 
   Widget _buildRecentSearches() {
     final recentSearches = ref.watch(recentSearchHistoryVmProvider);
-    
-    return Container(
-      padding: const EdgeInsets.all(16),
+    final double fontScale = ResponsiveSize.fontScale(context);
+    final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
+
+    return Padding(
+      padding: padding.copyWith(top: 16, bottom: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Text(
+              Text(
                 '최근 검색어',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFFAFAFAF),
-                ),
+                style: _sectionTitle(fontScale),
               ),
               const Spacer(),
               if (recentSearches.isNotEmpty)
                 TextButton(
                   onPressed: () => ref.read(recentSearchHistoryVmProvider.notifier).clearAllSearches(),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.textSecondary,
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                   child: Text(
                     '모두삭제',
                     style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.black,
+                      fontSize: 13 * fontScale,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
                       decoration: TextDecoration.underline,
+                      decorationColor: AppColors.textSecondary,
                     ),
                   ),
                 ),
@@ -133,8 +176,9 @@ class _CombineSearchScreenState extends ConsumerState<CombineSearchScreen> {
                     child: Text(
                       '최근 검색어가 없습니다',
                       style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
+                        fontSize: 14 * fontScale,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   )
@@ -150,8 +194,10 @@ class _CombineSearchScreenState extends ConsumerState<CombineSearchScreen> {
   }
 
   Widget _buildSearchSuggestionsContent() {
-    return Container(
-      padding: const EdgeInsets.all(16),
+    final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
+
+    return SingleChildScrollView(
+      padding: padding.copyWith(top: 16, bottom: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -175,13 +221,9 @@ class _CombineSearchScreenState extends ConsumerState<CombineSearchScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               '연관 검색어',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFFAFAFAF),
-              ),
+              style: _sectionTitle(ResponsiveSize.fontScale(context)),
             ),
             const SizedBox(height: 12),
             ...keywords.map((keyword) => _buildSuggestionItem(keyword)),
@@ -201,13 +243,9 @@ class _CombineSearchScreenState extends ConsumerState<CombineSearchScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               '추천 검색어',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFFAFAFAF),
-              ),
+              style: _sectionTitle(ResponsiveSize.fontScale(context)),
             ),
             const SizedBox(height: 12),
             ...keywords.map((keyword) => _buildSuggestionItem(keyword)),
@@ -216,12 +254,20 @@ class _CombineSearchScreenState extends ConsumerState<CombineSearchScreen> {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => Center(
-        child: Text('추천 검색어를 불러오는 중 오류가 발생했습니다'),
+        child: Text(
+          '추천 검색어를 불러오는 중 오류가 발생했습니다',
+          style: TextStyle(
+            fontSize: 14 * ResponsiveSize.fontScale(context),
+            color: AppColors.textSecondary,
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildSuggestionItem(SearchSuggestionModel suggestion) {
+    final double fontScale = ResponsiveSize.fontScale(context);
+
     return InkWell(
       onTap: () async {
         _searchFocusNode.unfocus();
@@ -231,39 +277,40 @@ class _CombineSearchScreenState extends ConsumerState<CombineSearchScreen> {
         }
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
           children: [
             Icon(
-              suggestion.type == SearchSuggestionType.related 
-                  ? Icons.search 
+              suggestion.type == SearchSuggestionType.related
+                  ? Icons.search
                   : Icons.trending_up,
-              size: 16,
-              color: Colors.grey[600],
+              size: 18,
+              color: AppColors.textSecondary,
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 suggestion.keyword,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: Colors.black,
+                style: TextStyle(
+                  fontSize: 15 * fontScale,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ),
             if (suggestion.isTrending)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: Colors.red[50],
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppColors.error.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(99),
                 ),
                 child: Text(
                   'HOT',
                   style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.red[700],
-                    fontWeight: FontWeight.bold,
+                    fontSize: 10 * fontScale,
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -274,6 +321,8 @@ class _CombineSearchScreenState extends ConsumerState<CombineSearchScreen> {
   }
 
   Widget _buildRecentSearchItem(RecentSearchKeyword searchKeyword) {
+    final double fontScale = ResponsiveSize.fontScale(context);
+
     return InkWell(
       onTap: () async {
         // 검색어 클릭 시 검색 실행
@@ -294,24 +343,40 @@ class _CombineSearchScreenState extends ConsumerState<CombineSearchScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    searchKeyword.keyword, 
-                    style: TextStyle(fontSize: 15, color: Colors.black),
+                    searchKeyword.keyword,
+                    style: TextStyle(
+                      fontSize: 15 * fontScale,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     _formatSearchTime(searchKeyword.searchedAt),
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 12 * fontScale,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
             ),
             IconButton(
               onPressed: () => ref.read(recentSearchHistoryVmProvider.notifier).removeSearchKeyword(searchKeyword.keyword),
-              icon: Icon(Icons.close, size: 15, color: Colors.black),
+              icon: Icon(Icons.close, size: 16, color: AppColors.textSecondary),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  TextStyle _sectionTitle(double fontScale) {
+    return TextStyle(
+      fontSize: 17 * fontScale,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.3,
+      color: AppColors.textPrimary,
     );
   }
 

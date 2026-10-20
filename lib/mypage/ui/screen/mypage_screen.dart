@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
-import 'package:interiorapp_flutter_client/core/theme/tab_bar_theme.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/mypage/ui/widget/mypage_logged_in_widget.dart';
 import 'package:interiorapp_flutter_client/mypage/ui/widget/mypage_logged_out_widget.dart';
@@ -24,12 +22,6 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     final double fontScale = ResponsiveSize.fontScale(context);
     final double subGap = ResponsiveSize.subGap(context);
     final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
-    final bool inTab = GoRouterState.of(context).uri.path == '/';
-    final double bottomGap = inTab
-        ? AppTabBarTheme.height(context) +
-            AppTabBarTheme.floatGap +
-            AppTabBarTheme.bottomInset(context)
-        : MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -87,9 +79,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               ),
             ),
             Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(bottom: bottomGap),
-                child: AnimatedSwitcher(
+              child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
                 transitionBuilder: (child, animation) => FadeTransition(
                   opacity: animation,
@@ -98,7 +88,6 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                 child: _isLoggedIn
                     ? const MyPageLoggedInWidget(key: ValueKey('loggedIn'))
                     : const MyPageLoggedOutWidget(key: ValueKey('loggedOut')),
-                ),
               ),
             ),
           ],

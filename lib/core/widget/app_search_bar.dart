@@ -45,8 +45,8 @@ class AppSearchBar extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border, width: 0.7),
         ),
         child: ValueListenableBuilder<TextEditingValue>(
           valueListenable: textController,
@@ -97,7 +97,7 @@ class AppSearchBar extends StatelessWidget {
                     IconButton(
                       icon: const Icon(
                         Icons.search,
-                        color: AppColors.textSecondary,
+                        color: AppColors.primary,
                         size: 18,
                       ),
                       splashRadius: 12,
