@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
-import 'package:interiorapp_flutter_client/core/theme/app_spacing.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 
@@ -22,13 +21,13 @@ class FinishedSpaceTile extends StatelessWidget {
 
     return Material(
       color: AppColors.surface,
-      borderRadius: BorderRadius.circular(AppSpacing.radius),
+      borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppSpacing.radius),
+        borderRadius: BorderRadius.circular(16),
         child: Ink(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppSpacing.radius),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.border, width: 0.7),
           ),
           child: Padding(

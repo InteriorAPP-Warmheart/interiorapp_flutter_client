@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/space_project_card.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
 /// 카드 아래 페이지 표시 높이. 개수와 상관없이 같은 칸을 비워 둔다.
@@ -97,9 +98,7 @@ class _OngoingSpacePagerState extends State<OngoingSpacePager> {
                 width: i == _index ? 16 : 6,
                 height: 6,
                 decoration: BoxDecoration(
-                  color: i == _index
-                      ? const Color(0xFF1A1A1A)
-                      : const Color(0xFFD5D5D5),
+                  color: i == _index ? AppColors.primary : AppColors.border,
                   borderRadius: BorderRadius.circular(99),
                 ),
               ),

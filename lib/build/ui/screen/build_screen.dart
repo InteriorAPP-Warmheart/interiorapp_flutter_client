@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:interiorapp_flutter_client/core/theme/tab_bar_theme.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/build/ui/space_catalog.dart';
 import 'package:interiorapp_flutter_client/build/ui/space_routes.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/finished_space_tile.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/interior_prep_card.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/ongoing_space_pager.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_dialog.dart';
-
-enum _SpacePreview { sample, noOngoing, noFinished, prepOnly, empty }
 
 class BuildScreen extends StatefulWidget {
   const BuildScreen({super.key});
@@ -20,8 +20,6 @@ class BuildScreen extends StatefulWidget {
 }
 
 class _BuildScreenState extends State<BuildScreen> {
-  _SpacePreview _preview = _SpacePreview.sample;
-
   @override
   void initState() {
     super.initState();
@@ -47,39 +45,35 @@ class _BuildScreenState extends State<BuildScreen> {
     final AppWindow window = AppWindow.of(context);
     final double finishedHeight = window.isExpanded ? 156 : window.isMedium ? 132 : 112;
     final double prepHeight = window.isExpanded ? 72 : window.isMedium ? 64 : 56;
-    final List<SpaceProject> ongoing =
-        _preview == _SpacePreview.sample || _preview == _SpacePreview.noFinished
-            ? [...SpaceBoard.instance.received, ...SpaceCatalog.ongoing]
-            : const [];
-    final List<SpaceProject> finished =
-        _preview == _SpacePreview.sample || _preview == _SpacePreview.noOngoing
-            ? SpaceCatalog.finished
-            : const [];
+    final List<SpaceProject> ongoing = [
+      ...SpaceBoard.instance.received,
+      ...SpaceCatalog.ongoing,
+    ];
+    final List<SpaceProject> finished = SpaceCatalog.finished;
     final bool hasOngoing = ongoing.isNotEmpty;
-
-    final double tabSlot = MediaQuery.paddingOf(context).bottom;
+    final bool inTab = GoRouterState.of(context).uri.path == '/';
+    final double bottomGap = inTab
+        ? AppTabBarTheme.height(context) +
+            AppTabBarTheme.floatGap +
+            AppTabBarTheme.bottomInset(context) +
+            subGap
+        : subGap + MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFCFCFC),
-      body: Stack(
-        children: [
-          Padding(
+      backgroundColor: AppColors.background,
+      body: Padding(
         padding: EdgeInsets.fromLTRB(
           padding.left,
           subGap,
           padding.right,
-          subGap + tabSlot,
+          bottomGap,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
               '진행 중인 공간',
-              style: TextStyle(
-                fontSize: 16 * fontScale,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF1A1A1A),
-              ),
+              style: _sectionTitle(fontScale),
             ),
             SizedBox(height: subGap),
             Expanded(
@@ -96,7 +90,7 @@ class _BuildScreenState extends State<BuildScreen> {
                         : Column(
                             children: [
                               Expanded(
-                                child: _EmptyRegionText(
+                                child: _EmptyRegion(
                                   label: '진행 중인 공간이 없어요',
                                   fontScale: fontScale,
                                 ),
@@ -112,17 +106,13 @@ class _BuildScreenState extends State<BuildScreen> {
             SizedBox(height: sectionGap),
             Text(
               '마친 공간',
-              style: TextStyle(
-                fontSize: 16 * fontScale,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF1A1A1A),
-              ),
+              style: _sectionTitle(fontScale),
             ),
             SizedBox(height: subGap),
             SizedBox(
               height: finishedHeight,
               child: finished.isEmpty
-                  ? _EmptyRegionText(label: '마친 공간이 없어요', fontScale: fontScale)
+                  ? _EmptyRegion(label: '마친 공간이 없어요', fontScale: fontScale)
                   : LayoutBuilder(
                       builder: (BuildContext context, BoxConstraints constraints) {
                         const double gap = 10;
@@ -159,8 +149,8 @@ class _BuildScreenState extends State<BuildScreen> {
                 listenable: SpaceBoard.instance,
                 builder: (BuildContext context, Widget? child) {
                   final SpaceBoard board = SpaceBoard.instance;
-                  final bool showCard = _preview != _SpacePreview.empty &&
-                      (board.consults.isNotEmpty || board.trades.isNotEmpty);
+                  final bool showCard =
+                      board.consults.isNotEmpty || board.trades.isNotEmpty;
                   return Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -187,40 +177,17 @@ class _BuildScreenState extends State<BuildScreen> {
           ],
         ),
       ),
-          Positioned(
-            top: subGap,
-            left: padding.left,
-            right: padding.right,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SegmentedButton<_SpacePreview>(
-                showSelectedIcon: false,
-                style: ButtonStyle(
-                  visualDensity: VisualDensity.compact,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  backgroundColor: const WidgetStatePropertyAll(Color(0xFFFCFCFC)),
-                  textStyle: WidgetStatePropertyAll(
-                    TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w600),
-                  ),
-                ),
-                segments: const [
-                  ButtonSegment(value: _SpacePreview.sample, label: Text('샘플')),
-                  ButtonSegment(value: _SpacePreview.noOngoing, label: Text('진행 없음')),
-                  ButtonSegment(value: _SpacePreview.noFinished, label: Text('마친 없음')),
-                  ButtonSegment(value: _SpacePreview.prepOnly, label: Text('상담 전만')),
-                  ButtonSegment(value: _SpacePreview.empty, label: Text('없음')),
-                ],
-                selected: {_preview},
-                onSelectionChanged: (Set<_SpacePreview> next) {
-                  setState(() => _preview = next.first);
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
+}
+
+TextStyle _sectionTitle(double fontScale) {
+  return TextStyle(
+    fontSize: 17 * fontScale,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.3,
+    color: AppColors.textPrimary,
+  );
 }
 
 Future<void> _openAddSheet(BuildContext context) async {
@@ -234,7 +201,7 @@ Future<void> _openAddSheet(BuildContext context) async {
       return Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(sheetContext).bottom),
         child: Material(
-          color: const Color(0xFFFFFFFF),
+          color: AppColors.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           child: SafeArea(
             top: false,
@@ -249,7 +216,7 @@ Future<void> _openAddSheet(BuildContext context) async {
                       width: 36,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFD9D9D9),
+                        color: AppColors.border,
                         borderRadius: BorderRadius.circular(99),
                       ),
                     ),
@@ -257,12 +224,21 @@ Future<void> _openAddSheet(BuildContext context) async {
                   const SizedBox(height: 16),
                   Text(
                     '무엇을 정리할까요',
-                    style: TextStyle(fontSize: 18 * fontScale, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontSize: 18 * fontScale,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.3,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     '상담으로 넘길 내용을 쓰거나, 자리를 고르기 전에 후보지를 남겨 둘 수 있어요.',
-                    style: TextStyle(fontSize: 14 * fontScale, height: 1.45, color: const Color(0xFF1A1A1A)),
+                    style: TextStyle(
+                      fontSize: 14 * fontScale,
+                      height: 1.45,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   _AddChoice(
@@ -313,19 +289,33 @@ class _AddChoice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFFF6F3EE),
+      color: AppColors.background,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
               const SizedBox(height: 4),
-              Text(body, style: const TextStyle(fontSize: 13, height: 1.4, color: Color(0xFF1A1A1A))),
+              Text(
+                body,
+                style: const TextStyle(
+                  fontSize: 13,
+                  height: 1.4,
+                  color: AppColors.textSecondary,
+                ),
+              ),
             ],
           ),
         ),
@@ -346,34 +336,41 @@ class _PrepAddButton extends StatelessWidget {
       width: size,
       height: size,
       child: Material(
-        color: const Color(0xFF111111),
+        color: AppColors.primary,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(16),
-          child: const Center(child: Icon(Icons.add, color: Color(0xFFFFFFFF))),
+          child: const Center(child: Icon(Icons.add, color: AppColors.white)),
         ),
       ),
     );
   }
 }
 
-class _EmptyRegionText extends StatelessWidget {
-  const _EmptyRegionText({required this.label, required this.fontScale});
+class _EmptyRegion extends StatelessWidget {
+  const _EmptyRegion({required this.label, required this.fontScale});
 
   final String label;
   final double fontScale;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        label,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 15 * fontScale,
-          fontWeight: FontWeight.w600,
-          color: const Color(0xFF8A8A8A),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 0.7),
+      ),
+      child: Center(
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 14 * fontScale,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textSecondary,
+          ),
         ),
       ),
     );

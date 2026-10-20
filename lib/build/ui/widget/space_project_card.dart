@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
-import 'package:interiorapp_flutter_client/core/theme/app_spacing.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 
@@ -22,16 +21,16 @@ class SpaceProjectCard extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radius),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border, width: 0.7),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(AppSpacing.radius),
+          borderRadius: BorderRadius.circular(16),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppSpacing.radius),
+            borderRadius: BorderRadius.circular(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -46,11 +45,11 @@ class SpaceProjectCard extends StatelessWidget {
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              Color(0x00000000),
-                              Color(0x00000000),
-                              Color(0x73000000),
+                              Color(0x000B1F38),
+                              Color(0x660B1F38),
+                              Color(0xE60B1F38),
                             ],
-                            stops: [0, 0.5, 1],
+                            stops: [0.35, 0.62, 1],
                           ),
                         ),
                       ),
@@ -97,7 +96,7 @@ class SpaceProjectCard extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 12 * fontScale,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textSecondary,
+                                color: AppColors.accent,
                               ),
                             ),
                             const SizedBox(height: 2),
