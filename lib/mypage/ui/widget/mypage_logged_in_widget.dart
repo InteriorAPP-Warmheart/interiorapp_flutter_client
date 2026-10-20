@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/mypage/data/model/mypage_user_model.dart';
 import 'package:interiorapp_flutter_client/mypage/presentation/provider/mypage_provider.dart';
@@ -192,21 +193,21 @@ class MyPageLoggedInWidget extends ConsumerWidget {
             TextButton(
               onPressed: () {},
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF8A8A8A),
-                textStyle: const TextStyle(fontSize: 13),
+                foregroundColor: AppColors.textSecondary,
+                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
               ),
               child: const Text('로그아웃'),
             ),
             Container(
               width: 1,
               height: 12,
-              color: const Color(0xFFECECEC),
+              color: AppColors.border,
             ),
             TextButton(
               onPressed: () {},
               style: TextButton.styleFrom(
-                foregroundColor: Colors.red,
-                textStyle: const TextStyle(fontSize: 13),
+                foregroundColor: AppColors.error,
+                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
               ),
               child: const Text('회원 탈퇴'),
             ),
@@ -230,7 +231,7 @@ class _ProfileCard extends StatelessWidget {
     final double fontScale = ResponsiveSize.fontScale(context);
 
     return Material(
-      color: Colors.white,
+      color: AppColors.surface,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: () {}, // 프로필 편집
@@ -238,7 +239,7 @@ class _ProfileCard extends StatelessWidget {
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFECECEC)),
+            border: Border.all(color: AppColors.border, width: 0.7),
           ),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -249,9 +250,8 @@ class _ProfileCard extends StatelessWidget {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF6F3EE),
+                    color: AppColors.primary.withValues(alpha: 0.08),
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFECECEC)),
                   ),
                   child: user?.profileImageUrl != null
                       ? ClipOval(
@@ -263,7 +263,7 @@ class _ProfileCard extends StatelessWidget {
                       : const Icon(
                           Icons.person_rounded,
                           size: 30,
-                          color: Color(0xFF8A8A8A),
+                          color: AppColors.primary,
                         ),
                 ),
                 const SizedBox(width: 14),
@@ -279,7 +279,8 @@ class _ProfileCard extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 16 * fontScale,
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFF1A1A1A),
+                                letterSpacing: -0.2,
+                                color: AppColors.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 3),
@@ -287,7 +288,7 @@ class _ProfileCard extends StatelessWidget {
                               user!.email,
                               style: TextStyle(
                                 fontSize: 13 * fontScale,
-                                color: const Color(0xFF8A8A8A),
+                                color: AppColors.textSecondary,
                               ),
                             ),
                             if (user!.isBusinessUser &&
@@ -297,18 +298,17 @@ class _ProfileCard extends StatelessWidget {
                                 user!.businessName!,
                                 style: TextStyle(
                                   fontSize: 12 * fontScale,
-                                  color: const Color(0xFF8A8A8A),
+                                  color: AppColors.textSecondary,
                                 ),
                               ),
                             ],
                           ],
                         ),
                 ),
-                // 수정 화살표
                 const Icon(
                   Icons.chevron_right_rounded,
                   size: 20,
-                  color: Color(0xFF8A8A8A),
+                  color: AppColors.textSecondary,
                 ),
               ],
             ),
@@ -329,7 +329,7 @@ class _SkeletonText extends StatelessWidget {
           width: 72,
           height: 14,
           decoration: BoxDecoration(
-            color: const Color(0xFFECECEC),
+            color: AppColors.border,
             borderRadius: BorderRadius.circular(4),
           ),
         ),
@@ -338,7 +338,7 @@ class _SkeletonText extends StatelessWidget {
           width: 120,
           height: 11,
           decoration: BoxDecoration(
-            color: const Color(0xFFF0F0F0),
+            color: AppColors.imagePlaceholder,
             borderRadius: BorderRadius.circular(4),
           ),
         ),
@@ -381,20 +381,21 @@ class _SummaryRow extends StatelessWidget {
             margin: EdgeInsets.only(right: i < items.length - 1 ? 8 : 0),
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFFF6F3EE),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFECECEC)),
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border, width: 0.7),
             ),
             child: Column(
               children: [
-                Icon(item.icon, size: 20, color: Colors.blue),
+                Icon(item.icon, size: 20, color: AppColors.primary),
                 const SizedBox(height: 5),
                 Text(
                   item.value.toString(),
                   style: TextStyle(
                     fontSize: 18 * fontScale,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1A1A1A),
+                    letterSpacing: -0.3,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -402,8 +403,9 @@ class _SummaryRow extends StatelessWidget {
                   item.label,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 10 * fontScale,
-                    color: const Color(0xFF8A8A8A),
+                    fontSize: 11 * fontScale,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -429,9 +431,10 @@ class _SectionHeader extends StatelessWidget {
     return Text(
       title,
       style: TextStyle(
-        fontSize: 16 * fontScale,
+        fontSize: 17 * fontScale,
         fontWeight: FontWeight.w700,
-        color: const Color(0xFF1A1A1A),
+        letterSpacing: -0.3,
+        color: AppColors.textPrimary,
       ),
     );
   }
@@ -449,9 +452,9 @@ class _MenuGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFECECEC)),
+        border: Border.all(color: AppColors.border, width: 0.7),
       ),
       child: Column(
         children: [
@@ -467,9 +470,9 @@ class _MenuGroup extends StatelessWidget {
             if (i < items.length - 1)
               const Divider(
                 height: 1,
-                indent: 52,
+                indent: 62,
                 endIndent: 0,
-                color: Color(0xFFF0F0F0),
+                color: AppColors.border,
               ),
           ],
         ],
@@ -504,7 +507,7 @@ class _MenuItem extends StatelessWidget {
     final double fontScale = ResponsiveSize.fontScale(context);
 
     return Material(
-      color: Colors.white,
+      color: AppColors.surface,
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -516,14 +519,13 @@ class _MenuItem extends StatelessWidget {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF6F3EE),
+                  color: AppColors.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFECECEC)),
                 ),
                 child: Icon(
                   icon,
-                  size: 17,
-                  color: const Color(0xFF1A1A1A),
+                  size: 18,
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(width: 12),
@@ -536,8 +538,8 @@ class _MenuItem extends StatelessWidget {
                       label,
                       style: TextStyle(
                         fontSize: 14 * fontScale,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF1A1A1A),
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     if (subtitle != null) ...[
@@ -546,7 +548,7 @@ class _MenuItem extends StatelessWidget {
                         subtitle!,
                         style: TextStyle(
                           fontSize: 12 * fontScale,
-                          color: const Color(0xFF8A8A8A),
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -558,15 +560,15 @@ class _MenuItem extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF0F0F0),
-                    borderRadius: BorderRadius.circular(10),
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(99),
                   ),
                   child: Text(
                     badge!,
                     style: TextStyle(
                       fontSize: 12 * fontScale,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1A1A1A),
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
@@ -579,7 +581,7 @@ class _MenuItem extends StatelessWidget {
                 const Icon(
                   Icons.chevron_right_rounded,
                   size: 18,
-                  color: Color(0xFF8A8A8A),
+                  color: AppColors.textSecondary,
                 ),
             ],
           ),
@@ -590,7 +592,7 @@ class _MenuItem extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 앱 스위치 (Colors.blue 통일)
+// 앱 스위치
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _AppSwitch extends StatelessWidget {
@@ -604,8 +606,14 @@ class _AppSwitch extends StatelessWidget {
     return Switch(
       value: value,
       onChanged: onChanged,
-      activeThumbColor: Colors.blue,
-      activeTrackColor: Colors.blue.withValues(alpha: 0.3),
+      thumbColor: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
+        return AppColors.white;
+      }),
+      trackColor: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
+        if (states.contains(WidgetState.selected)) return AppColors.primary;
+        return AppColors.border;
+      }),
+      trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
   }

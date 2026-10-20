@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/auth/presentation/provider/signup_provider.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
 class CheckboxSection extends ConsumerWidget {
@@ -101,6 +102,9 @@ class CheckboxSection extends ConsumerWidget {
             value: value,
             onChanged: (newValue) => onChanged(),
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            activeColor: AppColors.primary,
+            checkColor: AppColors.white,
+            side: const BorderSide(color: AppColors.border, width: 1.4),
           ),
         ),
         Expanded(
@@ -113,8 +117,9 @@ class CheckboxSection extends ConsumerWidget {
                     title,
                     style: TextStyle(
                       fontSize: 16 * fontScale,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF000000),
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 )
@@ -127,7 +132,7 @@ class CheckboxSection extends ConsumerWidget {
                     decoration: BoxDecoration(
                       border: Border(
                         bottom: BorderSide(
-                          color: Color(0xFF000000),
+                          color: AppColors.border,
                           width: 1.0,
                         ),
                       ),
@@ -135,9 +140,9 @@ class CheckboxSection extends ConsumerWidget {
                     child: Text(
                       title,
                       style: TextStyle(
-                      fontSize: 16 * fontScale,
-                      fontWeight: FontWeight.w500,
-                        color: Color(0xFF000000),
+                        fontSize: 15 * fontScale,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -147,9 +152,9 @@ class CheckboxSection extends ConsumerWidget {
                 Text(
                   isRequired ? '(필수)' : '(선택)',
                   style: TextStyle(
-                    fontSize: 14 * fontScale,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF999999),
+                    fontSize: 13 * fontScale,
+                    fontWeight: FontWeight.w500,
+                    color: isRequired ? AppColors.accent : AppColors.textSecondary,
                   ),
                 ),
               ],

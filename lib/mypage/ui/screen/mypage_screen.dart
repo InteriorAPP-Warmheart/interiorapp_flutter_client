@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
+import 'package:interiorapp_flutter_client/core/theme/tab_bar_theme.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/mypage/ui/widget/mypage_logged_in_widget.dart';
 import 'package:interiorapp_flutter_client/mypage/ui/widget/mypage_logged_out_widget.dart';
@@ -19,18 +22,25 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   @override
   Widget build(BuildContext context) {
     final double fontScale = ResponsiveSize.fontScale(context);
+    final double subGap = ResponsiveSize.subGap(context);
     final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
+    final bool inTab = GoRouterState.of(context).uri.path == '/';
+    final double bottomGap = inTab
+        ? AppTabBarTheme.height(context) +
+            AppTabBarTheme.floatGap +
+            AppTabBarTheme.bottomInset(context)
+        : MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFCFCFC),
+      backgroundColor: AppColors.background,
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
-            // ── 세그먼트 토글 (build_screen 스타일) ─────────
             Padding(
               padding: EdgeInsets.fromLTRB(
                 padding.left,
-                12,
+                subGap,
                 padding.right,
                 8,
               ),
@@ -41,9 +51,24 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                   style: ButtonStyle(
                     visualDensity: VisualDensity.compact,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    backgroundColor: const WidgetStatePropertyAll(
-                      Color(0xFFFCFCFC),
-                    ),
+                    backgroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return AppColors.primary;
+                      }
+                      return AppColors.surface;
+                    }),
+                    foregroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return AppColors.white;
+                      }
+                      return AppColors.textSecondary;
+                    }),
+                    side: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return const BorderSide(color: AppColors.primary);
+                      }
+                      return const BorderSide(color: AppColors.border, width: 0.7);
+                    }),
                     textStyle: WidgetStatePropertyAll(
                       TextStyle(
                         fontSize: 13 * fontScale,
@@ -61,9 +86,10 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                 ),
               ),
             ),
-            // ── 콘텐츠 영역 ──────────────────────────────────
             Expanded(
-              child: AnimatedSwitcher(
+              child: Padding(
+                padding: EdgeInsets.only(bottom: bottomGap),
+                child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
                 transitionBuilder: (child, animation) => FadeTransition(
                   opacity: animation,
@@ -72,6 +98,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                 child: _isLoggedIn
                     ? const MyPageLoggedInWidget(key: ValueKey('loggedIn'))
                     : const MyPageLoggedOutWidget(key: ValueKey('loggedOut')),
+                ),
               ),
             ),
           ],

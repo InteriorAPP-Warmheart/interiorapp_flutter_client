@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/auth/ui/widget/checkbox_section.dart';
 import 'package:interiorapp_flutter_client/auth/presentation/provider/signup_provider.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 
 class SignupScreen extends ConsumerWidget {
   const SignupScreen({super.key});
@@ -10,12 +12,14 @@ class SignupScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final EdgeInsets screenPadding = ResponsiveSize.responsivePadding(context);
+    final double fontScale = ResponsiveSize.fontScale(context);
     final nicknameController = ref.watch(nicknameControllerProvider);
     final signupForm = ref.watch(signupFormProvider);
     final canSignup = ref.watch(canSignupProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('회원가입')),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(title: const Text('회원가입')),
       body: SingleChildScrollView(
         child: Padding(
           padding: screenPadding,
@@ -24,7 +28,13 @@ class SignupScreen extends ConsumerWidget {
             children: [
               Text(
                 'XXX 이용을 위해\n필요해요',
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  fontSize: 26 * fontScale,
+                  fontWeight: FontWeight.w700,
+                  height: 1.3,
+                  letterSpacing: -0.5,
+                  color: AppColors.textPrimary,
+                ),
               ),
               SizedBox(height: ResponsiveSize.sectionGap(context)),
 
@@ -34,21 +44,26 @@ class SignupScreen extends ConsumerWidget {
                 children: [
                   Text(
                     '닉네임',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      fontSize: 16 * fontScale,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   TextButton(
                     onPressed: () => _generateRandomNickname(ref),
                     style: TextButton.styleFrom(
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 4,
                       ),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      foregroundColor: Color(0xFF007AFF),
+                      foregroundColor: AppColors.primary,
                       textStyle: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                        fontSize: 14 * fontScale,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     child: Row(
@@ -66,9 +81,9 @@ class SignupScreen extends ConsumerWidget {
               Text(
                 '나만의 닉네임을 설정하고 싶다면 새로 입력해주세요',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 12 * fontScale,
                   fontWeight: FontWeight.w400,
-                  color: Color(0xFFD6D6D6),
+                  color: AppColors.textSecondary,
                 ),
               ),
               SizedBox(height: ResponsiveSize.subGap(context)),
@@ -80,6 +95,12 @@ class SignupScreen extends ConsumerWidget {
                         .updateNickname(value),
                 decoration: InputDecoration(
                   hintText: '닉네임',
+                  hintStyle: TextStyle(
+                    fontSize: 15 * fontScale,
+                    color: AppColors.textSecondary,
+                  ),
+                  filled: true,
+                  fillColor: AppColors.surface,
                   suffixIcon: signupForm.nickname.isEmpty
                       ? null
                       : IconButton(
@@ -90,19 +111,19 @@ class SignupScreen extends ConsumerWidget {
                                 .updateNickname('');
                           },
                           icon: const Icon(Icons.cancel_rounded, size: 20),
-                          color: const Color(0xFFB0B0B0),
+                          color: AppColors.textSecondary,
                         ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Color(0xFFD6D6D6), width: 1),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border, width: 0.7),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Color(0xFFD6D6D6), width: 1),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border, width: 0.7),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    // borderSide: BorderSide(color: Color(0xFF007AFF), width: 2),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.primary, width: 1.2),
                   ),
                 ),
               ),
@@ -115,12 +136,18 @@ class SignupScreen extends ConsumerWidget {
                         ? () => _checkNicknameDuplicate(ref)
                         : null,
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Color(0xFF000000),
+                  foregroundColor: AppColors.primary,
+                  disabledForegroundColor: AppColors.textSecondary,
+                  backgroundColor: AppColors.surface,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  minimumSize: Size(double.infinity, 48),
-                  side: BorderSide(color: Color(0xFFD6D6D6)),
+                  minimumSize: const Size(double.infinity, 52),
+                  side: BorderSide(
+                    color: signupForm.nickname.isNotEmpty
+                        ? AppColors.primary
+                        : AppColors.border,
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -128,13 +155,13 @@ class SignupScreen extends ConsumerWidget {
                     Text(
                       '중복 확인',
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                        fontSize: 16 * fontScale,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     if (signupForm.isNicknameDuplicateChecked) ...[
-                      SizedBox(width: 8),
-                      Icon(Icons.check, color: Color(0xFF007AFF), size: 20),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.check, color: AppColors.primary, size: 20),
                     ],
                   ],
                 ),
@@ -147,27 +174,9 @@ class SignupScreen extends ConsumerWidget {
               SizedBox(height: ResponsiveSize.sectionGap(context)),
               SizedBox(height: ResponsiveSize.sectionGap(context)),
 
-              // 회원가입 버튼
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: canSignup ? () => _signup(ref) : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        canSignup ? Color(0xFF007AFF) : Color(0xFFE5E5E5),
-                    foregroundColor:
-                        canSignup ? Colors.white : Color(0xFF999999),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    '완료',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                ),
+              AppButton(
+                label: '완료',
+                onPressed: canSignup ? () => _signup(ref) : null,
               ),
               SizedBox(height: ResponsiveSize.sectionGap(context)),
             ],
@@ -201,7 +210,7 @@ class SignupScreen extends ConsumerWidget {
     ScaffoldMessenger.of(ref.context).showSnackBar(
       SnackBar(
         content: Text('사용 가능한 닉네임입니다'),
-        backgroundColor: Color(0xFF007AFF),
+        backgroundColor: AppColors.primary,
       ),
     );
   }
@@ -217,7 +226,7 @@ class SignupScreen extends ConsumerWidget {
     ScaffoldMessenger.of(ref.context).showSnackBar(
       SnackBar(
         content: Text('회원가입이 완료되었습니다'),
-        backgroundColor: Color(0xFF34C759),
+        backgroundColor: AppColors.primary,
       ),
     );
   }

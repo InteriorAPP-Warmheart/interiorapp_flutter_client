@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
 class SigninScreen extends StatelessWidget {
@@ -13,7 +14,8 @@ class SigninScreen extends StatelessWidget {
     final double sectionGap = ResponsiveSize.sectionGap(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text('로그인')),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(title: const Text('로그인')),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -29,7 +31,13 @@ class SigninScreen extends StatelessWidget {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           'XXX에 오신 것을\n환영합니다',
-                          style: TextStyle(fontSize: 26 * fontScale, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 26 * fontScale,
+                            fontWeight: FontWeight.w700,
+                            height: 1.3,
+                            letterSpacing: -0.5,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                       ),
                       Column(
@@ -38,7 +46,7 @@ class SigninScreen extends StatelessWidget {
                 padding: EdgeInsets.only(bottom: subGap),
                 child: SizedBox(
                   width: double.infinity,
-                  height: 48,
+                  height: 52,
                   child: FilledButton.icon(
                     onPressed: () {},
                     icon: Image.asset(
@@ -68,7 +76,7 @@ class SigninScreen extends StatelessWidget {
                 padding: EdgeInsets.only(bottom: subGap),
                 child: SizedBox(
                   width: double.infinity,
-                  height: 48,
+                  height: 52,
                   child: FilledButton.icon(
                     onPressed: () {},
                     icon: const Icon(Icons.apple, size: 22),
@@ -76,9 +84,9 @@ class SigninScreen extends StatelessWidget {
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.black,
                       foregroundColor: Colors.white,
-                      minimumSize: const Size(double.infinity, 48),
+                      minimumSize: const Size(double.infinity, 52),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       textStyle: TextStyle(fontSize: 16 * fontScale),
                     ),
@@ -89,7 +97,7 @@ class SigninScreen extends StatelessWidget {
                 padding: EdgeInsets.only(bottom: sectionGap),
                 child: SizedBox(
                   width: double.infinity,
-                  height: 48,
+                  height: 52,
                   child: OutlinedButton.icon(
                     onPressed: () {},
                     icon: Image.asset(
@@ -106,15 +114,15 @@ class SigninScreen extends StatelessWidget {
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFFFFF),
-                      minimumSize: const Size(double.infinity, 48),
+                      backgroundColor: AppColors.surface,
+                      minimumSize: const Size(double.infinity, 52),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       side: const BorderSide(
-                        color: Color(0xFFDADCE0),
-                        width: 1,
+                        color: AppColors.border,
+                        width: 0.7,
                       ),
                     ),
                   ),
@@ -128,7 +136,10 @@ class SigninScreen extends StatelessWidget {
                   '테스트용 회원가입 페이지',
                   style: TextStyle(
                     decoration: TextDecoration.underline,
-                    color: Colors.black,
+                    decorationColor: AppColors.primary,
+                    fontSize: 14 * fontScale,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
                   ),
                 ),
               ),

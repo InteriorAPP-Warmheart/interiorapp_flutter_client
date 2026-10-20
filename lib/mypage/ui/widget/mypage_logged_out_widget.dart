@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 
 class MyPageLoggedOutWidget extends StatelessWidget {
   const MyPageLoggedOutWidget({super.key});
@@ -16,28 +18,28 @@ class MyPageLoggedOutWidget extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 아이콘 영역
             Container(
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: const Color(0xFFF6F3EE),
+                color: AppColors.primary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFECECEC)),
               ),
               child: const Icon(
                 Icons.person_outline_rounded,
                 size: 38,
-                color: Color(0xFF1A1A1A),
+                color: AppColors.primary,
               ),
             ),
             const SizedBox(height: 20),
             Text(
               '로그인이 필요한 서비스입니다.',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 17 * fontScale,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF1A1A1A),
+                letterSpacing: -0.3,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
@@ -47,65 +49,21 @@ class MyPageLoggedOutWidget extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13 * fontScale,
                 height: 1.6,
-                color: const Color(0xFF8A8A8A),
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 32),
-            // 로그인 버튼 (다크)
-            SizedBox(
-              width: double.infinity,
-              child: Material(
-                color: const Color(0xFF111111),
-                borderRadius: BorderRadius.circular(12),
-                child: InkWell(
-                  onTap: () => context.push('/signin'),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    child: Text(
-                      '로그인 하러가기',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 15 * fontScale,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            AppButton(
+              label: '로그인 하러가기',
+              onPressed: () => context.push('/signin'),
             ),
             const SizedBox(height: 10),
-            // 회원가입 버튼 (아웃라인)
-            SizedBox(
-              width: double.infinity,
-              child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-                child: InkWell(
-                  onTap: () => context.push('/signup'),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFECECEC), width: 1.5),
-                    ),
-                    child: Text(
-                      '회원가입',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 15 * fontScale,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF1A1A1A),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            AppButton(
+              label: '회원가입',
+              variant: AppButtonVariant.secondary,
+              onPressed: () => context.push('/signup'),
             ),
             const SizedBox(height: 44),
-            // 기능 미리보기 힌트
             const _FeaturePreviewRow(),
           ],
         ),
@@ -138,18 +96,18 @@ class _FeaturePreviewRow extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF6F3EE),
+                  color: AppColors.primary.withValues(alpha: 0.08),
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFECECEC)),
                 ),
-                child: Icon(f.$1, size: 22, color: const Color(0xFF8A8A8A)),
+                child: Icon(f.$1, size: 22, color: AppColors.primary),
               ),
               const SizedBox(height: 7),
               Text(
                 f.$2,
                 style: TextStyle(
                   fontSize: 11 * fontScale,
-                  color: const Color(0xFF8A8A8A),
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
