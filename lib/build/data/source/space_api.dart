@@ -1,14 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
+import 'package:interiorapp_flutter_client/build/domain/repository/space_repository.dart';
 
-/// 화면을 채우기 위한 샘플. 저장소가 생기기 전까지 세션 안에서만 바뀐다.
-class SpaceBoard extends ChangeNotifier {
-  SpaceBoard._();
-
-  static final SpaceBoard instance = SpaceBoard._();
-
-  static const int maxTrades = 2;
-
+/// 내공간 서버의 자리. 연결 전에는 세션 안의 목데이터다.
+class SpaceApi {
   final List<SpaceProject> received = [];
   final Map<String, PrepRecord> _receivedRecords = {};
 
@@ -83,12 +77,70 @@ class SpaceBoard extends ChangeNotifier {
     ),
   ];
 
+  final List<SpaceProject> ongoing = const [
+    SpaceProject(
+      id: 'project-seongsu-cafe',
+      placeName: '성수동 카페',
+      statusLabel: '공사진행 · 주요시공',
+      nextAction: '벽 마감 사진을 확인해 주세요',
+      phase: SpacePhase.construction,
+      imageUrl: 'https://picsum.photos/seed/seongsu-cafe/1200/900',
+      completed: false,
+    ),
+    SpaceProject(
+      id: 'project-mangwon-bakery',
+      placeName: '망원동 빵집',
+      statusLabel: '견적 · 계약',
+      nextAction: '견적서를 확인해 주세요',
+      phase: SpacePhase.estimate,
+      imageUrl: 'https://picsum.photos/seed/mangwon-bakery/1200/900',
+      completed: false,
+    ),
+  ];
+
+  final List<SpaceProject> finished = const [
+    SpaceProject(
+      id: 'project-yeonnam-room',
+      placeName: '연남동 자취방',
+      statusLabel: '완료 · 준공확인',
+      nextAction: 'A/S 기간이 남아 있어요',
+      phase: SpacePhase.afterCare,
+      imageUrl: 'https://picsum.photos/seed/yeonnam-room/1200/900',
+      completed: true,
+    ),
+    SpaceProject(
+      id: 'project-jamwon-salon',
+      placeName: '잠원동 미용실',
+      statusLabel: '완료 · A/S 종료',
+      nextAction: '기록을 다시 볼 수 있어요',
+      phase: SpacePhase.afterCare,
+      imageUrl: 'https://picsum.photos/seed/jamwon-salon/1200/900',
+      completed: true,
+    ),
+    SpaceProject(
+      id: 'project-haeundae-stay',
+      placeName: '해운대 스테이',
+      statusLabel: '완료 · 준공확인',
+      nextAction: '기록을 다시 볼 수 있어요',
+      phase: SpacePhase.handover,
+      imageUrl: 'https://picsum.photos/seed/haeundae-stay/1200/900',
+      completed: true,
+    ),
+  ];
+
   PrepRecord? recordFor(String projectId) => _receivedRecords[projectId];
 
   SpaceProject? projectForRecord(String recordId) {
     if (recordId.isEmpty) return null;
     for (final SpaceProject project in received) {
       if (_receivedRecords[project.id]?.id == recordId) return project;
+    }
+    return null;
+  }
+
+  SpaceProject? find(String id) {
+    for (final SpaceProject project in [...received, ...ongoing, ...finished]) {
+      if (project.id == id) return project;
     }
     return null;
   }
@@ -121,9 +173,16 @@ class SpaceBoard extends ChangeNotifier {
             floorPlans: record.floorPlans,
             stylePhotos: record.stylePhotos,
             industry: record.industry,
+            industryGroup: record.industryGroup,
+            secondaryIndustries: record.secondaryIndustries,
+            areaRange: record.areaRange,
+            budgetRange: record.budgetRange,
+            startTiming: record.startTiming,
+            openTiming: record.openTiming,
             workScope: record.workScope,
             contact: record.contact,
             workPlace: record.workPlace,
+            finishes: record.finishes,
             styleRef: record.styleRef,
           );
     consults.removeWhere((PrepRecord item) => item.id == stored.id);
@@ -138,7 +197,6 @@ class SpaceBoard extends ChangeNotifier {
     );
     received.insert(0, project);
     _receivedRecords[project.id] = stored;
-    notifyListeners();
     return project;
   }
 
@@ -149,79 +207,15 @@ class SpaceBoard extends ChangeNotifier {
     } else {
       consults.insert(0, record);
     }
-    notifyListeners();
   }
 
   void saveTrade(TradeCandidate candidate) {
     final int index = trades.indexWhere((TradeCandidate item) => item.id == candidate.id);
     if (index >= 0) {
       trades[index] = candidate;
-      notifyListeners();
       return;
     }
-    if (trades.length >= maxTrades) return;
+    if (trades.length >= SpaceRepository.maxTrades) return;
     trades.insert(0, candidate);
-    notifyListeners();
   }
-}
-
-/// 화면을 채우기 위한 샘플. 인테리어는 보통 한두 건이라 목록도 짧게 둔다.
-abstract final class SpaceCatalog {
-  static const List<SpaceProject> ongoing = [
-    SpaceProject(
-      id: 'project-seongsu-cafe',
-      placeName: '성수동 카페',
-      statusLabel: '공사진행 · 주요시공',
-      nextAction: '벽 마감 사진을 확인해 주세요',
-      phase: SpacePhase.construction,
-      imageUrl: 'https://picsum.photos/seed/seongsu-cafe/1200/900',
-      completed: false,
-    ),
-    SpaceProject(
-      id: 'project-mangwon-bakery',
-      placeName: '망원동 빵집',
-      statusLabel: '견적 · 계약',
-      nextAction: '견적서를 확인해 주세요',
-      phase: SpacePhase.estimate,
-      imageUrl: 'https://picsum.photos/seed/mangwon-bakery/1200/900',
-      completed: false,
-    ),
-  ];
-
-  static SpaceProject? find(String id) {
-    for (final SpaceProject project in [...SpaceBoard.instance.received, ...ongoing, ...finished]) {
-      if (project.id == id) return project;
-    }
-    return null;
-  }
-
-  static const List<SpaceProject> finished = [
-    SpaceProject(
-      id: 'project-yeonnam-room',
-      placeName: '연남동 자취방',
-      statusLabel: '완료 · 준공확인',
-      nextAction: 'A/S 기간이 남아 있어요',
-      phase: SpacePhase.afterCare,
-      imageUrl: 'https://picsum.photos/seed/yeonnam-room/1200/900',
-      completed: true,
-    ),
-    SpaceProject(
-      id: 'project-jamwon-salon',
-      placeName: '잠원동 미용실',
-      statusLabel: '완료 · A/S 종료',
-      nextAction: '기록을 다시 볼 수 있어요',
-      phase: SpacePhase.afterCare,
-      imageUrl: 'https://picsum.photos/seed/jamwon-salon/1200/900',
-      completed: true,
-    ),
-    SpaceProject(
-      id: 'project-haeundae-stay',
-      placeName: '해운대 스테이',
-      statusLabel: '완료 · 준공확인',
-      nextAction: '기록을 다시 볼 수 있어요',
-      phase: SpacePhase.handover,
-      imageUrl: 'https://picsum.photos/seed/haeundae-stay/1200/900',
-      completed: true,
-    ),
-  ];
 }

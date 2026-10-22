@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/kakao_address_search_screen.dart';
+import 'package:interiorapp_flutter_client/build/presentation/provider/build_provider.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/trade_detail_screen.dart';
-import 'package:interiorapp_flutter_client/build/ui/space_catalog.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 
 /// 상권 분석 전에 남겨 두는 후보지. 성공 여부를 묻거나 점수를 만들지 않는다.
-class TradeCreateScreen extends StatefulWidget {
+class TradeCreateScreen extends ConsumerStatefulWidget {
   const TradeCreateScreen({super.key, this.initial});
 
   final TradeCandidate? initial;
 
   @override
-  State<TradeCreateScreen> createState() => _TradeCreateScreenState();
+  ConsumerState<TradeCreateScreen> createState() => _TradeCreateScreenState();
 }
 
-class _TradeCreateScreenState extends State<TradeCreateScreen> {
+class _TradeCreateScreenState extends ConsumerState<TradeCreateScreen> {
   static const List<String> _steps = ['자리', '주변', '메모'];
 
   final TextEditingController _name = TextEditingController();
@@ -157,7 +158,7 @@ class _TradeCreateScreenState extends State<TradeCreateScreen> {
     }
     if (_step >= _steps.length - 1) {
       if (_id.isEmpty) _id = 'trade-${DateTime.now().microsecondsSinceEpoch}';
-      SpaceBoard.instance.saveTrade(_current);
+      ref.read(spaceBoardProvider).saveTrade(_current);
     }
     setState(() {
       _error = null;

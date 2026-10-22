@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
+import 'package:interiorapp_flutter_client/build/presentation/provider/build_provider.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/prep_consult_screen.dart';
-import 'package:interiorapp_flutter_client/build/ui/space_catalog.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_theme.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
-class SpaceDetailScreen extends StatelessWidget {
+class SpaceDetailScreen extends ConsumerWidget {
   const SpaceDetailScreen({super.key, required this.projectId});
 
   final String projectId;
@@ -23,8 +24,8 @@ class SpaceDetailScreen extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
-    final SpaceProject? project = SpaceCatalog.find(projectId);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final SpaceProject? project = ref.watch(spaceBoardProvider).find(projectId);
     if (project == null) {
       return Scaffold(
         appBar: AppBar(),
@@ -34,7 +35,7 @@ class SpaceDetailScreen extends StatelessWidget {
 
     final double fontScale = ResponsiveSize.fontScale(context);
     final PrepRecord? received = project.phase == SpacePhase.consult
-        ? SpaceBoard.instance.recordFor(project.id)
+        ? ref.read(spaceBoardProvider).recordFor(project.id)
         : null;
 
     return Scaffold(

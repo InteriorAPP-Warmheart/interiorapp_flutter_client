@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
-import 'package:interiorapp_flutter_client/build/ui/space_catalog.dart';
+import 'package:interiorapp_flutter_client/build/presentation/provider/build_provider.dart';
 import 'package:interiorapp_flutter_client/build/ui/space_routes.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
-class MyBuildProjectWidget extends StatelessWidget {
+class MyBuildProjectWidget extends ConsumerWidget {
   final bool atBottom;
   const MyBuildProjectWidget({super.key, required this.atBottom});
 
@@ -26,14 +27,14 @@ class MyBuildProjectWidget extends StatelessWidget {
   /// 맨 아래 '내 프로젝트 진행률' 버튼 높이. 화면 비율로 키우지 않는다.
   static const double collapsedHeight = 36;
 
-  void _openMyProject(BuildContext context) {
-    final project = SpaceCatalog.ongoing.firstOrNull;
+  void _openMyProject(BuildContext context, WidgetRef ref) {
+    final project = ref.read(spaceBoardProvider).ongoing.firstOrNull;
     if (project == null) return;
     context.push(SpaceRoutes.detail(project.id));
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     double progress = 0.65; // 65%
     return !atBottom
         ? Container(
@@ -70,7 +71,7 @@ class MyBuildProjectWidget extends StatelessWidget {
                     vertical: verticalPad,
                   ),
                   child: GestureDetector(
-                    onTap: () => _openMyProject(context),
+                    onTap: () => _openMyProject(context, ref),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -192,7 +193,7 @@ class MyBuildProjectWidget extends StatelessWidget {
             final double fontScale = ResponsiveSize.fontScale(context);
             final double fontSize = 13 * fontScale;
             return GestureDetector(
-              onTap: () => _openMyProject(context),
+              onTap: () => _openMyProject(context, ref),
               child: Container(
                 width: MediaQuery.sizeOf(context).width * 0.86,
                 height: collapsedHeight,

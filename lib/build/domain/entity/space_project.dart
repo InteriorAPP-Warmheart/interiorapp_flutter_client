@@ -138,7 +138,23 @@ class ShowroomStyleRef {
   final String note;
 }
 
-/// 상담 전에 정리해 둔 사전준비 한 건.
+/// 세부 마감 한 문항의 답. 고른 항목과 직접 적은 글을 함께 둔다.
+class PrepFinishAnswer {
+  const PrepFinishAnswer({this.choices = const <String>[], this.note = ''});
+
+  final List<String> choices;
+  final String note;
+
+  bool get isEmpty => choices.isEmpty && note.trim().isEmpty;
+
+  String get summary {
+    final String written = note.trim();
+    if (choices.isEmpty) return written;
+    if (written.isEmpty) return choices.join(', ');
+    return '${choices.join(', ')} · $written';
+  }
+}
+
 abstract final class PrepLabels {
   static const String industryUndecided = '아직 정하지 못했어요';
   static const String areaUnknown = '정확히 몰라요';
@@ -146,8 +162,45 @@ abstract final class PrepLabels {
   static const String periodUndecided = '아직 정하지 못했어요';
   static const String fullWork = '전체공사';
   static const String partialWork = '부분공사';
+  static const String scopeUnknown = '잘 모르겠어요';
+  static const String decideOnSite = '현장 상담 후 결정';
 }
 
+/// 주소에서 동네 이름을 고른다. 동·읍·면·리가 없으면 구·군을 쓴다.
+String consultRegion(String address) {
+  final List<String> parts = address.trim().split(RegExp(r'\s+'));
+  final RegExp neighborhood = RegExp(r'([가-힣]{2,}(?:동|읍|면|리))');
+  for (final String part in parts) {
+    final RegExpMatch? match = neighborhood.firstMatch(part);
+    if (match != null) return match.group(1)!;
+  }
+  for (final String part in parts) {
+    if (part.endsWith('구') || part.endsWith('군')) return part;
+  }
+  for (final String part in parts) {
+    if (part.endsWith('시') && !part.contains('특별') && !part.contains('광역')) return part;
+  }
+  return '';
+}
+
+/// 임시 공간 이름에 쓸 짧은 업종. 없으면 공간이라고 둔다.
+String consultIndustryShort(String industry) {
+  final String trimmed = industry.trim();
+  if (trimmed.isEmpty || trimmed == PrepLabels.industryUndecided) return '공간';
+  final int split = trimmed.indexOf('·');
+  if (split > 0) return trimmed.substring(0, split).trim();
+  return trimmed;
+}
+
+/// 이름을 비웠을 때 쓰는 `지역 + 업종`.
+String consultTempPlaceName({required String address, required String industry}) {
+  final String region = consultRegion(address);
+  final String trade = consultIndustryShort(industry);
+  if (region.isEmpty) return trade == '공간' && industry.trim().isEmpty ? '' : trade;
+  return '$region $trade';
+}
+
+/// 상담 전에 정리해 둔 사전준비 한 건.
 class PrepRecord {
   const PrepRecord({
     this.id = '',
@@ -168,9 +221,16 @@ class PrepRecord {
     this.floorPlans = const <ShowroomReferenceRegion>[],
     this.stylePhotos = const <ShowroomReferenceRegion>[],
     this.industry = '',
+    this.industryGroup = '',
+    this.secondaryIndustries = const <String>[],
+    this.areaRange = '',
+    this.budgetRange = '',
+    this.startTiming = '',
+    this.openTiming = '',
     this.workScope = '',
     this.contact = '',
     this.workPlace = '',
+    this.finishes = const <String, PrepFinishAnswer>{},
     this.styleRef,
   });
 
@@ -205,7 +265,25 @@ class PrepRecord {
   /// 업종. 비어 있거나 [PrepLabels.industryUndecided]이면 정식 상담으로 넘기지 않는다.
   final String industry;
 
-  /// 전체공사 또는 부분공사.
+  /// 대분류. 자주 있는 업종만 고르면 비어 있다.
+  final String industryGroup;
+
+  /// 대표 업종 외에 함께 고른 업종.
+  final List<String> secondaryIndustries;
+
+  /// 평수 구간. 숫자를 같이 적어도 구간은 남긴다.
+  final String areaRange;
+
+  /// 예산 구간. 금액을 같이 적어도 구간은 남긴다.
+  final String budgetRange;
+
+  /// 희망 착공 시점. 비어 있으면 아직 고르지 않은 것이다.
+  final String startTiming;
+
+  /// 희망 오픈 또는 완료 시점.
+  final String openTiming;
+
+  /// 전체공사, 부분공사, 또는 아직 모르는 상태.
   final String workScope;
 
   /// 상담 전화에 쓰는 연락처.
@@ -214,12 +292,38 @@ class PrepRecord {
   /// 부분공사일 때 손볼 곳. 전체공사이면 비어 있다.
   final String workPlace;
 
+  /// 세부 마감. 문항 이름을 키로 둔다. 비어 있으면 아직 적지 않은 것이다.
+  final Map<String, PrepFinishAnswer> finishes;
+
   /// 쇼룸에서 골라 온 참고 사례. 없으면 일반 상담준비다.
   final ShowroomStyleRef? styleRef;
 
   bool get industryReady => industry.isNotEmpty && industry != PrepLabels.industryUndecided;
 
   bool get contactReady => contact.trim().isNotEmpty;
+
+  String get industryLine {
+    final String primary = industry.trim();
+    if (secondaryIndustries.isEmpty) return primary;
+    return '$primary · 보조 ${secondaryIndustries.join(', ')}';
+  }
+
+  String get areaLine {
+    final String exact = area.trim();
+    final String range = areaRange.trim();
+    if (range.isEmpty) return exact;
+    if (exact.isEmpty || exact == range) return range;
+    return '$exact · $range';
+  }
+
+  String get budgetLine {
+    final String amount = budget.trim();
+    final String range = budgetRange.trim();
+    if (amount == PrepLabels.budgetUndecided) return amount;
+    if (range.isEmpty) return amount;
+    if (amount.isEmpty || amount == range) return range;
+    return '$amount · $range';
+  }
 }
 
 /// 상담 전에 비교해 두는 상권 후보지. 분석 점수는 만들지 않는다.

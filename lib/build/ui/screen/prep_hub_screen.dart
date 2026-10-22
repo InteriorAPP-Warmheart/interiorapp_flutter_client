@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
-import 'package:interiorapp_flutter_client/build/ui/space_catalog.dart';
+import 'package:interiorapp_flutter_client/build/presentation/provider/build_provider.dart';
+import 'package:interiorapp_flutter_client/build/presentation/vm/space_board_vm.dart';
 import 'package:interiorapp_flutter_client/build/ui/space_routes.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
 /// 상담준비 내역과 상권 후보지를 나눠 보여 준다.
-class PrepHubScreen extends StatelessWidget {
+class PrepHubScreen extends ConsumerWidget {
   const PrepHubScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
     final double subGap = ResponsiveSize.subGap(context);
     final double sectionGap = ResponsiveSize.sectionGap(context);
@@ -20,10 +22,9 @@ class PrepHubScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFFCFCFC),
       appBar: AppBar(title: const Text('상담 전')),
       body: SafeArea(
-        child: ListenableBuilder(
-          listenable: SpaceBoard.instance,
-          builder: (BuildContext context, Widget? child) {
-            final SpaceBoard board = SpaceBoard.instance;
+        child: Builder(
+          builder: (BuildContext context) {
+            final SpaceBoard board = ref.watch(spaceBoardProvider);
             return ListView(
               padding: EdgeInsets.fromLTRB(padding.left, subGap, padding.right, sectionGap),
               children: [

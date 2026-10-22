@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
-import 'package:interiorapp_flutter_client/build/ui/space_catalog.dart';
+import 'package:interiorapp_flutter_client/build/presentation/provider/build_provider.dart';
 import 'package:interiorapp_flutter_client/build/ui/space_routes.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 
 /// 상담이 접수된 직후. 내 공간이 만들어지고, 지금 상태만 보여 준다.
-class PrepConsultScreen extends StatefulWidget {
+class PrepConsultScreen extends ConsumerStatefulWidget {
   const PrepConsultScreen({super.key, required this.record});
 
   final PrepRecord record;
 
   @override
-  State<PrepConsultScreen> createState() => _PrepConsultScreenState();
+  ConsumerState<PrepConsultScreen> createState() => _PrepConsultScreenState();
 }
 
-class _PrepConsultScreenState extends State<PrepConsultScreen> {
+class _PrepConsultScreenState extends ConsumerState<PrepConsultScreen> {
   SpaceProject? _project;
 
   @override
@@ -25,7 +26,7 @@ class _PrepConsultScreenState extends State<PrepConsultScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       setState(() {
-        _project = SpaceBoard.instance.receiveConsult(widget.record);
+        _project = ref.read(spaceBoardProvider).receiveConsult(widget.record);
       });
     });
   }
@@ -92,11 +93,14 @@ class ConsultReceivedBody extends StatelessWidget {
         _SummaryCard(
           fontScale: fontScale,
           rows: [
-            _SummaryRow('업종', _filled(record.industry)),
+            _SummaryRow('업종', _filled(record.industryLine)),
             _SummaryRow('주소', _filled(address)),
+            _SummaryRow('면적', _filled(record.areaLine)),
             _SummaryRow('공사 형태', _filled(work)),
-            _SummaryRow('예산', _filled(record.budget)),
+            _SummaryRow('예산', _filled(record.budgetLine)),
             _SummaryRow('일정', _filled(record.period)),
+            if (record.startTiming.trim().isNotEmpty) _SummaryRow('착공', record.startTiming.trim()),
+            if (record.openTiming.trim().isNotEmpty) _SummaryRow('오픈', record.openTiming.trim()),
           ],
         ),
         SizedBox(height: sectionGap),

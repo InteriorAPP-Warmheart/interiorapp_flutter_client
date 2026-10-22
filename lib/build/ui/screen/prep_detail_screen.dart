@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
-import 'package:interiorapp_flutter_client/build/ui/space_catalog.dart';
+import 'package:interiorapp_flutter_client/build/domain/prep_survey.dart';
+import 'package:interiorapp_flutter_client/build/presentation/provider/build_provider.dart';
 import 'package:interiorapp_flutter_client/build/ui/space_routes.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
@@ -69,7 +71,7 @@ class _PrepDetailScaffold extends StatelessWidget {
 }
 
 /// 현장과 조건을 한 스크롤로 보여 준다.
-class PrepDetailView extends StatelessWidget {
+class PrepDetailView extends ConsumerWidget {
   const PrepDetailView({
     super.key,
     required this.record,
@@ -132,7 +134,7 @@ class PrepDetailView extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final double fontScale = ResponsiveSize.fontScale(context);
     final double sectionGap = ResponsiveSize.sectionGap(context);
     final String fullAddress = record.detailAddress.isEmpty
@@ -145,9 +147,9 @@ class PrepDetailView extends StatelessWidget {
           placeName: record.placeName,
           address: fullAddress,
           detailAddress: record.detailAddress.isEmpty ? '상세주소 없음' : record.detailAddress,
-          area: _areaLabel(record.area),
+          area: _areaLabel(record.areaLine),
           buildingType: record.buildingType,
-          industry: record.industry.isEmpty ? '미입력' : record.industry,
+          industry: record.industryLine.isEmpty ? '미입력' : record.industryLine,
           contact: record.contact.isEmpty ? '미입력' : record.contact,
           fontScale: fontScale,
           onEdit: () => onEdit(0),
@@ -202,9 +204,17 @@ class PrepDetailView extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 20),
-            _EmphasisLine(label: '예산', value: record.budget, fontScale: fontScale),
+            _EmphasisLine(label: '예산', value: record.budgetLine, fontScale: fontScale),
             const SizedBox(height: 16),
             _EmphasisLine(label: '희망공사기간', value: record.period, fontScale: fontScale),
+            if (record.startTiming.trim().isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _EmphasisLine(label: '희망 착공', value: record.startTiming, fontScale: fontScale),
+            ],
+            if (record.openTiming.trim().isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _EmphasisLine(label: '희망 오픈·완료', value: record.openTiming, fontScale: fontScale),
+            ],
             if (record.workScope == PrepLabels.partialWork) ...[
               const SizedBox(height: 16),
               _EmphasisLine(
@@ -219,6 +229,32 @@ class PrepDetailView extends StatelessWidget {
               value: record.needs.isEmpty ? '적어 둔 내용이 없어요' : record.needs,
               fontScale: fontScale,
             ),
+          ],
+        ),
+        SizedBox(height: sectionGap),
+        _ReviewSection(
+          title: '마감',
+          fontScale: fontScale,
+          onEdit: () => onEdit(2),
+          children: [
+            if (PrepSurvey.details.every(
+              (PrepQuestion question) => record.finishes[question.id]?.isEmpty ?? true,
+            ))
+              Text(
+                '선택 항목이에요. 아직 적지 않아도 상담으로 이어갈 수 있어요.',
+                style: TextStyle(fontSize: 14 * fontScale, height: 1.45, color: AppColors.textSecondary),
+              )
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final PrepQuestion question in PrepSurvey.details)
+                    if (record.finishes[question.id] case final PrepFinishAnswer answer)
+                      if (!answer.isEmpty)
+                        _ValueChip(label: question.title, value: answer.summary, fontScale: fontScale),
+                ],
+              ),
           ],
         ),
         SizedBox(height: sectionGap),
@@ -249,10 +285,9 @@ class PrepDetailView extends StatelessWidget {
           ],
         ),
         SizedBox(height: sectionGap),
-        ListenableBuilder(
-          listenable: SpaceBoard.instance,
-          builder: (BuildContext context, Widget? child) {
-            final SpaceProject? opened = SpaceBoard.instance.projectForRecord(record.id);
+        Builder(
+          builder: (BuildContext context) {
+            final SpaceProject? opened = ref.watch(spaceBoardProvider).projectForRecord(record.id);
             if (opened != null) {
               return AppButton(
                 label: '내 공간에서 보기',

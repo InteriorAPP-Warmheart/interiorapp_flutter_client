@@ -1,41 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:interiorapp_flutter_client/core/theme/tab_bar_theme.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
-import 'package:interiorapp_flutter_client/build/ui/space_catalog.dart';
+import 'package:interiorapp_flutter_client/build/presentation/provider/build_provider.dart';
+import 'package:interiorapp_flutter_client/build/presentation/vm/space_board_vm.dart';
 import 'package:interiorapp_flutter_client/build/ui/space_routes.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/finished_space_tile.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/interior_prep_card.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/ongoing_space_pager.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
+import 'package:interiorapp_flutter_client/core/theme/tab_bar_theme.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_dialog.dart';
 
-class BuildScreen extends StatefulWidget {
+class BuildScreen extends ConsumerStatefulWidget {
   const BuildScreen({super.key});
 
   @override
-  State<BuildScreen> createState() => _BuildScreenState();
+  ConsumerState<BuildScreen> createState() => _BuildScreenState();
 }
 
-class _BuildScreenState extends State<BuildScreen> {
-  @override
-  void initState() {
-    super.initState();
-    SpaceBoard.instance.addListener(_onBoard);
-  }
-
-  @override
-  void dispose() {
-    SpaceBoard.instance.removeListener(_onBoard);
-    super.dispose();
-  }
-
-  void _onBoard() {
-    if (mounted) setState(() {});
-  }
-
+class _BuildScreenState extends ConsumerState<BuildScreen> {
   @override
   Widget build(BuildContext context) {
     final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
@@ -45,11 +31,12 @@ class _BuildScreenState extends State<BuildScreen> {
     final AppWindow window = AppWindow.of(context);
     final double finishedHeight = window.isExpanded ? 156 : window.isMedium ? 132 : 112;
     final double prepHeight = window.isExpanded ? 72 : window.isMedium ? 64 : 56;
+    final SpaceBoard board = ref.watch(spaceBoardProvider);
     final List<SpaceProject> ongoing = [
-      ...SpaceBoard.instance.received,
-      ...SpaceCatalog.ongoing,
+      ...board.received,
+      ...board.ongoing,
     ];
-    final List<SpaceProject> finished = SpaceCatalog.finished;
+    final List<SpaceProject> finished = board.finished;
     final bool hasOngoing = ongoing.isNotEmpty;
     final bool inTab = GoRouterState.of(context).uri.path == '/';
     final double bottomGap = inTab
@@ -145,10 +132,8 @@ class _BuildScreenState extends State<BuildScreen> {
             SizedBox(height: sectionGap),
             SizedBox(
               height: prepHeight,
-              child: ListenableBuilder(
-                listenable: SpaceBoard.instance,
-                builder: (BuildContext context, Widget? child) {
-                  final SpaceBoard board = SpaceBoard.instance;
+              child: Builder(
+                builder: (BuildContext context) {
                   final bool showCard =
                       board.consults.isNotEmpty || board.trades.isNotEmpty;
                   return Row(
@@ -265,7 +250,7 @@ Future<void> _openAddSheet(BuildContext context) async {
     context.push(SpaceRoutes.prepCreate);
     return;
   }
-  if (SpaceBoard.instance.trades.length >= SpaceBoard.maxTrades) {
+  if (ProviderScope.containerOf(context).read(spaceBoardProvider).trades.length >= SpaceBoard.maxTrades) {
     await showAppDialog<void>(
       context: context,
       title: '후보지는 두 곳까지예요',

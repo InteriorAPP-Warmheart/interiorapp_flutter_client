@@ -1,27 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
+import 'package:interiorapp_flutter_client/build/domain/prep_budget_guide.dart';
+import 'package:interiorapp_flutter_client/build/domain/prep_survey.dart';
+import 'package:interiorapp_flutter_client/build/presentation/provider/build_provider.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/kakao_address_search_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/prep_detail_screen.dart';
-import 'package:interiorapp_flutter_client/build/ui/space_catalog.dart';
+import 'package:interiorapp_flutter_client/build/ui/widget/prep_budget_reading_card.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
+import 'package:interiorapp_flutter_client/mypage/presentation/provider/mypage_provider.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_bottom_sheet.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_dialog.dart';
-import 'package:interiorapp_flutter_client/showroom/domain/entity/quick_filter_catalog.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_reference_pick.dart';
 
-/// 상담준비 작성. 현장, 조건 순서로 나눈다.
-class PrepCreateScreen extends StatefulWidget {
+/// 상담준비 작성. 현장, 조건, 그리고 선택인 마감 순서로 나눈다.
+class PrepCreateScreen extends ConsumerStatefulWidget {
   const PrepCreateScreen({super.key, this.initial, this.initialStep = 0});
 
   final PrepRecord? initial;
   final int initialStep;
 
   @override
-  State<PrepCreateScreen> createState() => _PrepCreateScreenState();
+  ConsumerState<PrepCreateScreen> createState() => _PrepCreateScreenState();
 }
 
 class _FormAnchors {
@@ -45,38 +50,7 @@ class _FieldIssue {
   final GlobalKey anchor;
 }
 
-class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProviderStateMixin {
-  static const List<String> _steps = ['현장', '조건'];
-  static const String _commercial = '상가';
-  static const String _residential = '주거';
-  static final List<String> _styles = [
-    for (final StyleMoodCard card in styleMoodCards) card.title,
-  ];
-  static const String _industryOther = '기타';
-  static const List<String> _industries = [
-    '카페',
-    '식당',
-    '베이커리',
-    '미용',
-    '학원',
-    '병원',
-    '사무실',
-    '소매',
-    _industryOther,
-    PrepLabels.industryUndecided,
-  ];
-  static const List<String> _workScopes = [
-    PrepLabels.fullWork,
-    PrepLabels.partialWork,
-  ];
-  static const List<String> _periods = [
-    '1개월 이내',
-    '1개월',
-    '2개월',
-    PrepLabels.periodUndecided,
-  ];
-  static const List<String> _buildingConditions = ['전체 철거', '부분 철거', '철거 없음', '상담필요'];
-
+class _PrepCreateScreenState extends ConsumerState<PrepCreateScreen> with TickerProviderStateMixin {
   final TextEditingController _address = TextEditingController();
   final TextEditingController _detailAddress = TextEditingController();
   final TextEditingController _buildingName = TextEditingController();
@@ -97,13 +71,23 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
   List<String> _legacyFloorLabels = const <String>[];
   List<String> _legacyStyleLabels = const <String>[];
   String? _industry;
+  String? _industryGroup;
+  String? _secondaryBrowse;
+  final List<String> _secondaryIndustries = <String>[];
   String? _workScope = PrepLabels.fullWork;
   String? _buildingCondition;
+  final Map<String, List<String>> _finishChoices = <String, List<String>>{};
+  final Map<String, TextEditingController> _finishNotes = <String, TextEditingController>{};
   String? _style;
   String? _period;
   bool _areaUnknown = false;
-  _AreaUnit _areaUnit = _AreaUnit.pyeong;
+  String? _areaRange;
+  String? _budgetRange;
   bool _budgetUndecided = false;
+  String? _startTiming;
+  String? _openTiming;
+  bool _contactEdited = false;
+  _AreaUnit _areaUnit = _AreaUnit.pyeong;
   DateTimeRange? _targetRange;
   String? _error;
   GlobalKey? _errorAnchor;
@@ -121,46 +105,73 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
       duration: const Duration(milliseconds: 200),
     )..value = 1;
     _formScroll.addListener(_onFormScroll);
+    _bindFinishes(widget.initial);
     final PrepRecord? initial = widget.initial;
-    if (initial == null) return;
+    if (initial == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _applyAccountPhone(ref.read(myPageUserVmProvider)?.phone);
+      });
+      return;
+    }
     _recordId = initial.id;
     _styleRef = initial.styleRef;
     _address.text = initial.address;
     _detailAddress.text = initial.detailAddress;
     _buildingName.text = initial.placeName;
     _areaUnknown = initial.area == PrepLabels.areaUnknown;
+    _areaRange = initial.areaRange.isEmpty ? null : initial.areaRange;
+    if (_areaRange == null && PrepSurvey.areaRanges.contains(initial.area)) {
+      _areaRange = initial.area;
+    }
     _areaUnit = _areaUnitOf(initial.area);
-    _area.text = _areaUnknown ? '' : _areaNumber(initial.area);
+    final bool areaIsRange = _areaRange != null && initial.area == _areaRange;
+    _area.text = _areaUnknown || areaIsRange ? '' : _areaNumber(initial.area);
     _budgetUndecided = initial.budget == PrepLabels.budgetUndecided;
-    _budget.text = _budgetUndecided ? '' : _budgetFieldText(initial.budget);
+    _budgetRange = initial.budgetRange.isEmpty ? null : initial.budgetRange;
+    if (_budgetRange == null && PrepSurvey.budgetRanges.contains(initial.budget)) {
+      _budgetRange = initial.budget;
+    }
+    final bool budgetIsRange = _budgetRange != null && initial.budget == _budgetRange;
+    _budget.text = _budgetUndecided || budgetIsRange ? '' : _budgetFieldText(initial.budget);
+    _startTiming = initial.startTiming.isEmpty ? null : initial.startTiming;
+    _openTiming = initial.openTiming.isEmpty ? null : initial.openTiming;
     _needs.text = initial.needs;
     _contact.text = _formatKoreanMobile(initial.contact);
+    _contactEdited = initial.contact.trim().isNotEmpty;
     final String savedIndustry = initial.industry;
+    final String? catalogGroup = PrepSurvey.groupOf(savedIndustry);
     if (savedIndustry.isEmpty) {
       _industry = null;
-    } else if (_industries.contains(savedIndustry)) {
+    } else if (catalogGroup != null) {
       _industry = savedIndustry;
+      _industryGroup = initial.industryGroup.isEmpty ? catalogGroup : initial.industryGroup;
+    } else if (PrepSurvey.industry.choices.contains(savedIndustry)) {
+      _industry = savedIndustry;
+      if (initial.industryGroup.isNotEmpty) _industryGroup = initial.industryGroup;
     } else {
-      _industry = _industryOther;
+      _industry = PrepSurvey.industryOther;
       _industryNote.text = savedIndustry;
     }
+    _secondaryIndustries.addAll(initial.secondaryIndustries);
+    _secondaryBrowse = _industryGroup;
     _workScope =
-        _workScopes.contains(initial.workScope)
+        PrepSurvey.workScope.choices.contains(initial.workScope)
             ? initial.workScope
             : PrepLabels.fullWork;
     _workPlace.text = initial.workPlace;
-    _buildingCondition = initial.buildingCondition;
+    _buildingCondition = initial.buildingCondition.isEmpty ? null : initial.buildingCondition;
     final String savedStyle = initial.style;
     final int styleSplit = savedStyle.indexOf(' · ');
     if (styleSplit >= 0) {
       final String mood = savedStyle.substring(0, styleSplit);
-      if (_styles.contains(mood)) {
+      if (PrepSurvey.style.choices.contains(mood)) {
         _style = mood;
         _styleNote.text = savedStyle.substring(styleSplit + 3);
       } else {
         _styleNote.text = savedStyle;
       }
-    } else if (_styles.contains(savedStyle)) {
+    } else if (PrepSurvey.style.choices.contains(savedStyle)) {
       _style = savedStyle;
     } else if (savedStyle.isNotEmpty) {
       _styleNote.text = savedStyle;
@@ -177,7 +188,11 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
     _stylePhotos.addAll(initial.stylePhotos);
     _legacyFloorLabels = initial.floorPlanLabels;
     _legacyStyleLabels = initial.referenceImageLabels;
-    _step = widget.initialStep.clamp(0, _steps.length - 1);
+    _step = widget.initialStep.clamp(0, PrepSurvey.steps.length - 1);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _applyAccountPhone(ref.read(myPageUserVmProvider)?.phone);
+    });
   }
 
   @override
@@ -195,19 +210,25 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
     _industryNote.dispose();
     _styleNote.dispose();
     _workPlace.dispose();
+    for (final TextEditingController note in _finishNotes.values) {
+      note.dispose();
+    }
     super.dispose();
   }
 
-  void _next() {
+  Future<void> _next() async {
     final _FieldIssue? issue = _validate();
     if (issue != null) {
       _showIssue(issue);
       return;
     }
-    if (_step >= _steps.length - 1) {
-      if (_recordId.isEmpty)
+    if (_step >= PrepSurvey.steps.length - 1) {
+      final bool save = await _confirmBudget();
+      if (!save || !mounted) return;
+      if (_recordId.isEmpty) {
         _recordId = 'consult-${DateTime.now().microsecondsSinceEpoch}';
-      SpaceBoard.instance.saveConsult(_currentRecord);
+      }
+      ref.read(spaceBoardProvider).saveConsult(_currentRecord);
       setState(() {
         _error = null;
         _errorAnchor = null;
@@ -225,6 +246,24 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
     _scrollFormToTop();
   }
 
+  Future<bool> _confirmBudget() async {
+    if (_budget.text.trim().isEmpty) return true;
+    final PrepPyeongBasis? basis = await ref.read(pyeongBasisUseCaseProvider).find(_pyeongQuery);
+    if (!mounted) return false;
+    final PrepBudgetReading reading = PrepBudgetGuide.read(
+      area: _storedArea,
+      budget: _storedBudget,
+      finishes: _finishRecord(),
+      query: _pyeongQuery,
+      basis: basis,
+    );
+    final bool? save = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => PrepBudgetSaveDialog(reading: reading),
+    );
+    return save == true;
+  }
+
   void _scrollFormToTop() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_formScroll.hasClients) return;
@@ -234,36 +273,41 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
 
   _FieldIssue? _validate() {
     if (_step == 0) {
-      if (_address.text.trim().isEmpty) return _FieldIssue('주소를 검색해 주세요', _anchors.address);
-      if (_detailAddress.text.trim().isEmpty) return _FieldIssue('상세주소를 적어 주세요', _anchors.address);
-      if (_buildingName.text.trim().isEmpty) return _FieldIssue('공간 이름을 적어 주세요', _anchors.placeName);
-      if (_industry == null) return _FieldIssue('업종을 골라 주세요', _anchors.industry);
-      if (_industry == _industryOther && _industryNote.text.trim().isEmpty) {
-        return _FieldIssue('업종을 적어 주세요', _anchors.industry);
+      if (_address.text.trim().isEmpty) {
+        return _FieldIssue(PrepSurvey.address.emptyMessage!, _anchors.address);
+      }
+      if (_detailAddress.text.trim().isEmpty) {
+        return _FieldIssue(PrepSurvey.detailAddress.emptyMessage!, _anchors.address);
+      }
+      if (_industry == null) return _FieldIssue(PrepSurvey.industry.emptyMessage!, _anchors.industry);
+      if (_industry == PrepSurvey.industryOther && _industryNote.text.trim().isEmpty) {
+        return _FieldIssue(PrepSurvey.industryNoteEmpty, _anchors.industry);
       }
       final int contactDigits = _contact.text.replaceAll(RegExp(r'\D'), '').length;
-      if (contactDigits == 0) return _FieldIssue('연락처를 적어 주세요', _anchors.contact);
-      if (contactDigits < 10) return _FieldIssue('연락처를 다시 확인해 주세요', _anchors.contact);
+      if (contactDigits == 0) return _FieldIssue(PrepSurvey.contactEmpty, _anchors.contact);
+      if (contactDigits < 10) return _FieldIssue(PrepSurvey.contactInvalid, _anchors.contact);
     }
     if (_step == 1) {
-      if (_workScope == null) return _FieldIssue('공사 형태를 골라 주세요', _anchors.workScope);
+      if (_workScope == null) return _FieldIssue(PrepSurvey.workScope.emptyMessage!, _anchors.workScope);
       if (_workScope == PrepLabels.partialWork && _workPlace.text.trim().isEmpty) {
-        return _FieldIssue('부분공사로 손볼 곳을 적어 주세요', _anchors.workScope);
+        return _FieldIssue(PrepSurvey.partialPlaceEmpty, _anchors.workScope);
       }
-      if (!_areaUnknown && _area.text.trim().isEmpty) {
-        return _FieldIssue('평수를 적거나, 정확히 모른다고 골라 주세요', _anchors.area);
+      if (!_areaUnknown && _area.text.trim().isEmpty && (_areaRange == null || _areaRange!.isEmpty)) {
+        return _FieldIssue(PrepSurvey.area.emptyMessage!, _anchors.area);
       }
-      if (_buildingCondition == null) return _FieldIssue('철거 여부를 골라 주세요', _anchors.demolition);
+      if (_buildingCondition == null) {
+        return _FieldIssue(PrepSurvey.demolition.emptyMessage!, _anchors.demolition);
+      }
       if (_style == null && _styleNote.text.trim().isEmpty) {
-        return _FieldIssue('원하는 스타일을 고르거나 적어 주세요', _anchors.style);
+        return _FieldIssue(PrepSurvey.style.emptyMessage!, _anchors.style);
       }
-      if (!_budgetUndecided && _budget.text.trim().isEmpty) {
-        return _FieldIssue('예산을 적거나, 아직 정하지 못했다고 골라 주세요', _anchors.budget);
+      if (_budget.text.trim().isEmpty && !_budgetUndecided && (_budgetRange == null || _budgetRange!.isEmpty)) {
+        return _FieldIssue(PrepSurvey.budget.emptyMessage!, _anchors.budget);
       }
       if (_period == null && _targetRange == null) {
-        return _FieldIssue('희망공사기간을 골라 주세요', _anchors.period);
+        return _FieldIssue(PrepSurvey.period.emptyMessage!, _anchors.period);
       }
-      if (_needs.text.trim().isEmpty) return _FieldIssue('상담에서 말하고 싶은 점을 적어 주세요', _anchors.needs);
+      if (_needs.text.trim().isEmpty) return _FieldIssue(PrepSurvey.needs.emptyMessage!, _anchors.needs);
     }
     return null;
   }
@@ -378,6 +422,80 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
     });
   }
 
+  void _bindFinishes(PrepRecord? initial) {
+    for (final PrepQuestion question in PrepSurvey.details) {
+      final PrepFinishAnswer? saved = initial?.finishes[question.id];
+      _finishChoices[question.id] = <String>[...?saved?.choices];
+      _finishNotes[question.id] = TextEditingController(text: saved?.note ?? '');
+    }
+  }
+
+  Map<String, PrepFinishAnswer> _finishRecord() {
+    final Map<String, PrepFinishAnswer> answers = <String, PrepFinishAnswer>{};
+    for (final PrepQuestion question in PrepSurvey.details) {
+      final List<String> choices = _finishChoices[question.id] ?? const <String>[];
+      final String note = _finishNotes[question.id]?.text.trim() ?? '';
+      if (choices.isEmpty && note.isEmpty) continue;
+      answers[question.id] = PrepFinishAnswer(
+        choices: List<String>.unmodifiable(choices),
+        note: note,
+      );
+    }
+    return Map<String, PrepFinishAnswer>.unmodifiable(answers);
+  }
+
+  bool get _hasFinishDraft {
+    for (final List<String> choices in _finishChoices.values) {
+      if (choices.isNotEmpty) return true;
+    }
+    for (final TextEditingController note in _finishNotes.values) {
+      if (note.text.trim().isNotEmpty) return true;
+    }
+    return false;
+  }
+
+  void _pickFinish(PrepQuestion question, String value) {
+    final List<String> selected = _finishChoices[question.id] ??= <String>[];
+    setState(() {
+      if (question.many) {
+        question.toggle(selected, value);
+        return;
+      }
+      if (selected.length == 1 && selected.first == value) {
+        selected.clear();
+      } else {
+        selected
+          ..clear()
+          ..add(value);
+      }
+    });
+  }
+
+  (String, String) get _stepHeading {
+    return switch (_step) {
+      0 => (
+        '공간을 정해주세요',
+        '상가 공간을 기준으로 주소와 업종, 연락처를 적어 두면 상담으로 이어갈 수 있어요. 업종을 아직 모르면 그렇게 골라도 돼요.',
+      ),
+      1 => (
+        '원하는 조건을 적어 주세요',
+        '모르는 항목은 그대로 두어도 돼요. 상담에서 이어서 확인해요.',
+      ),
+      2 || _ => (PrepSurvey.detailsIntro.title, PrepSurvey.detailsIntro.help!),
+    };
+  }
+
+  PrepPyeongQuery get _pyeongQuery {
+    final String industry = _industry == PrepSurvey.industryOther
+        ? _industryNote.text.trim()
+        : (_industry ?? '');
+    return PrepPyeongQuery(
+      industry: industry,
+      environment: _buildingCondition ?? '',
+      situation: _workScope ?? '',
+    );
+  }
+
   String _styleRecord() {
     final String note = _styleNote.text.trim();
     final String? mood = _style;
@@ -386,18 +504,48 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
     return mood ?? '';
   }
 
+  String get _resolvedIndustry {
+    if (_industry == PrepSurvey.industryOther) return _industryNote.text.trim();
+    return _industry ?? '';
+  }
+
+  String get _tempPlaceName => consultTempPlaceName(
+    address: _address.text,
+    industry: _resolvedIndustry,
+  );
+
+  String get _resolvedPlaceName {
+    final String written = _buildingName.text.trim();
+    if (written.isNotEmpty) return written;
+    return _tempPlaceName;
+  }
+
+  String get _storedArea {
+    if (_areaUnknown) return PrepLabels.areaUnknown;
+    final String exact = _areaRecordText(_area.text, _areaUnit);
+    if (exact.isNotEmpty) return exact;
+    return _areaRange ?? '';
+  }
+
+  String get _storedBudget {
+    if (_budgetUndecided) return PrepLabels.budgetUndecided;
+    final String amount = _budgetRecordText(_budget.text);
+    if (amount.isNotEmpty) return amount;
+    return _budgetRange ?? '';
+  }
+
   PrepRecord get _currentRecord {
     final DateTimeRange? range = _targetRange;
     return PrepRecord(
       id: _recordId,
-      placeName: _buildingName.text.trim(),
-      buildingType: _commercial,
+      placeName: _resolvedPlaceName,
+      buildingType: PrepSurvey.commercial,
       address: _address.text.trim(),
       detailAddress: _detailAddress.text.trim(),
-      area: _areaUnknown ? PrepLabels.areaUnknown : _areaRecordText(_area.text, _areaUnit),
+      area: _storedArea,
       buildingCondition: _buildingCondition ?? '',
       style: _styleRecord(),
-      budget: _budgetUndecided ? PrepLabels.budgetUndecided : _budgetRecordText(_budget.text),
+      budget: _storedBudget,
       period: range != null ? _formatDateRange(range) : (_period ?? ''),
       periodStart: range?.start,
       periodEnd: range?.end,
@@ -416,14 +564,18 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
             ],
       floorPlans: List<ShowroomReferenceRegion>.unmodifiable(_floorPlans),
       stylePhotos: List<ShowroomReferenceRegion>.unmodifiable(_stylePhotos),
-      industry:
-          _industry == _industryOther
-              ? _industryNote.text.trim()
-              : (_industry ?? ''),
+      industry: _resolvedIndustry,
+      industryGroup: _industryGroup ?? '',
+      secondaryIndustries: List<String>.unmodifiable(_secondaryIndustries),
+      areaRange: _areaUnknown ? '' : (_areaRange ?? ''),
+      budgetRange: _budgetUndecided ? '' : (_budgetRange ?? ''),
+      startTiming: _startTiming ?? '',
+      openTiming: _openTiming ?? '',
       workScope: _workScope ?? '',
       contact: _contact.text.trim(),
       workPlace:
           _workScope == PrepLabels.partialWork ? _workPlace.text.trim() : '',
+      finishes: _finishRecord(),
       styleRef: _styleRef,
     );
   }
@@ -484,7 +636,7 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
         builder: (BuildContext sheetContext) {
           return ListView(
             children: [
-              for (final TradeCandidate candidate in SpaceBoard.instance.trades)
+              for (final TradeCandidate candidate in ref.read(spaceBoardProvider).trades)
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(
@@ -510,13 +662,21 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
       _areaUnit = _areaUnitOf(picked.area);
       _area.text = _areaUnknown || picked.area.isEmpty ? '' : _areaNumber(picked.area);
       if (picked.area.isEmpty) _areaUnknown = false;
-      if (_industries.contains(picked.industry)) {
+      if (PrepSurvey.industry.choices.contains(picked.industry)) {
         _industry = picked.industry;
+        _industryGroup = null;
+        _industryNote.clear();
+      } else if (PrepSurvey.groupOf(picked.industry) case final String group) {
+        _industry = picked.industry;
+        _industryGroup = group;
+        _secondaryBrowse ??= group;
         _industryNote.clear();
       } else if (picked.industry.isNotEmpty) {
-        _industry = _industryOther;
+        _industry = PrepSurvey.industryOther;
         _industryNote.text = picked.industry;
+        _industryGroup = null;
       }
+      _secondaryIndustries.clear();
       if (picked.reason.trim().isNotEmpty && _needs.text.trim().isEmpty) {
         _needs.text = picked.toConsultSeed().needs;
       }
@@ -556,8 +716,72 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
     );
   }
 
+  void _applyAccountPhone(String? phone) {
+    if (_contactEdited || phone == null || phone.trim().isEmpty) return;
+    if (_contact.text.trim().isNotEmpty) return;
+    final String formatted = _formatKoreanMobile(phone);
+    if (formatted.isEmpty) return;
+    setState(() => _contact.text = formatted);
+  }
+
+  void _onQuickIndustry(String value) {
+    setState(() {
+      _industry = value;
+      _industryGroup = null;
+      _secondaryBrowse = null;
+      _secondaryIndustries.clear();
+      if (value != PrepSurvey.industryOther) _industryNote.clear();
+    });
+  }
+
+  void _onIndustryGroup(String value) {
+    setState(() {
+      _industryGroup = value;
+      _secondaryBrowse ??= value;
+    });
+  }
+
+  void _onPrimaryDetail(String value) {
+    setState(() {
+      _industry = value;
+      _industryNote.clear();
+      _secondaryIndustries.remove(value);
+    });
+  }
+
+  void _toggleSecondary(String value) {
+    if (value == _industry) return;
+    setState(() {
+      if (!_secondaryIndustries.remove(value)) _secondaryIndustries.add(value);
+    });
+  }
+
+  void _onAreaRange(String value) {
+    setState(() {
+      _areaRange = _areaRange == value ? null : value;
+      if (_areaRange != null) _areaUnknown = false;
+    });
+  }
+
+  void _onBudgetRange(String value) {
+    setState(() {
+      _budgetUndecided = false;
+      _budgetRange = _budgetRange == value ? null : value;
+    });
+  }
+
+  void _onBudgetUndecided() {
+    setState(() {
+      _budgetUndecided = !_budgetUndecided;
+      if (_budgetUndecided) {
+        _budget.clear();
+        _budgetRange = null;
+      }
+    });
+  }
+
   Future<void> _onSpaceKind(String value) async {
-    if (value != _residential) return;
+    if (value != PrepSurvey.residential) return;
     await showAppDialog<void>(
       context: context,
       title: '주거는 아직이에요',
@@ -583,6 +807,9 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
     final double messageSlot = messagePad + messageFont * 1.35 * 2 + messagePad;
 
     final bool leaveScreen = _saved || (_step == 0 && !_hasDraft);
+    ref.listen(myPageUserVmProvider, (previous, next) {
+      _applyAccountPhone(next?.phone);
+    });
     return Listener(
       behavior: HitTestBehavior.translucent,
       onPointerDown: _unfocusIfOutside,
@@ -630,7 +857,7 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _StepHeader(
-                        steps: _steps,
+                        steps: PrepSurvey.steps,
                         index: _step,
                         fontScale: fontScale,
                       ),
@@ -655,10 +882,8 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     _StepTitle(
-                                      title: _step == 0 ? '공간을 정해주세요' : '원하는 조건을 적어 주세요',
-                                      body: _step == 0
-                                          ? '상가 공간을 기준으로 주소와 업종, 연락처를 적어 두면 상담으로 이어갈 수 있어요. 업종을 아직 모르면 그렇게 골라도 돼요.'
-                                          : '모르는 항목은 그대로 두어도 돼요. 상담에서 이어서 확인해요.',
+                                      title: _stepHeading.$1,
+                                      body: _stepHeading.$2,
                                       fontScale: fontScale,
                                     ),
                                     if (_styleRef case final ShowroomStyleRef reference) ...[
@@ -673,44 +898,44 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
                                     SizedBox(height: sectionGap),
                                     if (_step == 0)
                                       _SiteStep(
-                                fontScale: fontScale,
-                                subGap: subGap,
-                                sectionGap: sectionGap,
-                                address: _address,
-                                detailAddress: _detailAddress,
-                                buildingName: _buildingName,
-                                onSearchAddress: _searchAddress,
-                                industry: _industry,
-                                industries: _industries,
-                                industryNote: _industryNote,
-                                contact: _contact,
-                                onIndustry:
-                                    (String value) =>
-                                        setState(() => _industry = value),
-                                onSpaceKind: _onSpaceKind,
-                                onImport:
-                                    SpaceBoard.instance.trades.isEmpty
-                                        ? null
-                                        : _importTrade,
-                                anchors: _anchors,
-                              ),
+                                        fontScale: fontScale,
+                                        subGap: subGap,
+                                        sectionGap: sectionGap,
+                                        address: _address,
+                                        detailAddress: _detailAddress,
+                                        buildingName: _buildingName,
+                                        onSearchAddress: _searchAddress,
+                                        industry: _industry,
+                                        industryGroup: _industryGroup,
+                                        secondaryBrowse: _secondaryBrowse ?? _industryGroup,
+                                        secondaryIndustries: _secondaryIndustries,
+                                        industryNote: _industryNote,
+                                        contact: _contact,
+                                        tempPlaceName: _buildingName.text.trim().isEmpty ? _tempPlaceName : '',
+                                        onIndustry: _onQuickIndustry,
+                                        onIndustryGroup: _onIndustryGroup,
+                                        onPrimaryDetail: _onPrimaryDetail,
+                                        onSecondaryBrowse: (String value) => setState(() => _secondaryBrowse = value),
+                                        onToggleSecondary: _toggleSecondary,
+                                        onPlaceNameChanged: (_) => setState(() {}),
+                                        onContactChanged: (_) => _contactEdited = true,
+                                        onSpaceKind: _onSpaceKind,
+                                        onImport: ref.read(spaceBoardProvider).trades.isEmpty ? null : _importTrade,
+                                        anchors: _anchors,
+                                      ),
                             if (_step == 1)
                               _NeedsStep(
                                 fontScale: fontScale,
                                 subGap: subGap,
                                 sectionGap: sectionGap,
-                                styles: _styles,
-                                periods: _periods,
-                                buildingConditions: _buildingConditions,
-                                workScopes: _workScopes,
                                 style: _style,
                                 period: _period,
                                 buildingCondition: _buildingCondition,
                                 workScope: _workScope,
                                 areaUnknown: _areaUnknown,
+                                areaRange: _areaRange,
                                 areaUnit: _areaUnit,
                                 onAreaUnit: _setAreaUnit,
-                                budgetUndecided: _budgetUndecided,
                                 workPlace: _workPlace,
                                 targetRange: _targetRange,
                                 area: _area,
@@ -728,32 +953,37 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
                                 onAreaUnknown:
                                     () => setState(() {
                                       _areaUnknown = !_areaUnknown;
-                                      if (_areaUnknown) _area.clear();
+                                      if (_areaUnknown) {
+                                        _area.clear();
+                                        _areaRange = null;
+                                      }
                                     }),
+                                onAreaRange: _onAreaRange,
                                 onAreaChanged: (String value) {
                                   if (value.trim().isNotEmpty && _areaUnknown) {
                                     setState(() => _areaUnknown = false);
                                   }
                                 },
-                                onBudgetUndecided:
-                                    () => setState(() {
-                                      _budgetUndecided = !_budgetUndecided;
-                                      if (_budgetUndecided) _budget.clear();
-                                    }),
+                                budgetUndecided: _budgetUndecided,
+                                budgetRange: _budgetRange,
                                 onBudgetChanged: (String value) {
-                                  if (value.trim().isNotEmpty &&
-                                      _budgetUndecided) {
+                                  if (value.trim().isNotEmpty && _budgetUndecided) {
                                     setState(() => _budgetUndecided = false);
                                   }
                                 },
+                                onBudgetRange: _onBudgetRange,
+                                onBudgetUndecided: _onBudgetUndecided,
+                                startTiming: _startTiming,
+                                openTiming: _openTiming,
+                                onStartTiming: (String value) => setState(() => _startTiming = value),
+                                onOpenTiming: (String value) => setState(() => _openTiming = value),
                                 onPeriod:
                                     (String value) => setState(() {
                                       _period = value;
                                       _targetRange = null;
                                     }),
                                 onPickDate: _pickTargetRange,
-                                onClearDate:
-                                    () => setState(() => _targetRange = null),
+                                onClearDate: () => setState(() => _targetRange = null),
                                 floorPlans: _floorPlans,
                                 stylePhotos: _stylePhotos,
                                 onAddFloorPlan: () => _addPhoto(floorPlan: true),
@@ -767,6 +997,14 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
                                 onRemoveStylePhoto: (ShowroomReferenceRegion region) =>
                                     setState(() => _stylePhotos.remove(region)),
                                 anchors: _anchors,
+                              ),
+                            if (_step == 2)
+                              _DetailStep(
+                                fontScale: fontScale,
+                                subGap: subGap,
+                                choices: _finishChoices,
+                                notes: _finishNotes,
+                                onPick: _pickFinish,
                               ),
                                   ],
                                 ),
@@ -825,7 +1063,11 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
                         ),
                       ),
                       AppButton(
-                        label: _step == 0 ? '조건설정 넘어가기' : '상담준비 저장',
+                        label: switch (_step) {
+                          0 => '조건설정 넘어가기',
+                          1 => '마감 선택 넘어가기',
+                          _ => '상담준비 저장',
+                        },
                         onPressed: _next,
                       ),
                     ],
@@ -847,15 +1089,21 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
         _contact.text.trim().isNotEmpty ||
         _area.text.trim().isNotEmpty ||
         _areaUnknown ||
+        _areaRange != null ||
+        _budgetRange != null ||
+        _budgetUndecided ||
+        _startTiming != null ||
+        _openTiming != null ||
+        _secondaryIndustries.isNotEmpty ||
         _buildingCondition != null ||
         _style != null ||
         _styleNote.text.trim().isNotEmpty ||
         _budget.text.trim().isNotEmpty ||
-        _budgetUndecided ||
         _period != null ||
         _targetRange != null ||
         _needs.text.trim().isNotEmpty ||
         _workPlace.text.trim().isNotEmpty ||
+        _hasFinishDraft ||
         _floorPlans.isNotEmpty ||
         _stylePhotos.isNotEmpty ||
         _styleRef != null ||
@@ -876,7 +1124,7 @@ class _PrepCreateScreenState extends State<PrepCreateScreen> with TickerProvider
 
   void _storeDraft() {
     if (_recordId.isEmpty) _recordId = 'consult-${DateTime.now().microsecondsSinceEpoch}';
-    SpaceBoard.instance.saveConsult(_currentRecord);
+    ref.read(spaceBoardProvider).saveConsult(_currentRecord);
   }
 
   Future<void> _leaveForm() async {
@@ -990,10 +1238,19 @@ class _SiteStep extends StatelessWidget {
     required this.detailAddress,
     required this.buildingName,
     required this.industry,
-    required this.industries,
+    required this.industryGroup,
+    required this.secondaryBrowse,
+    required this.secondaryIndustries,
     required this.industryNote,
     required this.contact,
+    required this.tempPlaceName,
     required this.onIndustry,
+    required this.onIndustryGroup,
+    required this.onPrimaryDetail,
+    required this.onSecondaryBrowse,
+    required this.onToggleSecondary,
+    required this.onPlaceNameChanged,
+    required this.onContactChanged,
     required this.onSpaceKind,
     required this.onSearchAddress,
     required this.anchors,
@@ -1007,10 +1264,19 @@ class _SiteStep extends StatelessWidget {
   final TextEditingController detailAddress;
   final TextEditingController buildingName;
   final String? industry;
-  final List<String> industries;
+  final String? industryGroup;
+  final String? secondaryBrowse;
+  final List<String> secondaryIndustries;
   final TextEditingController industryNote;
   final TextEditingController contact;
+  final String tempPlaceName;
   final ValueChanged<String> onIndustry;
+  final ValueChanged<String> onIndustryGroup;
+  final ValueChanged<String> onPrimaryDetail;
+  final ValueChanged<String> onSecondaryBrowse;
+  final ValueChanged<String> onToggleSecondary;
+  final ValueChanged<String> onPlaceNameChanged;
+  final ValueChanged<String> onContactChanged;
   final ValueChanged<String> onSpaceKind;
   final VoidCallback onSearchAddress;
   final _FormAnchors anchors;
@@ -1044,20 +1310,17 @@ class _SiteStep extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _FieldLabel(label: '공간', fontScale: fontScale),
+              _FieldLabel(label: PrepSurvey.space.title, fontScale: fontScale),
               SizedBox(height: subGap),
               _OptionSegment(
-                values: const [
-                  _PrepCreateScreenState._commercial,
-                  _PrepCreateScreenState._residential,
-                ],
-                selected: _PrepCreateScreenState._commercial,
+                values: PrepSurvey.space.choices,
+                selected: PrepSurvey.commercial,
                 fontScale: fontScale,
                 onSelected: onSpaceKind,
               ),
               SizedBox(height: subGap),
               Text(
-                '지금은 상가 공간만 진행할 수 있어요.',
+                PrepSurvey.space.help!,
                 style: TextStyle(fontSize: 13 * fontScale, height: 1.4, color: AppColors.textPrimary),
               ),
             ],
@@ -1069,7 +1332,7 @@ class _SiteStep extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _FieldLabel(label: '주소', fontScale: fontScale),
+              _FieldLabel(label: PrepSurvey.address.title, fontScale: fontScale),
               SizedBox(height: subGap),
               _AddressSearchField(
                 address: address.text,
@@ -1077,9 +1340,9 @@ class _SiteStep extends StatelessWidget {
                 onTap: onSearchAddress,
               ),
               SizedBox(height: sectionGap),
-              _FieldLabel(label: '상세주소', fontScale: fontScale),
+              _FieldLabel(label: PrepSurvey.detailAddress.title, fontScale: fontScale),
               SizedBox(height: subGap),
-              _PrepTextField(controller: detailAddress, hint: '건물 이름, 동, 호수'),
+              _PrepTextField(controller: detailAddress, hint: PrepSurvey.detailAddress.hint!),
             ],
           ),
         ),
@@ -1089,9 +1352,25 @@ class _SiteStep extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _FieldLabel(label: '공간 이름', fontScale: fontScale),
+              _FieldLabel(label: PrepSurvey.placeName.title, fontScale: fontScale),
               SizedBox(height: subGap),
-              _PrepTextField(controller: buildingName, hint: '예: 성수 사옥, 동탄 고기집'),
+              Text(
+                PrepSurvey.placeName.help!,
+                style: TextStyle(fontSize: 13 * fontScale, height: 1.4, color: AppColors.textPrimary),
+              ),
+              SizedBox(height: subGap),
+              _PrepTextField(
+                controller: buildingName,
+                hint: PrepSurvey.placeName.hint!,
+                onChanged: onPlaceNameChanged,
+              ),
+              if (tempPlaceName.isNotEmpty) ...[
+                SizedBox(height: subGap * 0.5),
+                Text(
+                  '비워 두면 $tempPlaceName으로 저장해요.',
+                  style: TextStyle(fontSize: 13 * fontScale, height: 1.4, color: AppColors.textSecondary),
+                ),
+              ],
             ],
           ),
         ),
@@ -1101,22 +1380,77 @@ class _SiteStep extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _FieldLabel(label: '업종', fontScale: fontScale),
+              _FieldLabel(label: PrepSurvey.industry.title, fontScale: fontScale),
               SizedBox(height: subGap),
               Text(
-                '자주 있는 업종만 골랐어요. 없으면 기타에 직접 적어 주세요.',
+                PrepSurvey.industry.help!,
                 style: TextStyle(fontSize: 13 * fontScale, height: 1.4, color: AppColors.textPrimary),
               ),
               SizedBox(height: subGap),
               _ChoiceWrap(
-                values: industries,
-                selected: industry,
+                values: PrepSurvey.industry.choices,
+                selected: industryGroup == null ? industry : null,
                 fontScale: fontScale,
                 onSelected: onIndustry,
               ),
-              if (industry == _PrepCreateScreenState._industryOther) ...[
+              if (industry == PrepSurvey.industryOther) ...[
                 SizedBox(height: subGap),
-                _PrepTextField(controller: industryNote, hint: '예: 복지시설, 창고, 공방'),
+                _PrepTextField(controller: industryNote, hint: PrepSurvey.industry.hint!),
+              ],
+              SizedBox(height: sectionGap),
+              Text(
+                '대분류',
+                style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700),
+              ),
+              SizedBox(height: subGap),
+              _ChoiceWrap(
+                values: PrepSurvey.industryGroups,
+                selected: industryGroup,
+                fontScale: fontScale,
+                onSelected: onIndustryGroup,
+              ),
+              if (industryGroup != null) ...[
+                SizedBox(height: sectionGap),
+                Text(
+                  '세부업종',
+                  style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700),
+                ),
+                SizedBox(height: subGap),
+                _ChoiceWrap(
+                  values: PrepSurvey.detailsOf(industryGroup),
+                  selected: industry,
+                  fontScale: fontScale,
+                  onSelected: onPrimaryDetail,
+                ),
+              ],
+              SizedBox(height: sectionGap),
+              Text(
+                '보조 업종',
+                style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700),
+              ),
+              SizedBox(height: subGap * 0.5),
+              Text(
+                '대표 업종 외에 함께 있는 업종을 고를 수 있어요.',
+                style: TextStyle(fontSize: 13 * fontScale, height: 1.4, color: AppColors.textPrimary),
+              ),
+              SizedBox(height: subGap),
+              _ChoiceWrap(
+                values: PrepSurvey.industryGroups,
+                selected: secondaryBrowse,
+                fontScale: fontScale,
+                onSelected: onSecondaryBrowse,
+              ),
+              if (PrepSurvey.detailsOf(secondaryBrowse).isNotEmpty) ...[
+                SizedBox(height: subGap),
+                _ChoiceWrap(
+                  values: [
+                    for (final String name in PrepSurvey.detailsOf(secondaryBrowse))
+                      if (name != industry) name,
+                  ],
+                  picked: secondaryIndustries.toSet(),
+                  fontScale: fontScale,
+                  onSelected: onToggleSecondary,
+                ),
               ],
             ],
           ),
@@ -1127,18 +1461,19 @@ class _SiteStep extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _FieldLabel(label: '연락처', fontScale: fontScale),
+              _FieldLabel(label: PrepSurvey.contact.title, fontScale: fontScale),
               SizedBox(height: subGap),
               Text(
-                '하이픈 없이 숫자만 적어 주세요. 010-0000-0000 형태로 보여 드려요.',
+                PrepSurvey.contact.help!,
                 style: TextStyle(fontSize: 13 * fontScale, height: 1.4, color: AppColors.textPrimary),
               ),
               SizedBox(height: subGap),
               _PrepTextField(
                 controller: contact,
-                hint: '01012345678',
+                hint: PrepSurvey.contact.hint!,
                 keyboardType: TextInputType.number,
                 inputFormatters: const [_KoreanMobileFormatter()],
+                onChanged: onContactChanged,
               ),
             ],
           ),
@@ -1242,18 +1577,14 @@ class _NeedsStep extends StatelessWidget {
     required this.fontScale,
     required this.subGap,
     required this.sectionGap,
-    required this.styles,
-    required this.periods,
-    required this.buildingConditions,
-    required this.workScopes,
     required this.style,
     required this.period,
     required this.buildingCondition,
     required this.workScope,
     required this.areaUnknown,
+    required this.areaRange,
     required this.areaUnit,
     required this.onAreaUnit,
-    required this.budgetUndecided,
     required this.workPlace,
     required this.targetRange,
     required this.area,
@@ -1264,9 +1595,17 @@ class _NeedsStep extends StatelessWidget {
     required this.onBuildingCondition,
     required this.onWorkScope,
     required this.onAreaUnknown,
+    required this.onAreaRange,
     required this.onAreaChanged,
-    required this.onBudgetUndecided,
+    required this.budgetUndecided,
+    required this.budgetRange,
     required this.onBudgetChanged,
+    required this.onBudgetRange,
+    required this.onBudgetUndecided,
+    required this.startTiming,
+    required this.openTiming,
+    required this.onStartTiming,
+    required this.onOpenTiming,
     required this.onPeriod,
     required this.onPickDate,
     required this.onClearDate,
@@ -1284,18 +1623,14 @@ class _NeedsStep extends StatelessWidget {
   final double fontScale;
   final double subGap;
   final double sectionGap;
-  final List<String> styles;
-  final List<String> periods;
-  final List<String> buildingConditions;
-  final List<String> workScopes;
   final String? style;
   final String? period;
   final String? buildingCondition;
   final String? workScope;
   final bool areaUnknown;
+  final String? areaRange;
   final _AreaUnit areaUnit;
   final ValueChanged<_AreaUnit> onAreaUnit;
-  final bool budgetUndecided;
   final TextEditingController workPlace;
   final DateTimeRange? targetRange;
   final TextEditingController area;
@@ -1306,9 +1641,17 @@ class _NeedsStep extends StatelessWidget {
   final ValueChanged<String> onBuildingCondition;
   final ValueChanged<String> onWorkScope;
   final VoidCallback onAreaUnknown;
+  final ValueChanged<String> onAreaRange;
   final ValueChanged<String> onAreaChanged;
-  final VoidCallback onBudgetUndecided;
+  final bool budgetUndecided;
+  final String? budgetRange;
   final ValueChanged<String> onBudgetChanged;
+  final ValueChanged<String> onBudgetRange;
+  final VoidCallback onBudgetUndecided;
+  final String? startTiming;
+  final String? openTiming;
+  final ValueChanged<String> onStartTiming;
+  final ValueChanged<String> onOpenTiming;
   final ValueChanged<String> onPeriod;
   final VoidCallback onPickDate;
   final VoidCallback onClearDate;
@@ -1328,24 +1671,24 @@ class _NeedsStep extends StatelessWidget {
         targetRange == null ? '날짜로 진행 기간 지정' : _formatDateRange(targetRange!);
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _FormSection(
           key: anchors.workScope,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-        _FieldLabel(label: '공사 형태', fontScale: fontScale),
+        _FieldLabel(label: PrepSurvey.workScope.title, fontScale: fontScale),
         SizedBox(height: subGap),
-        _OptionSegment(
-          values: workScopes,
+        _ChoiceWrap(
+          values: PrepSurvey.workScope.choices,
           selected: workScope,
           fontScale: fontScale,
           onSelected: onWorkScope,
         ),
         SizedBox(height: subGap),
         Text(
-          '지금은 전체공사만 진행할 수 있어요.',
+          PrepSurvey.workScope.help!,
           style: TextStyle(
             fontSize: 13 * fontScale,
             height: 1.4,
@@ -1355,7 +1698,7 @@ class _NeedsStep extends StatelessWidget {
         if (workScope == PrepLabels.partialWork) ...[
           SizedBox(height: subGap),
           Text(
-            '주방, 홀처럼 손볼 곳을 간단히 적어 주세요.',
+            PrepSurvey.partialPlaceHelp,
             style: TextStyle(
               fontSize: 13 * fontScale,
               height: 1.4,
@@ -1363,7 +1706,7 @@ class _NeedsStep extends StatelessWidget {
             ),
           ),
           SizedBox(height: subGap),
-          _PrepTextField(controller: workPlace, hint: '예: 주방, 홀', maxLines: 2),
+          _PrepTextField(controller: workPlace, hint: PrepSurvey.partialPlaceHint, maxLines: 2),
         ],
             ],
           ),
@@ -1376,7 +1719,7 @@ class _NeedsStep extends StatelessWidget {
             children: [
         Row(
           children: [
-            _FieldLabel(label: '평수', fontScale: fontScale),
+            _FieldLabel(label: PrepSurvey.area.title, fontScale: fontScale),
             const Spacer(),
             _AreaUnitSwitch(unit: areaUnit, fontScale: fontScale, onChanged: onAreaUnit),
           ],
@@ -1392,7 +1735,14 @@ class _NeedsStep extends StatelessWidget {
         ),
         SizedBox(height: subGap),
         _ChoiceWrap(
-          values: const [PrepLabels.areaUnknown],
+          values: PrepSurvey.areaRanges,
+          selected: areaRange,
+          fontScale: fontScale,
+          onSelected: onAreaRange,
+        ),
+        SizedBox(height: subGap),
+        _ChoiceWrap(
+          values: PrepSurvey.area.choices,
           selected: areaUnknown ? PrepLabels.areaUnknown : null,
           fontScale: fontScale,
           onSelected: (_) => onAreaUnknown(),
@@ -1415,10 +1765,10 @@ class _NeedsStep extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-        _FieldLabel(label: '철거 여부', fontScale: fontScale),
+        _FieldLabel(label: PrepSurvey.demolition.title, fontScale: fontScale),
         SizedBox(height: subGap),
         _ChoiceWrap(
-          values: buildingConditions,
+          values: PrepSurvey.demolition.choices,
           selected: buildingCondition,
           fontScale: fontScale,
           onSelected: onBuildingCondition,
@@ -1432,21 +1782,21 @@ class _NeedsStep extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-        _FieldLabel(label: '원하는 스타일', fontScale: fontScale),
+        _FieldLabel(label: PrepSurvey.style.title, fontScale: fontScale),
         SizedBox(height: subGap),
         Text(
-          '가까운 분위기를 고르거나, 원하는 스타일을 직접 적어도 돼요.',
+          PrepSurvey.style.help!,
           style: TextStyle(fontSize: 13 * fontScale, height: 1.4, color: AppColors.textPrimary),
         ),
         SizedBox(height: subGap),
         _ChoiceWrap(
-          values: styles,
+          values: PrepSurvey.style.choices,
           selected: style,
           fontScale: fontScale,
           onSelected: onStyle,
         ),
         SizedBox(height: subGap),
-        _PrepTextField(controller: styleNote, hint: '예: 호텔 라운지, 노출 콘크리트'),
+        _PrepTextField(controller: styleNote, hint: PrepSurvey.style.hint!),
         _QuietAttach(
           action: '사진으로 설명하기',
           items: stylePhotos,
@@ -1465,15 +1815,27 @@ class _NeedsStep extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-        _FieldLabel(label: '예산', fontScale: fontScale),
+        _FieldLabel(label: PrepSurvey.budget.title, fontScale: fontScale),
+        SizedBox(height: subGap),
+        Text(
+          PrepSurvey.budget.help!,
+          style: TextStyle(fontSize: 13 * fontScale, height: 1.45, color: AppColors.textPrimary),
+        ),
         SizedBox(height: subGap),
         _PrepTextField(
           controller: budget,
-          hint: '예: 30,000,000',
+          hint: PrepSurvey.budget.hint!,
           keyboardType: TextInputType.number,
           inputFormatters: const <TextInputFormatter>[_GroupedIntFormatter()],
           suffixText: '원',
           onChanged: onBudgetChanged,
+        ),
+        SizedBox(height: subGap),
+        _ChoiceWrap(
+          values: PrepSurvey.budgetRanges,
+          selected: budgetRange,
+          fontScale: fontScale,
+          onSelected: onBudgetRange,
         ),
         SizedBox(height: subGap),
         _ChoiceWrap(
@@ -1491,15 +1853,15 @@ class _NeedsStep extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-        _FieldLabel(label: '희망공사기간', fontScale: fontScale),
+        _FieldLabel(label: PrepSurvey.period.title, fontScale: fontScale),
         SizedBox(height: subGap),
         Text(
-          '공사가 진행됨에 따라 인건비가 늘어나요. 희망하는 공사의 진행 기간을 골라 주세요. 상담을 통해 기간은 달라질 수 있어요.',
+          PrepSurvey.period.help!,
           style: TextStyle(fontSize: 13 * fontScale, height: 1.4, color: AppColors.textPrimary),
         ),
         SizedBox(height: subGap),
         _ChoiceWrap(
-          values: periods,
+          values: PrepSurvey.period.choices,
           selected: period,
           fontScale: fontScale,
           onSelected: onPeriod,
@@ -1512,6 +1874,34 @@ class _NeedsStep extends StatelessWidget {
           onTap: onPickDate,
           onClear: onClearDate,
         ),
+        SizedBox(height: sectionGap),
+        _FieldLabel(label: PrepSurvey.startTiming.title, fontScale: fontScale),
+        SizedBox(height: subGap),
+        Text(
+          PrepSurvey.startTiming.help!,
+          style: TextStyle(fontSize: 13 * fontScale, height: 1.4, color: AppColors.textPrimary),
+        ),
+        SizedBox(height: subGap),
+        _ChoiceWrap(
+          values: PrepSurvey.startTiming.choices,
+          selected: startTiming,
+          fontScale: fontScale,
+          onSelected: onStartTiming,
+        ),
+        SizedBox(height: sectionGap),
+        _FieldLabel(label: PrepSurvey.openTiming.title, fontScale: fontScale),
+        SizedBox(height: subGap),
+        Text(
+          PrepSurvey.openTiming.help!,
+          style: TextStyle(fontSize: 13 * fontScale, height: 1.4, color: AppColors.textPrimary),
+        ),
+        SizedBox(height: subGap),
+        _ChoiceWrap(
+          values: PrepSurvey.openTiming.choices,
+          selected: openTiming,
+          fontScale: fontScale,
+          onSelected: onOpenTiming,
+        ),
             ],
           ),
         ),
@@ -1521,11 +1911,11 @@ class _NeedsStep extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-        _FieldLabel(label: '상담에서 말하고 싶은 점', fontScale: fontScale),
+        _FieldLabel(label: PrepSurvey.needs.title, fontScale: fontScale),
         SizedBox(height: subGap),
         _PrepTextField(
           controller: needs,
-          hint: '예: 주방을 넓히고, 수납을 늘리고 싶어요',
+          hint: PrepSurvey.needs.hint!,
           maxLines: 4,
         ),
             ],
@@ -2094,16 +2484,407 @@ class _PrepTextField extends StatelessWidget {
   }
 }
 
+class _DetailStep extends StatefulWidget {
+  const _DetailStep({
+    required this.fontScale,
+    required this.subGap,
+    required this.choices,
+    required this.notes,
+    required this.onPick,
+  });
+
+  final double fontScale;
+  final double subGap;
+  final Map<String, List<String>> choices;
+  final Map<String, TextEditingController> notes;
+  final void Function(PrepQuestion question, String value) onPick;
+
+  @override
+  State<_DetailStep> createState() => _DetailStepState();
+}
+
+class _DetailStepState extends State<_DetailStep> {
+  late final Set<String> _open = <String>{
+    for (final PrepQuestion question in PrepSurvey.details)
+      if (_hasAnswer(question)) question.id,
+  };
+
+  bool _hasAnswer(PrepQuestion question) {
+    final bool picked = widget.choices[question.id]?.isNotEmpty ?? false;
+    final bool written = widget.notes[question.id]?.text.trim().isNotEmpty ?? false;
+    return picked || written;
+  }
+
+  void _toggle(String id) {
+    setState(() {
+      if (!_open.add(id)) {
+        _open.remove(id);
+      }
+    });
+  }
+
+  String _summary(PrepQuestion question) {
+    final List<String> selected = widget.choices[question.id] ?? const <String>[];
+    final String note = widget.notes[question.id]?.text.trim() ?? '';
+    if (selected.isEmpty && note.isEmpty) return '${question.options.length}가지가 있어요';
+    if (note.isEmpty) return selected.join(', ');
+    if (selected.isEmpty) return note;
+    return '${selected.join(', ')} · $note';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double fontScale = widget.fontScale;
+    final double subGap = widget.subGap;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppColors.accent.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _OptionalMark(),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '항목을 펼치면 선택지가 모두 보여요. 없어도 저장되고, 비용은 저렴·보통·비쌈의 감각만 보여 드려요.',
+                    style: TextStyle(
+                      fontSize: 13 * fontScale,
+                      height: 1.45,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: subGap),
+        for (final PrepQuestion question in PrepSurvey.details) ...[
+          _FormSection(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => _toggle(question.id),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                if (widget.choices[question.id]?.isNotEmpty ?? false) ...[
+                                  const DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Padding(
+                                      padding: EdgeInsets.all(3),
+                                      child: Icon(Icons.check, size: 14, color: AppColors.white),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                                Flexible(
+                                  child: Text(
+                                    question.title,
+                                    style: TextStyle(
+                                      fontSize: 16 * fontScale,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const _OptionalMark(),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              _summary(question),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13 * fontScale,
+                                height: 1.35,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _open.contains(question.id) ? '접기' : '펼치기',
+                              style: TextStyle(
+                                fontSize: 13 * fontScale,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            Icon(
+                              _open.contains(question.id) ? Icons.expand_less : Icons.expand_more,
+                              color: AppColors.primary,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ClipRect(
+                  child: AnimatedSize(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOut,
+                    alignment: Alignment.topCenter,
+                    child: _open.contains(question.id)
+                        ? Padding(
+                            padding: EdgeInsets.only(top: subGap),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                for (final PrepFinishOption option in question.options) ...[
+                                  _FinishOptionCard(
+                                    option: option,
+                                    selected: widget.choices[question.id]?.contains(option.label) ?? false,
+                                    fontScale: fontScale,
+                                    onTap: () => widget.onPick(question, option.label),
+                                  ),
+                                  const SizedBox(height: 10),
+                                ],
+                                Text(
+                                  '직접 입력',
+                                  style: TextStyle(
+                                    fontSize: 13 * fontScale,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                SizedBox(height: subGap * 0.5),
+                                _PrepTextField(
+                                  controller: widget.notes[question.id]!,
+                                  hint: question.hint ?? '',
+                                ),
+                              ],
+                            ),
+                          )
+                        : const SizedBox(width: double.infinity),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: subGap),
+        ],
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+}
+
+class _OptionalMark extends StatelessWidget {
+  const _OptionalMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.accent.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        child: Text(
+          '선택사항',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: AppColors.accent,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FinishOptionCard extends StatelessWidget {
+  const _FinishOptionCard({
+    required this.option,
+    required this.selected,
+    required this.fontScale,
+    required this.onTap,
+  });
+
+  final PrepFinishOption option;
+  final bool selected;
+  final double fontScale;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? AppColors.primary.withValues(alpha: 0.06) : AppColors.background,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected ? AppColors.primary : AppColors.border,
+              width: selected ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 132,
+                height: 132,
+                child: ClipRRect(
+                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(11)),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        _FinishOptionImage(option: option),
+                        if (selected)
+                          const Positioned(
+                            top: 8,
+                            right: 8,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                              child: Padding(
+                                padding: EdgeInsets.all(3),
+                                child: Icon(Icons.check, size: 14, color: AppColors.white),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          option.label,
+                          style: TextStyle(
+                            fontSize: 16 * fontScale,
+                            fontWeight: FontWeight.w700,
+                            height: 1.3,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        if (option.description case final String text) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            text,
+                            style: TextStyle(
+                              fontSize: 13 * fontScale,
+                              height: 1.4,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                        if (option.cost case final PrepCostBand cost) ...[
+                          const SizedBox(height: 10),
+                          _CostBandChip(cost: cost, fontScale: fontScale),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FinishOptionImage extends StatelessWidget {
+  const _FinishOptionImage({required this.option});
+
+  final PrepFinishOption option;
+
+  @override
+  Widget build(BuildContext context) {
+    final String? url = option.imageUrl;
+    if (url != null && url.isNotEmpty) return AppNetworkImage(url: url);
+    return ColoredBox(
+      color: option.undecided ? AppColors.accent.withValues(alpha: 0.12) : AppColors.imagePlaceholder,
+      child: Center(
+        child: Icon(
+          option.undecided ? Icons.forum_outlined : Icons.image_outlined,
+          size: 28,
+          color: AppColors.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+class _CostBandChip extends StatelessWidget {
+  const _CostBandChip({required this.cost, required this.fontScale});
+
+  final PrepCostBand cost;
+  final double fontScale;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color tone = switch (cost) {
+      PrepCostBand.low => AppColors.accent,
+      PrepCostBand.mid => AppColors.textSecondary,
+      PrepCostBand.high => AppColors.primary,
+    };
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: tone.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        child: Text(
+          cost.label,
+          style: TextStyle(fontSize: 11 * fontScale, fontWeight: FontWeight.w700, color: tone),
+        ),
+      ),
+    );
+  }
+}
+
 class _ChoiceWrap extends StatelessWidget {
   const _ChoiceWrap({
     required this.values,
-    required this.selected,
     required this.fontScale,
     required this.onSelected,
+    this.selected,
+    this.picked = const <String>{},
   });
 
   final List<String> values;
   final String? selected;
+  final Set<String> picked;
   final double fontScale;
   final ValueChanged<String> onSelected;
 
@@ -2114,30 +2895,29 @@ class _ChoiceWrap extends StatelessWidget {
       runSpacing: 8,
       children: [
         for (final String value in values)
-          ChoiceChip(
-            label: Text(value),
-            selected: selected == value,
-            onSelected: (_) => onSelected(value),
-            labelStyle: TextStyle(
-              fontSize: 14 * fontScale,
-              fontWeight: FontWeight.w600,
-              color:
-                  selected == value
-                      ? const Color(0xFFFFFFFF)
-                      : const Color(0xFF1A1A1A),
-            ),
-            selectedColor: const Color(0xFF111111),
-            backgroundColor: AppColors.background,
-            side: BorderSide(
-              color:
-                  selected == value
-                      ? const Color(0xFF111111)
-                      : const Color(0xFFE4E4E4),
-            ),
-            showCheckmark: false,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(99),
-            ),
+          Builder(
+            builder: (BuildContext context) {
+              final bool on = picked.isEmpty ? selected == value : picked.contains(value);
+              return ChoiceChip(
+                label: Text(value),
+                selected: on,
+                onSelected: (_) => onSelected(value),
+                labelStyle: TextStyle(
+                  fontSize: 14 * fontScale,
+                  fontWeight: FontWeight.w600,
+                  color: on ? const Color(0xFFFFFFFF) : const Color(0xFF1A1A1A),
+                ),
+                selectedColor: const Color(0xFF111111),
+                backgroundColor: AppColors.background,
+                side: BorderSide(
+                  color: on ? const Color(0xFF111111) : const Color(0xFFE4E4E4),
+                ),
+                showCheckmark: false,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              );
+            },
           ),
       ],
     );
