@@ -62,20 +62,21 @@ class _ExpandingActionButtonState extends State<ExpandingActionButton>
   void initState() {
     super.initState();
     widget.controller?._close = _close;
+    // 펼침은 바로 움직이고, 구르는 끝은 남긴다. 홈과 쇼룸이 이 시간을 같이 쓴다.
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
-      reverseDuration: const Duration(milliseconds: 750),
+      duration: const Duration(milliseconds: 420),
+      reverseDuration: const Duration(milliseconds: 320),
     );
     _expand = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeInOutSine,
-      reverseCurve: Curves.easeInOutSine,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInOutCubic,
     );
     _label = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.12, 1, curve: Curves.easeInOutSine),
-      reverseCurve: const Interval(0.4, 1, curve: Curves.easeInOutSine),
+      curve: const Interval(0.08, 0.9, curve: Curves.easeOut),
+      reverseCurve: const Interval(0.2, 1, curve: Curves.easeIn),
     );
   }
 
