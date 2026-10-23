@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/build/ui/space_routes.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 
@@ -17,26 +18,31 @@ class TradeDetailScreen extends StatelessWidget {
     final TradeCandidate? current = candidate;
     if (current == null) {
       return Scaffold(
-        backgroundColor: const Color(0xFFFCFCFC),
+        backgroundColor: AppColors.background,
         appBar: AppBar(title: const Text('상권 후보지')),
         body: Center(
           child: Text(
             '후보지를 찾을 수 없어요',
-            style: TextStyle(fontSize: 16 * fontScale, color: const Color(0xFF1A1A1A)),
+            style: TextStyle(
+              fontSize: 16 * fontScale,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
       );
     }
+    final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
+    final double subGap = ResponsiveSize.subGap(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFFCFCFC),
+      backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('상권 후보지')),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.fromLTRB(
-            ResponsiveSize.responsivePadding(context).left,
-            ResponsiveSize.subGap(context),
-            ResponsiveSize.responsivePadding(context).right,
-            ResponsiveSize.subGap(context),
+            padding.left,
+            subGap,
+            padding.right,
+            subGap,
           ),
           child: TradeDetailView(
             candidate: current,
@@ -58,22 +64,16 @@ class TradeDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     final double fontScale = ResponsiveSize.fontScale(context);
     final double sectionGap = ResponsiveSize.sectionGap(context);
-    final String address = candidate.detailAddress.isEmpty
-        ? candidate.address
-        : '${candidate.address} ${candidate.detailAddress}';
-    final String area = candidate.area.isEmpty
-        ? '미입력'
-        : candidate.area == PrepLabels.areaUnknown
+    final String address =
+        candidate.detailAddress.isEmpty
+            ? candidate.address
+            : '${candidate.address} ${candidate.detailAddress}';
+    final String area =
+        candidate.area.isEmpty
+            ? ''
+            : candidate.area == PrepLabels.areaUnknown
             ? candidate.area
             : '${candidate.area}평';
-    final String rent = candidate.rentUnknown
-        ? '아직 몰라요'
-        : [
-            if (candidate.deposit.isNotEmpty) '보증금 ${candidate.deposit}',
-            if (candidate.rent.isNotEmpty) '월세 ${candidate.rent}',
-            if (candidate.maintenance.isNotEmpty) '관리비 ${candidate.maintenance}',
-            if (candidate.premium.isNotEmpty) '권리금 ${candidate.premium}',
-          ].join(' · ');
 
     return Column(
       children: [
@@ -82,106 +82,378 @@ class TradeDetailView extends StatelessWidget {
             children: [
               Text(
                 candidate.name,
-                style: TextStyle(fontSize: 26 * fontScale, fontWeight: FontWeight.w700, height: 1.25),
+                style: TextStyle(
+                  fontSize: 22 * fontScale,
+                  fontWeight: FontWeight.w700,
+                  height: 1.25,
+                  letterSpacing: -0.3,
+                  color: AppColors.textPrimary,
+                ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                '이 기록은 상권이 좋은지 나쁜지를 정하지 않아요. 나중에 분석할 때 쓸 조건만 남겨 둔 후보지예요.',
-                style: TextStyle(fontSize: 14 * fontScale, height: 1.45, color: const Color(0xFF1A1A1A)),
-              ),
+              if (address.trim().isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  address,
+                  style: TextStyle(
+                    fontSize: 14 * fontScale,
+                    height: 1.4,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
               SizedBox(height: sectionGap),
-              _Block(
+              _Section(
                 title: '자리',
                 fontScale: fontScale,
-                lines: [
-                  address,
-                  '${candidate.industry.isEmpty ? '업종 미입력' : candidate.industry} · $area',
-                ],
+                child: _FactGrid(
+                  fontScale: fontScale,
+                  items: [
+                    _Fact(
+                      icon: Icons.category_outlined,
+                      label: '업종',
+                      value: candidate.industry,
+                    ),
+                    _Fact(
+                      icon: Icons.square_foot_outlined,
+                      label: '평수',
+                      value: area,
+                    ),
+                  ],
+                ),
               ),
               SizedBox(height: sectionGap),
-              _Block(
+              _Section(
                 title: '입지에서 보인 것',
                 fontScale: fontScale,
-                lines: [
-                  '길 ${candidate.access}',
-                  '이동 ${candidate.transit}',
-                  '주차 ${candidate.parking}',
-                  if (candidate.landmark.isNotEmpty) candidate.landmark,
-                ],
+                child: _FactGrid(
+                  fontScale: fontScale,
+                  items: [
+                    _Fact(
+                      icon: Icons.signpost_outlined,
+                      label: '길',
+                      value: candidate.access,
+                    ),
+                    _Fact(
+                      icon: Icons.directions_transit_outlined,
+                      label: '이동',
+                      value: candidate.transit,
+                    ),
+                    _Fact(
+                      icon: Icons.local_parking_outlined,
+                      label: '주차',
+                      value: candidate.parking,
+                    ),
+                    _Fact(
+                      icon: Icons.apartment_outlined,
+                      label: '주변 이정표',
+                      value: candidate.landmark,
+                    ),
+                  ],
+                ),
               ),
               SizedBox(height: sectionGap),
-              _Block(
+              _Section(
                 title: '주변과 사람',
                 fontScale: fontScale,
-                lines: [
-                  '같은 업종 ${candidate.sameIndustry}',
-                  if (candidate.nearbyTrades.isNotEmpty) '주변에 많은 업종 ${candidate.nearbyTrades}',
-                  '시간대 ${candidate.timeBand}',
-                  '주로 ${candidate.visitor}',
-                ],
+                child: _FactGrid(
+                  fontScale: fontScale,
+                  items: [
+                    _Fact(
+                      icon: Icons.storefront_outlined,
+                      label: '같은 업종',
+                      value: candidate.sameIndustry,
+                    ),
+                    _Fact(
+                      icon: Icons.store_outlined,
+                      label: '주변에 많은 업종',
+                      value: candidate.nearbyTrades,
+                    ),
+                    _Fact(
+                      icon: Icons.schedule_outlined,
+                      label: '시간대',
+                      value: candidate.timeBand,
+                    ),
+                    _Fact(
+                      icon: Icons.people_outline,
+                      label: '주로 오는 사람',
+                      value: candidate.visitor,
+                    ),
+                  ],
+                ),
               ),
               SizedBox(height: sectionGap),
-              _Block(
+              _Section(
                 title: '아는 임대 조건',
                 fontScale: fontScale,
-                lines: [rent.isEmpty ? '적어 둔 금액이 없어요' : rent],
+                child:
+                    candidate.rentUnknown
+                        ? const _FactRow(
+                          icon: Icons.payments_outlined,
+                          label: '임대 조건',
+                          value: '아직 몰라요',
+                        )
+                        : _FactGrid(
+                          fontScale: fontScale,
+                          items: [
+                            _Fact(
+                              icon: Icons.account_balance_wallet_outlined,
+                              label: '보증금',
+                              value: candidate.deposit,
+                            ),
+                            _Fact(
+                              icon: Icons.payments_outlined,
+                              label: '월세',
+                              value: candidate.rent,
+                            ),
+                            _Fact(
+                              icon: Icons.receipt_long_outlined,
+                              label: '관리비',
+                              value: candidate.maintenance,
+                            ),
+                            _Fact(
+                              icon: Icons.key_outlined,
+                              label: '권리금',
+                              value: candidate.premium,
+                            ),
+                          ],
+                        ),
               ),
-              if (candidate.reason.isNotEmpty) ...[
+              if (candidate.reason.trim().isNotEmpty) ...[
                 SizedBox(height: sectionGap),
-                _Block(title: '이 자리를 고른 이유', fontScale: fontScale, lines: [candidate.reason]),
+                _Section(
+                  title: '이 자리를 고른 이유',
+                  fontScale: fontScale,
+                  child: _FactRow(
+                    icon: Icons.chat_bubble_outline,
+                    label: '이유',
+                    value: candidate.reason,
+                  ),
+                ),
               ],
               if (candidate.interiorNotes.isNotEmpty) ...[
                 SizedBox(height: sectionGap),
-                _Block(
+                _Section(
                   title: '인테리어에서 볼 점',
                   fontScale: fontScale,
-                  lines: [candidate.interiorNotes.join(', ')],
+                  child: _FactRow(
+                    icon: Icons.chair_outlined,
+                    label: '메모',
+                    value: candidate.interiorNotes.join(' · '),
+                  ),
                 ),
               ],
             ],
           ),
         ),
         if (onEdit != null) ...[
-          AppButton(label: '수정', variant: AppButtonVariant.secondary, onPressed: onEdit),
+          AppButton(
+            label: '수정',
+            variant: AppButtonVariant.secondary,
+            onPressed: onEdit,
+          ),
           const SizedBox(height: 8),
         ],
         AppButton(
           label: '이 후보지로 상담준비',
-          onPressed: () => context.push(SpaceRoutes.prepCreate, extra: candidate.toConsultSeed()),
+          onPressed:
+              () => context.push(
+                SpaceRoutes.prepCreate,
+                extra: candidate.toConsultSeed(),
+              ),
         ),
       ],
     );
   }
 }
 
-class _Block extends StatelessWidget {
-  const _Block({required this.title, required this.fontScale, required this.lines});
+class _Section extends StatelessWidget {
+  const _Section({
+    required this.title,
+    required this.fontScale,
+    required this.child,
+  });
 
   final String title;
   final double fontScale;
-  final List<String> lines;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE4E4E4)),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 0.7),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 8),
-          for (final String line in lines) ...[
-            Text(line, style: TextStyle(fontSize: 15 * fontScale, height: 1.45, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 4),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 17 * fontScale,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            child,
           ],
-        ],
+        ),
       ),
+    );
+  }
+}
+
+class _Fact {
+  const _Fact({required this.icon, required this.label, required this.value});
+
+  final IconData icon;
+  final String label;
+  final String value;
+}
+
+class _FactGrid extends StatelessWidget {
+  const _FactGrid({required this.items, required this.fontScale});
+
+  final List<_Fact> items;
+  final double fontScale;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var i = 0; i < items.length; i += 2) ...[
+          if (i > 0) const SizedBox(height: 8),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _FactCell(fact: items[i], fontScale: fontScale),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child:
+                      i + 1 < items.length
+                          ? _FactCell(fact: items[i + 1], fontScale: fontScale)
+                          : const SizedBox.shrink(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _FactCell extends StatelessWidget {
+  const _FactCell({required this.fact, required this.fontScale});
+
+  final _Fact fact;
+  final double fontScale;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool empty = fact.value.trim().isEmpty;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(fact.icon, size: 16, color: AppColors.primary),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    fact.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12 * fontScale,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              empty ? '아직 없어요' : fact.value,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14 * fontScale,
+                fontWeight: FontWeight.w700,
+                height: 1.3,
+                color: empty ? AppColors.textSecondary : AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FactRow extends StatelessWidget {
+  const _FactRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final double fontScale = ResponsiveSize.fontScale(context);
+    final bool empty = value.trim().isEmpty;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: AppColors.primary),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12 * fontScale,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                empty ? '아직 없어요' : value,
+                style: TextStyle(
+                  fontSize: 15 * fontScale,
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
+                  color:
+                      empty ? AppColors.textSecondary : AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

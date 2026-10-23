@@ -30,7 +30,10 @@ class PrepDetailScreen extends StatelessWidget {
         body: Center(
           child: Text(
             '상담준비를 찾을 수 없어요',
-            style: TextStyle(fontSize: 16 * fontScale, color: AppColors.textPrimary),
+            style: TextStyle(
+              fontSize: 16 * fontScale,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
       );
@@ -38,7 +41,9 @@ class PrepDetailScreen extends StatelessWidget {
 
     return _PrepDetailScaffold(
       record: current,
-      onEdit: (int step) => context.push(SpaceRoutes.prepEdit(step), extra: current),
+      onEdit:
+          (int step) =>
+              context.push(SpaceRoutes.prepEdit(step), extra: current),
     );
   }
 }
@@ -59,11 +64,13 @@ class _PrepDetailScaffold extends StatelessWidget {
       appBar: AppBar(title: const Text('상담준비')),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.fromLTRB(padding.left, subGap, padding.right, subGap),
-          child: PrepDetailView(
-            record: record,
-            onEdit: onEdit,
+          padding: EdgeInsets.fromLTRB(
+            padding.left,
+            subGap,
+            padding.right,
+            subGap,
           ),
+          child: PrepDetailView(record: record, onEdit: onEdit),
         ),
       ),
     );
@@ -72,16 +79,15 @@ class _PrepDetailScaffold extends StatelessWidget {
 
 /// 현장과 조건을 한 스크롤로 보여 준다.
 class PrepDetailView extends ConsumerWidget {
-  const PrepDetailView({
-    super.key,
-    required this.record,
-    required this.onEdit,
-  });
+  const PrepDetailView({super.key, required this.record, required this.onEdit});
 
   final PrepRecord record;
   final ValueChanged<int> onEdit;
 
-  Future<void> _requestConsult(BuildContext context, {DateTime? periodStart}) async {
+  Future<void> _requestConsult(
+    BuildContext context, {
+    DateTime? periodStart,
+  }) async {
     final _ConsultGap? gap = _consultGap(record);
     if (gap != null) {
       final bool? goEdit = await _showDateNotice(
@@ -94,7 +100,9 @@ class PrepDetailView extends ConsumerWidget {
       if (goEdit == true) onEdit(gap.step);
       return;
     }
-    final _PrepDateCheck check = _checkPrepDate(periodStart ?? record.periodStart);
+    final _PrepDateCheck check = _checkPrepDate(
+      periodStart ?? record.periodStart,
+    );
     if (check == _PrepDateCheck.past) {
       final bool? changeDate = await _showDateNotice(
         context,
@@ -137,26 +145,31 @@ class PrepDetailView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final double fontScale = ResponsiveSize.fontScale(context);
     final double sectionGap = ResponsiveSize.sectionGap(context);
-    final String fullAddress = record.detailAddress.isEmpty
-        ? record.address
-        : '${record.address} ${record.detailAddress}';
+    final String fullAddress =
+        record.detailAddress.isEmpty
+            ? record.address
+            : '${record.address} ${record.detailAddress}';
 
     return ListView(
       children: [
         _PlaceCard(
           placeName: record.placeName,
           address: fullAddress,
-          detailAddress: record.detailAddress.isEmpty ? '상세주소 없음' : record.detailAddress,
+          detailAddress:
+              record.detailAddress.isEmpty ? '상세주소 없음' : record.detailAddress,
           area: _areaLabel(record.areaLine),
           buildingType: record.buildingType,
-          industry: record.industryLine.isEmpty ? '미입력' : record.industryLine,
-          contact: record.contact.isEmpty ? '미입력' : record.contact,
+          industry: record.industryLine,
+          contact: record.contact,
           fontScale: fontScale,
           onEdit: () => onEdit(0),
         ),
         if (record.styleRef case final ShowroomStyleRef reference) ...[
           SizedBox(height: sectionGap),
-          ShowroomStyleReferenceTile(reference: reference, fontScale: fontScale),
+          ShowroomStyleReferenceTile(
+            reference: reference,
+            fontScale: fontScale,
+          ),
         ],
         SizedBox(height: sectionGap),
         _ReviewSection(
@@ -164,23 +177,62 @@ class PrepDetailView extends ConsumerWidget {
           fontScale: fontScale,
           onEdit: () => onEdit(1),
           children: [
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _ValueChip(
+            _FactGrid(
+              fontScale: fontScale,
+              items: [
+                _Fact(
+                  icon: Icons.home_repair_service_outlined,
                   label: '공사 형태',
-                  value: record.workScope.isEmpty ? '미입력' : record.workScope,
-                  fontScale: fontScale,
+                  value: record.workScope,
                 ),
-                _ValueChip(label: '철거 여부', value: record.buildingCondition, fontScale: fontScale),
-                _ValueChip(label: '스타일', value: record.style, fontScale: fontScale),
+                _Fact(
+                  icon: Icons.layers_clear_outlined,
+                  label: '철거 여부',
+                  value: record.buildingCondition,
+                ),
+                _Fact(
+                  icon: Icons.palette_outlined,
+                  label: '스타일',
+                  value: record.style,
+                ),
+                _Fact(
+                  icon: Icons.payments_outlined,
+                  label: '예산',
+                  value: record.budgetLine,
+                ),
+                _Fact(
+                  icon: Icons.calendar_month_outlined,
+                  label: '희망공사기간',
+                  value: record.period,
+                ),
+                _Fact(
+                  icon: Icons.flag_outlined,
+                  label: '희망 착공',
+                  value: record.startTiming,
+                ),
+                _Fact(
+                  icon: Icons.event_available_outlined,
+                  label: '희망 오픈·완료',
+                  value: record.openTiming,
+                ),
+                if (record.workScope == PrepLabels.partialWork)
+                  _Fact(
+                    icon: Icons.place_outlined,
+                    label: '공사할 곳',
+                    value: record.workPlace,
+                  ),
               ],
             ),
             if (record.floorPlans.isNotEmpty) ...[
               const SizedBox(height: 16),
-              _AttachedPhotoBlock(label: '평면도', regions: record.floorPlans, fontScale: fontScale),
-            ] else if (record.floorPlanLabels.any((String label) => label.trim().isNotEmpty)) ...[
+              _AttachedPhotoBlock(
+                label: '평면도',
+                regions: record.floorPlans,
+                fontScale: fontScale,
+              ),
+            ] else if (record.floorPlanLabels.any(
+              (String label) => label.trim().isNotEmpty,
+            )) ...[
               const SizedBox(height: 16),
               _AttachmentPreview(
                 label: '평면도',
@@ -192,8 +244,14 @@ class PrepDetailView extends ConsumerWidget {
             ],
             if (record.stylePhotos.isNotEmpty) ...[
               const SizedBox(height: 16),
-              _AttachedPhotoBlock(label: '스타일 사진', regions: record.stylePhotos, fontScale: fontScale),
-            ] else if (record.referenceImageLabels.any((String label) => label.trim().isNotEmpty)) ...[
+              _AttachedPhotoBlock(
+                label: '스타일 사진',
+                regions: record.stylePhotos,
+                fontScale: fontScale,
+              ),
+            ] else if (record.referenceImageLabels.any(
+              (String label) => label.trim().isNotEmpty,
+            )) ...[
               const SizedBox(height: 16),
               _AttachmentPreview(
                 label: '스타일 사진',
@@ -203,30 +261,11 @@ class PrepDetailView extends ConsumerWidget {
                 icon: Icons.image_outlined,
               ),
             ],
-            const SizedBox(height: 20),
-            _EmphasisLine(label: '예산', value: record.budgetLine, fontScale: fontScale),
-            const SizedBox(height: 16),
-            _EmphasisLine(label: '희망공사기간', value: record.period, fontScale: fontScale),
-            if (record.startTiming.trim().isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _EmphasisLine(label: '희망 착공', value: record.startTiming, fontScale: fontScale),
-            ],
-            if (record.openTiming.trim().isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _EmphasisLine(label: '희망 오픈·완료', value: record.openTiming, fontScale: fontScale),
-            ],
-            if (record.workScope == PrepLabels.partialWork) ...[
-              const SizedBox(height: 16),
-              _EmphasisLine(
-                label: '공사할 곳',
-                value: record.workPlace.isEmpty ? '아직 없어요' : record.workPlace,
-                fontScale: fontScale,
-              ),
-            ],
-            const SizedBox(height: 20),
-            _NoteBlock(
+            const SizedBox(height: 8),
+            _FactRow(
+              icon: Icons.chat_bubble_outline,
               label: '상담에서 말하고 싶은 점',
-              value: record.needs.isEmpty ? '적어 둔 내용이 없어요' : record.needs,
+              value: record.needs,
               fontScale: fontScale,
             ),
           ],
@@ -238,21 +277,30 @@ class PrepDetailView extends ConsumerWidget {
           onEdit: () => onEdit(2),
           children: [
             if (PrepSurvey.details.every(
-              (PrepQuestion question) => record.finishes[question.id]?.isEmpty ?? true,
+              (PrepQuestion question) =>
+                  record.finishes[question.id]?.isEmpty ?? true,
             ))
               Text(
                 '선택 항목이에요. 아직 적지 않아도 상담으로 이어갈 수 있어요.',
-                style: TextStyle(fontSize: 14 * fontScale, height: 1.45, color: AppColors.textSecondary),
+                style: TextStyle(
+                  fontSize: 14 * fontScale,
+                  height: 1.45,
+                  color: AppColors.textSecondary,
+                ),
               )
             else
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
+              _FactGrid(
+                fontScale: fontScale,
+                items: [
                   for (final PrepQuestion question in PrepSurvey.details)
-                    if (record.finishes[question.id] case final PrepFinishAnswer answer)
+                    if (record.finishes[question.id]
+                        case final PrepFinishAnswer answer)
                       if (!answer.isEmpty)
-                        _ValueChip(label: question.title, value: answer.summary, fontScale: fontScale),
+                        _Fact(
+                          icon: _finishIcon(question.id),
+                          label: question.title,
+                          value: answer.summary,
+                        ),
                 ],
               ),
           ],
@@ -260,7 +308,11 @@ class PrepDetailView extends ConsumerWidget {
         SizedBox(height: sectionGap),
         Text(
           '날짜 안내 테스트',
-          style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
+          style: TextStyle(
+            fontSize: 13 * fontScale,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textSecondary,
+          ),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -270,24 +322,40 @@ class PrepDetailView extends ConsumerWidget {
             _DateTestButton(
               label: '지난 날짜',
               fontScale: fontScale,
-              onTap: () => _requestConsult(context, periodStart: DateTime.now().subtract(const Duration(days: 1))),
+              onTap:
+                  () => _requestConsult(
+                    context,
+                    periodStart: DateTime.now().subtract(
+                      const Duration(days: 1),
+                    ),
+                  ),
             ),
             _DateTestButton(
               label: '일주일 이내',
               fontScale: fontScale,
-              onTap: () => _requestConsult(context, periodStart: DateTime.now().add(const Duration(days: 3))),
+              onTap:
+                  () => _requestConsult(
+                    context,
+                    periodStart: DateTime.now().add(const Duration(days: 3)),
+                  ),
             ),
             _DateTestButton(
               label: '여유 있는 날짜',
               fontScale: fontScale,
-              onTap: () => _requestConsult(context, periodStart: DateTime.now().add(const Duration(days: 30))),
+              onTap:
+                  () => _requestConsult(
+                    context,
+                    periodStart: DateTime.now().add(const Duration(days: 30)),
+                  ),
             ),
           ],
         ),
         SizedBox(height: sectionGap),
         Builder(
           builder: (BuildContext context) {
-            final SpaceProject? opened = ref.watch(spaceBoardProvider).projectForRecord(record.id);
+            final SpaceProject? opened = ref
+                .watch(spaceBoardProvider)
+                .projectForRecord(record.id);
             if (opened != null) {
               return AppButton(
                 label: '내 공간에서 보기',
@@ -373,27 +441,40 @@ class _PlaceCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               address,
-              style: TextStyle(fontSize: 14 * fontScale, height: 1.4, color: AppColors.textSecondary),
+              style: TextStyle(
+                fontSize: 14 * fontScale,
+                height: 1.4,
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 2),
             Text(
               detailAddress,
-              style: TextStyle(fontSize: 13 * fontScale, color: AppColors.textSecondary),
+              style: TextStyle(
+                fontSize: 13 * fontScale,
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                _Stat(value: area, label: '평수', fontScale: fontScale),
-                const SizedBox(width: 12),
-                _Stat(value: buildingType, label: '공간', fontScale: fontScale),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                _Stat(value: industry, label: '업종', fontScale: fontScale),
-                const SizedBox(width: 12),
-                _Stat(value: contact, label: '연락처', fontScale: fontScale),
+            _FactGrid(
+              fontScale: fontScale,
+              items: [
+                _Fact(
+                  icon: Icons.square_foot_outlined,
+                  label: '평수',
+                  value: area,
+                ),
+                _Fact(
+                  icon: Icons.storefront_outlined,
+                  label: '공간',
+                  value: buildingType,
+                ),
+                _Fact(
+                  icon: Icons.category_outlined,
+                  label: '업종',
+                  value: industry,
+                ),
+                _Fact(icon: Icons.phone_outlined, label: '연락처', value: contact),
               ],
             ),
           ],
@@ -403,43 +484,182 @@ class _PlaceCard extends StatelessWidget {
   }
 }
 
-class _Stat extends StatelessWidget {
-  const _Stat({required this.value, required this.label, required this.fontScale});
+class _Fact {
+  const _Fact({required this.icon, required this.label, required this.value});
 
-  final String value;
+  final IconData icon;
   final String label;
+  final String value;
+}
+
+class _FactGrid extends StatelessWidget {
+  const _FactGrid({required this.items, required this.fontScale});
+
+  final List<_Fact> items;
   final double fontScale;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 16 * fontScale, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                style: TextStyle(fontSize: 12 * fontScale, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
-              ),
-            ],
+    return Column(
+      children: [
+        for (var i = 0; i < items.length; i += 2) ...[
+          if (i > 0) const SizedBox(height: 8),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _FactCell(fact: items[i], fontScale: fontScale),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child:
+                      i + 1 < items.length
+                          ? _FactCell(fact: items[i + 1], fontScale: fontScale)
+                          : const SizedBox.shrink(),
+                ),
+              ],
+            ),
           ),
+        ],
+      ],
+    );
+  }
+}
+
+class _FactCell extends StatelessWidget {
+  const _FactCell({required this.fact, required this.fontScale});
+
+  final _Fact fact;
+  final double fontScale;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool empty = fact.value.trim().isEmpty;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(fact.icon, size: 16, color: AppColors.primary),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    fact.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12 * fontScale,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              empty ? '아직 없어요' : fact.value,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14 * fontScale,
+                fontWeight: FontWeight.w700,
+                height: 1.3,
+                color: empty ? AppColors.textSecondary : AppColors.textPrimary,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
+
+class _FactRow extends StatelessWidget {
+  const _FactRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.fontScale,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final double fontScale;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool empty = value.trim().isEmpty;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 18, color: AppColors.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12 * fontScale,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  empty ? '아직 없어요' : value,
+                  style: TextStyle(
+                    fontSize: 15 * fontScale,
+                    fontWeight: FontWeight.w600,
+                    height: 1.35,
+                    color:
+                        empty ? AppColors.textSecondary : AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+IconData _finishIcon(String id) {
+  return switch (id) {
+    'signboard' => Icons.storefront_outlined,
+    'signage' => Icons.campaign_outlined,
+    'lighting' => Icons.lightbulb_outline,
+    'facilities' => Icons.plumbing_outlined,
+    'floor' => Icons.grid_on_outlined,
+    'ceiling' => Icons.roofing_outlined,
+    'paint' => Icons.format_paint_outlined,
+    _ => Icons.tune_outlined,
+  };
 }
 
 class _ReviewSection extends StatelessWidget {
@@ -473,7 +693,11 @@ class _ReviewSection extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: TextStyle(fontSize: 16 * fontScale, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                    style: TextStyle(
+                      fontSize: 16 * fontScale,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
                 _EditPill(fontScale: fontScale, onTap: onEdit),
@@ -511,106 +735,11 @@ class _EditPill extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           child: Text(
             '수정',
-            style: TextStyle(fontSize: 12 * fontScale, fontWeight: FontWeight.w700, color: AppColors.primary),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ValueChip extends StatelessWidget {
-  const _ValueChip({required this.label, required this.value, required this.fontScale});
-
-  final String label;
-  final String value;
-  final double fontScale;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(99),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Text.rich(
-          TextSpan(
-            children: [
-              TextSpan(
-                text: '$label  ',
-                style: TextStyle(fontSize: 12 * fontScale, fontWeight: FontWeight.w600, color: AppColors.white),
-              ),
-              TextSpan(
-                text: value,
-                style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700, color: AppColors.white),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EmphasisLine extends StatelessWidget {
-  const _EmphasisLine({required this.label, required this.value, required this.fontScale});
-
-  final String label;
-  final String value;
-  final double fontScale;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: TextStyle(fontSize: 20 * fontScale, fontWeight: FontWeight.w700, height: 1.3, color: AppColors.textPrimary),
-        ),
-      ],
-    );
-  }
-}
-
-class _NoteBlock extends StatelessWidget {
-  const _NoteBlock({required this.label, required this.value, required this.fontScale});
-
-  final String label;
-  final String value;
-  final double fontScale;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 96),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(fontSize: 12 * fontScale, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                value,
-                style: TextStyle(fontSize: 16 * fontScale, height: 1.6, color: AppColors.textPrimary),
-              ),
-            ],
+            style: TextStyle(
+              fontSize: 12 * fontScale,
+              fontWeight: FontWeight.w700,
+              color: AppColors.primary,
+            ),
           ),
         ),
       ),
@@ -642,12 +771,20 @@ class _AttachmentPreview extends StatelessWidget {
           children: [
             Text(
               label,
-              style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+              style: TextStyle(
+                fontSize: 13 * fontScale,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
             ),
             const SizedBox(width: 6),
             Text(
               labels.isEmpty ? '없음' : '${labels.length}',
-              style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+              style: TextStyle(
+                fontSize: 13 * fontScale,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -663,14 +800,21 @@ class _AttachmentPreview extends StatelessWidget {
             ),
             child: Text(
               emptyLabel,
-              style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+              style: TextStyle(
+                fontSize: 13 * fontScale,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
             ),
           )
         else
           LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
               final bool single = labels.length == 1;
-              final double tileWidth = single ? constraints.maxWidth : (constraints.maxWidth - 8) / 2;
+              final double tileWidth =
+                  single
+                      ? constraints.maxWidth
+                      : (constraints.maxWidth - 8) / 2;
               return Wrap(
                 spacing: 8,
                 runSpacing: 12,
@@ -678,7 +822,11 @@ class _AttachmentPreview extends StatelessWidget {
                   for (final String itemLabel in labels)
                     SizedBox(
                       width: tileWidth,
-                      child: _PhotoFrame(label: itemLabel, fontScale: fontScale, icon: icon),
+                      child: _PhotoFrame(
+                        label: itemLabel,
+                        fontScale: fontScale,
+                        icon: icon,
+                      ),
                     ),
                 ],
               );
@@ -690,7 +838,11 @@ class _AttachmentPreview extends StatelessWidget {
 }
 
 class _PhotoFrame extends StatelessWidget {
-  const _PhotoFrame({required this.label, required this.fontScale, required this.icon});
+  const _PhotoFrame({
+    required this.label,
+    required this.fontScale,
+    required this.icon,
+  });
 
   final String label;
   final double fontScale;
@@ -715,7 +867,12 @@ class _PhotoFrame extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             label,
-            style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w600, height: 1.3, color: AppColors.textPrimary),
+            style: TextStyle(
+              fontSize: 13 * fontScale,
+              fontWeight: FontWeight.w600,
+              height: 1.3,
+              color: AppColors.textPrimary,
+            ),
           ),
         ],
       ],
@@ -781,24 +938,34 @@ class PrepPhotoStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool caption = regions.any((ShowroomReferenceRegion region) => region.note.trim().isNotEmpty);
+    final bool caption = regions.any(
+      (ShowroomReferenceRegion region) => region.note.trim().isNotEmpty,
+    );
     final AppWindow window = AppWindow.of(context);
-    final int visible = window.isExpanded ? 6 : window.isMedium ? 5 : 4;
+    final int visible =
+        window.isExpanded
+            ? 6
+            : window.isMedium
+            ? 5
+            : 4;
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         const double gap = 8;
-        final double tile = (constraints.maxWidth - gap * (visible - 1)) / visible;
+        final double tile =
+            (constraints.maxWidth - gap * (visible - 1)) / visible;
         final double captionHeight = 4 + 13 * fontScale * 1.3 * 2;
         final double height = tile + (caption ? captionHeight : 0);
         return SizedBox(
           height: height,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            physics: regions.length > visible
-                ? const BouncingScrollPhysics()
-                : const NeverScrollableScrollPhysics(),
+            physics:
+                regions.length > visible
+                    ? const BouncingScrollPhysics()
+                    : const NeverScrollableScrollPhysics(),
             itemCount: regions.length,
-            separatorBuilder: (BuildContext context, int index) => const SizedBox(width: gap),
+            separatorBuilder:
+                (BuildContext context, int index) => const SizedBox(width: gap),
             itemBuilder: (BuildContext context, int index) {
               final ShowroomReferenceRegion region = regions[index];
               return _ReferenceImageTile(
@@ -901,60 +1068,65 @@ class ShowroomStyleReferenceTile extends StatelessWidget {
               if (reference.regions.isNotEmpty ||
                   reference.aspects.isNotEmpty ||
                   reference.note.trim().isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-            if (reference.regions.isNotEmpty) ...[
-              _ReferenceImageStrip(
-                regions: reference.regions,
-                fontScale: fontScale,
-                onTap: onRegionTap,
-                onDelete: onRegionDelete,
-              ),
-            ],
-            if (reference.aspects.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [
-                  for (final String aspect in reference.aspects)
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        child: Text(
-                          aspect,
+                Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (reference.regions.isNotEmpty) ...[
+                        _ReferenceImageStrip(
+                          regions: reference.regions,
+                          fontScale: fontScale,
+                          onTap: onRegionTap,
+                          onDelete: onRegionDelete,
+                        ),
+                      ],
+                      if (reference.aspects.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            for (final String aspect in reference.aspects)
+                              DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.08,
+                                  ),
+                                  borderRadius: BorderRadius.circular(99),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  child: Text(
+                                    aspect,
+                                    style: TextStyle(
+                                      fontSize: 12 * fontScale,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                      if (reference.note.trim().isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          reference.note.trim(),
                           style: TextStyle(
-                            fontSize: 12 * fontScale,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
+                            fontSize: 13 * fontScale,
+                            height: 1.45,
+                            color: AppColors.textPrimary,
                           ),
                         ),
-                      ),
-                    ),
-                ],
-              ),
-            ],
-            if (reference.note.trim().isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                reference.note.trim(),
-                style: TextStyle(
-                  fontSize: 13 * fontScale,
-                  height: 1.45,
-                  color: AppColors.textPrimary,
+                      ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-                  ],
-                ),
-              ),
             ],
           ),
         ),
@@ -978,7 +1150,9 @@ class _ReferenceImageStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool caption = regions.any((ShowroomReferenceRegion region) => region.note.trim().isNotEmpty);
+    final bool caption = regions.any(
+      (ShowroomReferenceRegion region) => region.note.trim().isNotEmpty,
+    );
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         const double gap = 8;
@@ -988,11 +1162,13 @@ class _ReferenceImageStrip extends StatelessWidget {
           height: height,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            physics: regions.length > 4
-                ? const BouncingScrollPhysics()
-                : const NeverScrollableScrollPhysics(),
+            physics:
+                regions.length > 4
+                    ? const BouncingScrollPhysics()
+                    : const NeverScrollableScrollPhysics(),
             itemCount: regions.length,
-            separatorBuilder: (BuildContext context, int index) => const SizedBox(width: gap),
+            separatorBuilder:
+                (BuildContext context, int index) => const SizedBox(width: gap),
             itemBuilder: (BuildContext context, int index) {
               final ShowroomReferenceRegion region = regions[index];
               return _ReferenceImageTile(
@@ -1072,7 +1248,11 @@ class _ReferenceImageTile extends StatelessWidget {
                         child: SizedBox(
                           width: 20,
                           height: 20,
-                          child: Icon(Icons.close, size: 14, color: AppColors.textPrimary),
+                          child: Icon(
+                            Icons.close,
+                            size: 14,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                       ),
                     ),
@@ -1086,7 +1266,11 @@ class _ReferenceImageTile extends StatelessWidget {
               detail,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 11 * fontScale, height: 1.3, color: AppColors.textSecondary),
+              style: TextStyle(
+                fontSize: 11 * fontScale,
+                height: 1.3,
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
         ],
@@ -1096,7 +1280,11 @@ class _ReferenceImageTile extends StatelessWidget {
 }
 
 class _DateTestButton extends StatelessWidget {
-  const _DateTestButton({required this.label, required this.fontScale, required this.onTap});
+  const _DateTestButton({
+    required this.label,
+    required this.fontScale,
+    required this.onTap,
+  });
 
   final String label;
   final double fontScale;
@@ -1112,7 +1300,10 @@ class _DateTestButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)),
       ),
-      child: Text(label, style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700)),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700),
+      ),
     );
   }
 }
@@ -1125,7 +1316,11 @@ String _areaLabel(String area) {
 }
 
 class _ConsultGap {
-  const _ConsultGap({required this.title, required this.body, required this.step});
+  const _ConsultGap({
+    required this.title,
+    required this.body,
+    required this.step,
+  });
 
   final String title;
   final String body;
@@ -1161,7 +1356,8 @@ _ConsultGap? _consultGap(PrepRecord record) {
       step: 1,
     );
   }
-  if (record.workScope == PrepLabels.partialWork && record.workPlace.trim().isEmpty) {
+  if (record.workScope == PrepLabels.partialWork &&
+      record.workPlace.trim().isEmpty) {
     return const _ConsultGap(
       title: '공사할 곳을 적어 주세요',
       body: '부분 공사라면 어디를 손볼지 적어 주세요.',

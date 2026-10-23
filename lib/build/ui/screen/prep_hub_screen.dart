@@ -5,6 +5,7 @@ import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dar
 import 'package:interiorapp_flutter_client/build/presentation/provider/build_provider.dart';
 import 'package:interiorapp_flutter_client/build/presentation/vm/space_board_vm.dart';
 import 'package:interiorapp_flutter_client/build/ui/space_routes.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
 /// 상담준비 내역과 상권 후보지를 나눠 보여 준다.
@@ -17,67 +18,73 @@ class PrepHubScreen extends ConsumerWidget {
     final double subGap = ResponsiveSize.subGap(context);
     final double sectionGap = ResponsiveSize.sectionGap(context);
     final double fontScale = ResponsiveSize.fontScale(context);
+    final SpaceBoard board = ref.watch(spaceBoardProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFCFCFC),
+      backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('상담 전')),
       body: SafeArea(
-        child: Builder(
-          builder: (BuildContext context) {
-            final SpaceBoard board = ref.watch(spaceBoardProvider);
-            return ListView(
-              padding: EdgeInsets.fromLTRB(padding.left, subGap, padding.right, sectionGap),
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+            padding.left,
+            subGap,
+            padding.right,
+            sectionGap,
+          ),
+          children: [
+            Text(
+              '상담으로 넘길 내용과, 자리를 비교하는 후보지를 나눠 둡니다.',
+              style: TextStyle(
+                fontSize: 14 * fontScale,
+                height: 1.45,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            SizedBox(height: sectionGap),
+            _HubSection(
+              title: '상담준비',
+              caption: '자리를 정한 뒤에 상담으로 넘길 내용',
+              countLabel: '${board.consults.length}',
               children: [
-                Text(
-                  '상담 전에\n정리해 둔 것들',
-                  style: TextStyle(fontSize: 28 * fontScale, fontWeight: FontWeight.w700, height: 1.25),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '상담으로 넘길 내용과, 자리를 비교하는 후보지를 따로 둡니다.',
-                  style: TextStyle(fontSize: 14 * fontScale, height: 1.45, color: const Color(0xFF1A1A1A)),
-                ),
-                SizedBox(height: sectionGap),
-                _HubSection(
-                  mark: '01',
-                  title: '상담준비',
-                  caption: '자리를 정한 뒤에 상담으로 넘길 내용',
-                  countLabel: '${board.consults.length}',
-                  children: [
-                    if (board.consults.isEmpty)
-                      const _EmptyNote(label: '아직 상담준비가 없어요')
-                    else
-                      for (var i = 0; i < board.consults.length; i++) ...[
-                        if (i > 0) const SizedBox(height: 10),
-                        _ConsultCard(
-                          record: board.consults[i],
-                          onTap: () => context.push(SpaceRoutes.prepRecord, extra: board.consults[i]),
-                        ),
-                      ],
+                if (board.consults.isEmpty)
+                  const _EmptyNote(label: '아직 상담준비가 없어요')
+                else
+                  for (var i = 0; i < board.consults.length; i++) ...[
+                    if (i > 0) SizedBox(height: subGap),
+                    _ConsultCard(
+                      record: board.consults[i],
+                      onTap:
+                          () => context.push(
+                            SpaceRoutes.prepRecord,
+                            extra: board.consults[i],
+                          ),
+                    ),
                   ],
-                ),
-                SizedBox(height: sectionGap),
-                _HubSection(
-                  mark: '02',
-                  title: '상권 후보지',
-                  caption: '업종을 어디에 둘지 비교하는 자리. 점수는 없어요.',
-                  countLabel: '${board.trades.length}/${SpaceBoard.maxTrades}',
-                  children: [
-                    if (board.trades.isEmpty)
-                      const _EmptyNote(label: '아직 후보지 없어요')
-                    else
-                      for (var i = 0; i < board.trades.length; i++) ...[
-                        if (i > 0) const SizedBox(height: 10),
-                        _TradeCard(
-                          candidate: board.trades[i],
-                          onTap: () => context.push(SpaceRoutes.trade, extra: board.trades[i]),
-                        ),
-                      ],
-                  ],
-                ),
               ],
-            );
-          },
+            ),
+            SizedBox(height: sectionGap),
+            _HubSection(
+              title: '상권 후보지',
+              caption: '업종을 어디에 둘지 비교하는 자리',
+              countLabel: '${board.trades.length}/${SpaceBoard.maxTrades}',
+              children: [
+                if (board.trades.isEmpty)
+                  const _EmptyNote(label: '아직 후보지가 없어요')
+                else
+                  for (var i = 0; i < board.trades.length; i++) ...[
+                    if (i > 0) SizedBox(height: subGap),
+                    _TradeCard(
+                      candidate: board.trades[i],
+                      onTap:
+                          () => context.push(
+                            SpaceRoutes.trade,
+                            extra: board.trades[i],
+                          ),
+                    ),
+                  ],
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -86,14 +93,12 @@ class PrepHubScreen extends ConsumerWidget {
 
 class _HubSection extends StatelessWidget {
   const _HubSection({
-    required this.mark,
     required this.title,
     required this.caption,
     required this.countLabel,
     required this.children,
   });
 
-  final String mark;
   final String title;
   final String caption;
   final String countLabel;
@@ -102,42 +107,43 @@ class _HubSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double fontScale = ResponsiveSize.fontScale(context);
+    final double subGap = ResponsiveSize.subGap(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
-              mark,
-              style: TextStyle(fontSize: 13 * fontScale, fontWeight: FontWeight.w700, color: const Color(0xFF8C7358)),
-            ),
-            const SizedBox(width: 8),
             Expanded(
               child: Text(
                 title,
-                style: TextStyle(fontSize: 20 * fontScale, fontWeight: FontWeight.w700, height: 1.2),
+                style: TextStyle(
+                  fontSize: 17 * fontScale,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFF111111),
-                borderRadius: BorderRadius.circular(99),
-              ),
-              child: Text(
-                countLabel,
-                style: TextStyle(fontSize: 12 * fontScale, fontWeight: FontWeight.w700, color: const Color(0xFFFFFFFF)),
+            Text(
+              countLabel,
+              style: TextStyle(
+                fontSize: 13 * fontScale,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         Text(
           caption,
-          style: TextStyle(fontSize: 13 * fontScale, height: 1.4, color: const Color(0xFF1A1A1A)),
+          style: TextStyle(
+            fontSize: 13 * fontScale,
+            height: 1.4,
+            color: AppColors.textSecondary,
+          ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: subGap),
         ...children,
       ],
     );
@@ -152,41 +158,21 @@ class _ConsultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double fontScale = ResponsiveSize.fontScale(context);
-    final String address = record.detailAddress.isEmpty
-        ? record.address
-        : '${record.address} ${record.detailAddress}';
-    return _SurfaceCard(
+    final String address =
+        record.detailAddress.isEmpty
+            ? record.address
+            : '${record.address} ${record.detailAddress}';
+    final String meta = [
+      if (record.industry.trim().isNotEmpty) record.industry.trim(),
+      if (record.workScope.trim().isNotEmpty) record.workScope.trim(),
+    ].join(' · ');
+
+    return _HubCard(
+      icon: Icons.edit_note_rounded,
+      title: record.placeName.trim().isEmpty ? '이름 없는 상담준비' : record.placeName,
+      subtitle: address,
+      meta: meta.isEmpty ? '업종을 아직 적지 않았어요' : meta,
       onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            record.placeName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 18 * fontScale, fontWeight: FontWeight.w700, height: 1.25),
-          ),
-          if (address.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              address,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 13 * fontScale, height: 1.35, color: const Color(0xFF1A1A1A)),
-            ),
-          ],
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              _MetaChip(label: record.industry.isEmpty ? '업종 미입력' : record.industry),
-              if (record.workScope.isNotEmpty) _MetaChip(label: record.workScope),
-            ],
-          ),
-        ],
-      ),
     );
   }
 }
@@ -199,94 +185,116 @@ class _TradeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double fontScale = ResponsiveSize.fontScale(context);
-    final String address = candidate.detailAddress.isEmpty
-        ? candidate.address
-        : '${candidate.address} ${candidate.detailAddress}';
-    return _SurfaceCard(
+    final String address =
+        candidate.detailAddress.isEmpty
+            ? candidate.address
+            : '${candidate.address} ${candidate.detailAddress}';
+    final String meta = [
+      if (candidate.industry.trim().isNotEmpty) candidate.industry.trim(),
+      if (candidate.timeBand.trim().isNotEmpty) candidate.timeBand.trim(),
+    ].join(' · ');
+
+    return _HubCard(
+      icon: Icons.add_location_alt_outlined,
+      title: candidate.name.trim().isEmpty ? '이름 없는 후보지' : candidate.name,
+      subtitle: address,
+      meta: meta.isEmpty ? '업종을 아직 적지 않았어요' : meta,
       onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            candidate.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 18 * fontScale, fontWeight: FontWeight.w700, height: 1.25),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            address,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 13 * fontScale, height: 1.35, color: const Color(0xFF1A1A1A)),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              _MetaChip(label: candidate.industry.isEmpty ? '업종 미입력' : candidate.industry),
-              if (candidate.timeBand.isNotEmpty) _MetaChip(label: candidate.timeBand),
-              if (candidate.sameIndustry.isNotEmpty) _MetaChip(label: '같은 업종 ${candidate.sameIndustry}'),
-            ],
-          ),
-        ],
-      ),
     );
   }
 }
 
-class _SurfaceCard extends StatelessWidget {
-  const _SurfaceCard({required this.onTap, required this.child});
+class _HubCard extends StatelessWidget {
+  const _HubCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.meta,
+    required this.onTap,
+  });
 
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String meta;
   final VoidCallback onTap;
-  final Widget child;
 
   @override
   Widget build(BuildContext context) {
+    final double fontScale = ResponsiveSize.fontScale(context);
     return Material(
-      color: const Color(0xFFFFFFFF),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: Color(0xFFE4E4E4)),
-      ),
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(child: child),
-              const Icon(Icons.arrow_forward_rounded, color: Color(0xFF1A1A1A)),
-            ],
+        borderRadius: BorderRadius.circular(16),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border, width: 0.7),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: AppColors.primary, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 15 * fontScale,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.2,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      if (subtitle.trim().isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13 * fontScale,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 2),
+                      Text(
+                        meta,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12 * fontScale,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+              ],
+            ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _MetaChip extends StatelessWidget {
-  const _MetaChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final double fontScale = ResponsiveSize.fontScale(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF6F3EE),
-        borderRadius: BorderRadius.circular(99),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(fontSize: 12 * fontScale, fontWeight: FontWeight.w700, color: const Color(0xFF1A1A1A)),
       ),
     );
   }
@@ -300,17 +308,25 @@ class _EmptyNote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double fontScale = ResponsiveSize.fontScale(context);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE4E4E4)),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 0.7),
       ),
-      child: Text(
-        label,
-        style: TextStyle(fontSize: 14 * fontScale, fontWeight: FontWeight.w600, color: const Color(0xFF1A1A1A)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+        child: Center(
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14 * fontScale,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
       ),
     );
   }
