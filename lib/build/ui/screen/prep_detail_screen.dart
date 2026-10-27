@@ -5,6 +5,7 @@ import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dar
 import 'package:interiorapp_flutter_client/build/domain/prep_survey.dart';
 import 'package:interiorapp_flutter_client/build/presentation/provider/build_provider.dart';
 import 'package:interiorapp_flutter_client/build/ui/space_routes.dart';
+import 'package:interiorapp_flutter_client/build/ui/widget/industry_cover.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
@@ -77,12 +78,36 @@ class _PrepDetailScaffold extends StatelessWidget {
   }
 }
 
+/// 접수가 끝난 상담. 고친 내용이 아니라, 신청할 때 남긴 내용을 보여 준다.
+class SubmittedConsultScreen extends StatelessWidget {
+  const SubmittedConsultScreen({super.key, required this.record});
+
+  final PrepRecord record;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(title: const Text('접수한 내용')),
+      body: PrepDetailView(record: record, onEdit: (_) {}, submitted: true),
+    );
+  }
+}
+
 /// 현장과 조건을 한 스크롤로 보여 준다.
 class PrepDetailView extends ConsumerWidget {
-  const PrepDetailView({super.key, required this.record, required this.onEdit});
+  const PrepDetailView({
+    super.key,
+    required this.record,
+    required this.onEdit,
+    this.submitted = false,
+  });
 
   final PrepRecord record;
   final ValueChanged<int> onEdit;
+
+  /// 접수 이후에는 수정과 다시 신청을 열지 않는다.
+  final bool submitted;
 
   Future<void> _requestConsult(
     BuildContext context, {
@@ -150,161 +175,198 @@ class PrepDetailView extends ConsumerWidget {
             ? record.address
             : '${record.address} ${record.detailAddress}';
 
-    return ListView(
-      children: [
-        _PlaceCard(
-          placeName: record.placeName,
-          address: fullAddress,
-          detailAddress:
-              record.detailAddress.isEmpty ? '상세주소 없음' : record.detailAddress,
-          area: _areaLabel(record.areaLine),
-          buildingType: record.buildingType,
-          industry: record.industryLine,
-          contact: record.contact,
-          fontScale: fontScale,
-          onEdit: () => onEdit(0),
-        ),
-        if (record.styleRef case final ShowroomStyleRef reference) ...[
-          SizedBox(height: sectionGap),
-          ShowroomStyleReferenceTile(
-            reference: reference,
+    final List<Widget> sections = [
+      _PlaceCard(
+        placeName: record.placeName,
+        address: fullAddress,
+        // detailAddress:
+        //     record.detailAddress.isEmpty ? '상세주소 없음' : record.detailAddress,
+        area: _areaLabel(record.areaLine),
+        buildingType: record.buildingType,
+        industry: record.industryLine,
+        contact: record.contact,
+        fontScale: fontScale,
+        onEdit: () => onEdit(0),
+        showEdit: !submitted,
+        hideIndustry: submitted,
+      ),
+      if (record.styleRef case final ShowroomStyleRef reference) ...[
+        SizedBox(height: sectionGap),
+        ShowroomStyleReferenceTile(reference: reference, fontScale: fontScale),
+      ],
+      SizedBox(height: sectionGap),
+      _ReviewSection(
+        title: '조건',
+        fontScale: fontScale,
+        onEdit: () => onEdit(1),
+        showEdit: !submitted,
+        children: [
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: _ToneFact(
+                    icon: Icons.home_repair_service_outlined,
+                    label: '공사 형태',
+                    value: record.workScope,
+                    fontScale: fontScale,
+                    dark: true,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 4,
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: _ToneFact(
+                          icon: Icons.layers_clear_outlined,
+                          label: '철거 여부',
+                          value: record.buildingCondition,
+                          fontScale: fontScale,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Expanded(
+                        child: _ToneFact(
+                          icon: Icons.palette_outlined,
+                          label: '스타일',
+                          value: record.style,
+                          fontScale: fontScale,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          _MoneyLine(
+            label: '예산',
+            value: record.budgetLine,
+            fontScale: fontScale,
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _ChipFact(
+                icon: Icons.calendar_month_outlined,
+                label: '희망공사기간',
+                value: record.period,
+                fontScale: fontScale,
+              ),
+              _ChipFact(
+                icon: Icons.flag_outlined,
+                label: '희망 착공',
+                value: record.startTiming,
+                fontScale: fontScale,
+              ),
+              _ChipFact(
+                icon: Icons.event_available_outlined,
+                label: '희망 오픈·완료',
+                value: record.openTiming,
+                fontScale: fontScale,
+              ),
+              if (record.workScope == PrepLabels.partialWork)
+                _ChipFact(
+                  icon: Icons.place_outlined,
+                  label: '공사할 곳',
+                  value: record.workPlace,
+                  fontScale: fontScale,
+                ),
+            ],
+          ),
+          if (record.floorPlans.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _AttachedPhotoBlock(
+              label: '평면도',
+              regions: record.floorPlans,
+              fontScale: fontScale,
+            ),
+          ] else if (record.floorPlanLabels.any(
+            (String label) => label.trim().isNotEmpty,
+          )) ...[
+            const SizedBox(height: 16),
+            _AttachmentPreview(
+              label: '평면도',
+              labels: record.floorPlanLabels,
+              emptyLabel: '올린 평면도가 없어요',
+              fontScale: fontScale,
+              icon: Icons.map_outlined,
+            ),
+          ],
+          if (record.stylePhotos.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _AttachedPhotoBlock(
+              label: '스타일 사진',
+              regions: record.stylePhotos,
+              fontScale: fontScale,
+            ),
+          ] else if (record.referenceImageLabels.any(
+            (String label) => label.trim().isNotEmpty,
+          )) ...[
+            const SizedBox(height: 16),
+            _AttachmentPreview(
+              label: '스타일 사진',
+              labels: record.referenceImageLabels,
+              emptyLabel: '올린 참고 이미지가 없어요',
+              fontScale: fontScale,
+              icon: Icons.image_outlined,
+            ),
+          ],
+          const SizedBox(height: 8),
+          _FactRow(
+            icon: Icons.chat_bubble_outline,
+            label: '상담에서 말하고 싶은 점',
+            value: record.needs,
             fontScale: fontScale,
           ),
         ],
-        SizedBox(height: sectionGap),
-        _ReviewSection(
-          title: '조건',
-          fontScale: fontScale,
-          onEdit: () => onEdit(1),
-          children: [
-            _FactGrid(
-              fontScale: fontScale,
-              items: [
-                _Fact(
-                  icon: Icons.home_repair_service_outlined,
-                  label: '공사 형태',
-                  value: record.workScope,
-                ),
-                _Fact(
-                  icon: Icons.layers_clear_outlined,
-                  label: '철거 여부',
-                  value: record.buildingCondition,
-                ),
-                _Fact(
-                  icon: Icons.palette_outlined,
-                  label: '스타일',
-                  value: record.style,
-                ),
-                _Fact(
-                  icon: Icons.payments_outlined,
-                  label: '예산',
-                  value: record.budgetLine,
-                ),
-                _Fact(
-                  icon: Icons.calendar_month_outlined,
-                  label: '희망공사기간',
-                  value: record.period,
-                ),
-                _Fact(
-                  icon: Icons.flag_outlined,
-                  label: '희망 착공',
-                  value: record.startTiming,
-                ),
-                _Fact(
-                  icon: Icons.event_available_outlined,
-                  label: '희망 오픈·완료',
-                  value: record.openTiming,
-                ),
-                if (record.workScope == PrepLabels.partialWork)
-                  _Fact(
-                    icon: Icons.place_outlined,
-                    label: '공사할 곳',
-                    value: record.workPlace,
-                  ),
+      ),
+      SizedBox(height: sectionGap),
+      _ReviewSection(
+        title: '마감',
+        fontScale: fontScale,
+        onEdit: () => onEdit(2),
+        showEdit: !submitted,
+        children: [
+          if (PrepSurvey.details.every(
+            (PrepQuestion question) =>
+                record.finishes[question.id]?.isEmpty ?? true,
+          ))
+            Text(
+              '선택 항목이에요. 아직 적지 않아도 상담으로 이어갈 수 있어요.',
+              style: TextStyle(
+                fontSize: 14 * fontScale,
+                height: 1.45,
+                color: AppColors.textSecondary,
+              ),
+            )
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final PrepQuestion question in PrepSurvey.details)
+                  if (record.finishes[question.id]
+                      case final PrepFinishAnswer answer)
+                    if (!answer.isEmpty)
+                      _ChipFact(
+                        icon: _finishIcon(question.id),
+                        label: question.title,
+                        value: answer.summary,
+                        fontScale: fontScale,
+                      ),
               ],
             ),
-            if (record.floorPlans.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _AttachedPhotoBlock(
-                label: '평면도',
-                regions: record.floorPlans,
-                fontScale: fontScale,
-              ),
-            ] else if (record.floorPlanLabels.any(
-              (String label) => label.trim().isNotEmpty,
-            )) ...[
-              const SizedBox(height: 16),
-              _AttachmentPreview(
-                label: '평면도',
-                labels: record.floorPlanLabels,
-                emptyLabel: '올린 평면도가 없어요',
-                fontScale: fontScale,
-                icon: Icons.map_outlined,
-              ),
-            ],
-            if (record.stylePhotos.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _AttachedPhotoBlock(
-                label: '스타일 사진',
-                regions: record.stylePhotos,
-                fontScale: fontScale,
-              ),
-            ] else if (record.referenceImageLabels.any(
-              (String label) => label.trim().isNotEmpty,
-            )) ...[
-              const SizedBox(height: 16),
-              _AttachmentPreview(
-                label: '스타일 사진',
-                labels: record.referenceImageLabels,
-                emptyLabel: '올린 참고 이미지가 없어요',
-                fontScale: fontScale,
-                icon: Icons.image_outlined,
-              ),
-            ],
-            const SizedBox(height: 8),
-            _FactRow(
-              icon: Icons.chat_bubble_outline,
-              label: '상담에서 말하고 싶은 점',
-              value: record.needs,
-              fontScale: fontScale,
-            ),
-          ],
-        ),
-        SizedBox(height: sectionGap),
-        _ReviewSection(
-          title: '마감',
-          fontScale: fontScale,
-          onEdit: () => onEdit(2),
-          children: [
-            if (PrepSurvey.details.every(
-              (PrepQuestion question) =>
-                  record.finishes[question.id]?.isEmpty ?? true,
-            ))
-              Text(
-                '선택 항목이에요. 아직 적지 않아도 상담으로 이어갈 수 있어요.',
-                style: TextStyle(
-                  fontSize: 14 * fontScale,
-                  height: 1.45,
-                  color: AppColors.textSecondary,
-                ),
-              )
-            else
-              _FactGrid(
-                fontScale: fontScale,
-                items: [
-                  for (final PrepQuestion question in PrepSurvey.details)
-                    if (record.finishes[question.id]
-                        case final PrepFinishAnswer answer)
-                      if (!answer.isEmpty)
-                        _Fact(
-                          icon: _finishIcon(question.id),
-                          label: question.title,
-                          value: answer.summary,
-                        ),
-                ],
-              ),
-          ],
-        ),
+        ],
+      ),
+      if (!submitted) ...[
         SizedBox(height: sectionGap),
         Text(
           '날짜 안내 테스트',
@@ -370,6 +432,26 @@ class PrepDetailView extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
       ],
+    ];
+
+    if (!submitted) {
+      return ListView(children: sections);
+    }
+
+    final EdgeInsets pagePadding = ResponsiveSize.responsivePadding(context);
+    return CustomScrollView(
+      slivers: [
+        industryCoverBar(record.industryLine),
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(
+            pagePadding.left,
+            4,
+            pagePadding.right,
+            24 + MediaQuery.paddingOf(context).bottom,
+          ),
+          sliver: SliverList(delegate: SliverChildListDelegate(sections)),
+        ),
+      ],
     );
   }
 }
@@ -378,24 +460,28 @@ class _PlaceCard extends StatelessWidget {
   const _PlaceCard({
     required this.placeName,
     required this.address,
-    required this.detailAddress,
+    // required this.detailAddress,
     required this.area,
     required this.buildingType,
     required this.industry,
     required this.contact,
     required this.fontScale,
     required this.onEdit,
+    this.showEdit = true,
+    this.hideIndustry = false,
   });
 
   final String placeName;
   final String address;
-  final String detailAddress;
+  // final String detailAddress;
   final String area;
   final String buildingType;
   final String industry;
   final String contact;
   final double fontScale;
   final VoidCallback onEdit;
+  final bool showEdit;
+  final bool hideIndustry;
 
   @override
   Widget build(BuildContext context) {
@@ -421,11 +507,12 @@ class _PlaceCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                _EditPill(
-                  fontScale: fontScale,
-                  onTap: onEdit,
-                  background: AppColors.background,
-                ),
+                if (showEdit)
+                  _EditPill(
+                    fontScale: fontScale,
+                    onTap: onEdit,
+                    background: AppColors.background,
+                  ),
               ],
             ),
             const SizedBox(height: 14),
@@ -438,44 +525,98 @@ class _PlaceCard extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              address,
-              style: TextStyle(
-                fontSize: 14 * fontScale,
-                height: 1.4,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              detailAddress,
-              style: TextStyle(
-                fontSize: 13 * fontScale,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _FactGrid(
+            const SizedBox(height: 10),
+            _MetaLine(
+              icon: Icons.place_outlined,
+              value: address,
               fontScale: fontScale,
-              items: [
-                _Fact(
-                  icon: Icons.square_foot_outlined,
-                  label: '평수',
-                  value: area,
+            ),
+            const SizedBox(height: 4),
+            // Padding(
+            //   padding: const EdgeInsets.only(left: 26),
+            //   child: Text(
+            //     // detailAddress,
+            //     // '상세주소 없음',
+            //     maxLines: 1,
+            //     overflow: TextOverflow.ellipsis,
+            //     style: TextStyle(
+            //       fontSize: 12 * fontScale,
+            //       color: AppColors.textSecondary,
+            //     ),
+            //   ),
+            // ),
+            const SizedBox(height: 14),
+            if (hideIndustry)
+              Row(
+                children: [
+                  Expanded(
+                    child: _ToneFact(
+                      icon: Icons.square_foot_outlined,
+                      label: '평수',
+                      value: area,
+                      fontScale: fontScale,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _ToneFact(
+                      icon: Icons.home_work_outlined,
+                      label: '공간',
+                      value: buildingType,
+                      fontScale: fontScale,
+                    ),
+                  ),
+                ],
+              )
+            else
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      flex: 5,
+                      child: _ToneFact(
+                        icon: Icons.storefront_outlined,
+                        label: '업종',
+                        value: industry,
+                        fontScale: fontScale,
+                        dark: true,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 4,
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: _ToneFact(
+                              icon: Icons.square_foot_outlined,
+                              label: '평수',
+                              value: area,
+                              fontScale: fontScale,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Expanded(
+                            child: _ToneFact(
+                              icon: Icons.home_work_outlined,
+                              label: '공간',
+                              value: buildingType,
+                              fontScale: fontScale,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                _Fact(
-                  icon: Icons.storefront_outlined,
-                  label: '공간',
-                  value: buildingType,
-                ),
-                _Fact(
-                  icon: Icons.category_outlined,
-                  label: '업종',
-                  value: industry,
-                ),
-                _Fact(icon: Icons.phone_outlined, label: '연락처', value: contact),
-              ],
+              ),
+            const SizedBox(height: 8),
+            _MetaLine(
+              icon: Icons.phone_outlined,
+              label: '연락처',
+              value: contact,
+              fontScale: fontScale,
             ),
           ],
         ),
@@ -484,99 +625,249 @@ class _PlaceCard extends StatelessWidget {
   }
 }
 
-class _Fact {
-  const _Fact({required this.icon, required this.label, required this.value});
+class _ToneFact extends StatelessWidget {
+  const _ToneFact({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.fontScale,
+    this.dark = false,
+  });
 
   final IconData icon;
   final String label;
   final String value;
-}
-
-class _FactGrid extends StatelessWidget {
-  const _FactGrid({required this.items, required this.fontScale});
-
-  final List<_Fact> items;
   final double fontScale;
+  final bool dark;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        for (var i = 0; i < items.length; i += 2) ...[
-          if (i > 0) const SizedBox(height: 8),
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: _FactCell(fact: items[i], fontScale: fontScale),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child:
-                      i + 1 < items.length
-                          ? _FactCell(fact: items[i + 1], fontScale: fontScale)
-                          : const SizedBox.shrink(),
-                ),
-              ],
-            ),
+    final bool empty = value.trim().isEmpty;
+    final String shown = empty ? '아직 없어요' : value;
+    final Color foreground = dark ? AppColors.white : AppColors.textPrimary;
+    final Color muted =
+        dark ? const Color(0xB3FFFFFF) : AppColors.textSecondary;
+    final Widget body = Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 18,
+            color: dark ? AppColors.white : AppColors.accent,
           ),
-        ],
-      ],
-    );
-  }
-}
-
-class _FactCell extends StatelessWidget {
-  const _FactCell({required this.fact, required this.fontScale});
-
-  final _Fact fact;
-  final double fontScale;
-
-  @override
-  Widget build(BuildContext context) {
-    final bool empty = fact.value.trim().isEmpty;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(fact.icon, size: 16, color: AppColors.primary),
-                const SizedBox(width: 6),
-                Expanded(
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11 * fontScale,
+                    height: 1.15,
+                    fontWeight: FontWeight.w600,
+                    color: muted,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
                   child: Text(
-                    fact.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    shown,
+                    softWrap: false,
                     style: TextStyle(
-                      fontSize: 12 * fontScale,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
+                      fontSize: (dark ? 18 : 15) * fontScale,
+                      height: 1.15,
+                      fontWeight: FontWeight.w700,
+                      color: empty ? muted : foreground,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+          ),
+        ],
+      ),
+    );
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: dark ? AppColors.primary : AppColors.background,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: body,
+    );
+  }
+}
+
+class _MetaLine extends StatelessWidget {
+  const _MetaLine({
+    required this.icon,
+    required this.value,
+    required this.fontScale,
+    this.label = '',
+  });
+
+  final IconData icon;
+  final String value;
+  final double fontScale;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool empty = value.trim().isEmpty;
+    return SizedBox(
+      height: 36,
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppColors.primary),
+          const SizedBox(width: 8),
+          if (label.isNotEmpty) ...[
             Text(
-              empty ? '아직 없어요' : fact.value,
-              maxLines: 2,
+              label,
+              style: TextStyle(
+                fontSize: 12 * fontScale,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Expanded(
+            child: Text(
+              empty ? '아직 없어요' : value,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              textAlign: label.isEmpty ? TextAlign.start : TextAlign.end,
               style: TextStyle(
                 fontSize: 14 * fontScale,
-                fontWeight: FontWeight.w700,
-                height: 1.3,
+                fontWeight: FontWeight.w600,
                 color: empty ? AppColors.textSecondary : AppColors.textPrimary,
               ),
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MoneyLine extends StatelessWidget {
+  const _MoneyLine({
+    required this.label,
+    required this.value,
+    required this.fontScale,
+  });
+
+  final String label;
+  final String value;
+  final double fontScale;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool empty = value.trim().isEmpty;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: SizedBox(
+        height: 56,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.payments_outlined,
+                size: 20,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12 * fontScale,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    empty ? '아직 없어요' : value,
+                    softWrap: false,
+                    style: TextStyle(
+                      fontSize: 18 * fontScale,
+                      fontWeight: FontWeight.w700,
+                      color:
+                          empty
+                              ? AppColors.textSecondary
+                              : AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChipFact extends StatelessWidget {
+  const _ChipFact({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.fontScale,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final double fontScale;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool empty = value.trim().isEmpty;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 240, minHeight: 34),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(99),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: AppColors.accent),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  '$label  ${empty ? '아직 없어요' : value}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12 * fontScale,
+                    fontWeight: FontWeight.w600,
+                    color:
+                        empty ? AppColors.textSecondary : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -668,11 +959,13 @@ class _ReviewSection extends StatelessWidget {
     required this.fontScale,
     required this.onEdit,
     required this.children,
+    this.showEdit = true,
   });
 
   final String title;
   final double fontScale;
   final VoidCallback onEdit;
+  final bool showEdit;
   final List<Widget> children;
 
   @override
@@ -700,7 +993,7 @@ class _ReviewSection extends StatelessWidget {
                     ),
                   ),
                 ),
-                _EditPill(fontScale: fontScale, onTap: onEdit),
+                if (showEdit) _EditPill(fontScale: fontScale, onTap: onEdit),
               ],
             ),
             const SizedBox(height: 16),

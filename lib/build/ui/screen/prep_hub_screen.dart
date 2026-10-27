@@ -169,9 +169,11 @@ class _ConsultCard extends StatelessWidget {
 
     return _HubCard(
       icon: Icons.edit_note_rounded,
+      rail: AppColors.primary,
+      iconColor: AppColors.white,
       title: record.placeName.trim().isEmpty ? '이름 없는 상담준비' : record.placeName,
       subtitle: address,
-      meta: meta.isEmpty ? '업종을 아직 적지 않았어요' : meta,
+      chips: meta.isEmpty ? const ['업종을 아직 적지 않았어요'] : meta.split(' · '),
       onTap: onTap,
     );
   }
@@ -196,10 +198,38 @@ class _TradeCard extends StatelessWidget {
 
     return _HubCard(
       icon: Icons.add_location_alt_outlined,
+      rail: const Color(0xFFE7EBE4),
+      iconColor: AppColors.accent,
       title: candidate.name.trim().isEmpty ? '이름 없는 후보지' : candidate.name,
       subtitle: address,
-      meta: meta.isEmpty ? '업종을 아직 적지 않았어요' : meta,
+      chips: meta.isEmpty ? const ['업종을 아직 적지 않았어요'] : meta.split(' · '),
       onTap: onTap,
+    );
+  }
+}
+
+class _HubRail extends StatelessWidget {
+  const _HubRail({
+    required this.icon,
+    required this.rail,
+    required this.iconColor,
+  });
+
+  final IconData icon;
+  final Color rail;
+  final Color iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: const BorderRadius.horizontal(left: Radius.circular(15)),
+      child: ColoredBox(
+        color: rail,
+        child: SizedBox(
+          width: 46,
+          child: Icon(icon, color: iconColor, size: 22),
+        ),
+      ),
     );
   }
 }
@@ -207,16 +237,20 @@ class _TradeCard extends StatelessWidget {
 class _HubCard extends StatelessWidget {
   const _HubCard({
     required this.icon,
+    required this.rail,
+    required this.iconColor,
     required this.title,
     required this.subtitle,
-    required this.meta,
+    required this.chips,
     required this.onTap,
   });
 
   final IconData icon;
+  final Color rail;
+  final Color iconColor;
   final String title;
   final String subtitle;
-  final String meta;
+  final List<String> chips;
   final VoidCallback onTap;
 
   @override
@@ -233,22 +267,13 @@ class _HubCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.border, width: 0.7),
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(icon, color: AppColors.primary, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
+          child: Row(
+            children: [
+              _HubRail(icon: icon, rail: rail, iconColor: iconColor),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -257,7 +282,8 @@ class _HubCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 15 * fontScale,
+                          fontSize: 16 * fontScale,
+                          height: 1.2,
                           fontWeight: FontWeight.w700,
                           letterSpacing: -0.2,
                           color: AppColors.textPrimary,
@@ -270,29 +296,37 @@ class _HubCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 13 * fontScale,
+                            fontSize: 12 * fontScale,
+                            height: 1.2,
                             fontWeight: FontWeight.w500,
                             color: AppColors.textSecondary,
                           ),
                         ),
                       ],
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 6),
                       Text(
-                        meta,
+                        chips.join('  ·  '),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 12 * fontScale,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary,
+                          height: 1.2,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.accent,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-              ],
-            ),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(right: 10),
+                child: Icon(
+                  Icons.chevron_right,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
           ),
         ),
       ),

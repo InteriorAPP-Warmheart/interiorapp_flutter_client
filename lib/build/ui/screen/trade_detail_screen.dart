@@ -83,40 +83,62 @@ class TradeDetailView extends StatelessWidget {
               Text(
                 candidate.name,
                 style: TextStyle(
-                  fontSize: 22 * fontScale,
+                  fontSize: 28 * fontScale,
                   fontWeight: FontWeight.w700,
-                  height: 1.25,
-                  letterSpacing: -0.3,
+                  height: 1.2,
+                  letterSpacing: -0.4,
                   color: AppColors.textPrimary,
                 ),
               ),
               if (address.trim().isNotEmpty) ...[
-                const SizedBox(height: 6),
-                Text(
-                  address,
-                  style: TextStyle(
-                    fontSize: 14 * fontScale,
-                    height: 1.4,
-                    color: AppColors.textSecondary,
-                  ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.place_outlined,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        address,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14 * fontScale,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
-              SizedBox(height: sectionGap),
-              _Section(
-                title: '자리',
-                fontScale: fontScale,
-                child: _FactGrid(
-                  fontScale: fontScale,
-                  items: [
-                    _Fact(
-                      icon: Icons.category_outlined,
-                      label: '업종',
-                      value: candidate.industry,
+              const SizedBox(height: 14),
+              SizedBox(
+                height: 84,
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 5,
+                      child: _ToneFact(
+                        icon: Icons.storefront_outlined,
+                        label: '업종',
+                        value: candidate.industry,
+                        fontScale: fontScale,
+                        dark: true,
+                      ),
                     ),
-                    _Fact(
-                      icon: Icons.square_foot_outlined,
-                      label: '평수',
-                      value: area,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 4,
+                      child: _ToneFact(
+                        icon: Icons.square_foot_outlined,
+                        label: '평수',
+                        value: area,
+                        fontScale: fontScale,
+                      ),
                     ),
                   ],
                 ),
@@ -125,28 +147,56 @@ class TradeDetailView extends StatelessWidget {
               _Section(
                 title: '입지에서 보인 것',
                 fontScale: fontScale,
-                child: _FactGrid(
-                  fontScale: fontScale,
-                  items: [
-                    _Fact(
-                      icon: Icons.signpost_outlined,
-                      label: '길',
-                      value: candidate.access,
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 148,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 5,
+                            child: _ToneFact(
+                              icon: Icons.signpost_outlined,
+                              label: '길',
+                              value: candidate.access,
+                              fontScale: fontScale,
+                              stacked: true,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            flex: 4,
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: _ToneFact(
+                                    icon: Icons.directions_transit_outlined,
+                                    label: '이동',
+                                    value: candidate.transit,
+                                    fontScale: fontScale,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Expanded(
+                                  child: _ToneFact(
+                                    icon: Icons.local_parking_outlined,
+                                    label: '주차',
+                                    value: candidate.parking,
+                                    fontScale: fontScale,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    _Fact(
-                      icon: Icons.directions_transit_outlined,
-                      label: '이동',
-                      value: candidate.transit,
-                    ),
-                    _Fact(
-                      icon: Icons.local_parking_outlined,
-                      label: '주차',
-                      value: candidate.parking,
-                    ),
-                    _Fact(
+                    const SizedBox(height: 8),
+                    _ChipFact(
                       icon: Icons.apartment_outlined,
                       label: '주변 이정표',
                       value: candidate.landmark,
+                      fontScale: fontScale,
                     ),
                   ],
                 ),
@@ -155,28 +205,33 @@ class TradeDetailView extends StatelessWidget {
               _Section(
                 title: '주변과 사람',
                 fontScale: fontScale,
-                child: _FactGrid(
-                  fontScale: fontScale,
-                  items: [
-                    _Fact(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _ChipFact(
                       icon: Icons.storefront_outlined,
                       label: '같은 업종',
                       value: candidate.sameIndustry,
+                      fontScale: fontScale,
                     ),
-                    _Fact(
+                    _ChipFact(
                       icon: Icons.store_outlined,
                       label: '주변에 많은 업종',
                       value: candidate.nearbyTrades,
+                      fontScale: fontScale,
                     ),
-                    _Fact(
+                    _ChipFact(
                       icon: Icons.schedule_outlined,
                       label: '시간대',
                       value: candidate.timeBand,
+                      fontScale: fontScale,
                     ),
-                    _Fact(
+                    _ChipFact(
                       icon: Icons.people_outline,
                       label: '주로 오는 사람',
                       value: candidate.visitor,
+                      fontScale: fontScale,
                     ),
                   ],
                 ),
@@ -187,59 +242,61 @@ class TradeDetailView extends StatelessWidget {
                 fontScale: fontScale,
                 child:
                     candidate.rentUnknown
-                        ? const _FactRow(
+                        ? const _QuietNote(
                           icon: Icons.payments_outlined,
-                          label: '임대 조건',
-                          value: '아직 몰라요',
+                          text: '아직 몰라요',
                         )
-                        : _FactGrid(
-                          fontScale: fontScale,
-                          items: [
-                            _Fact(
-                              icon: Icons.account_balance_wallet_outlined,
-                              label: '보증금',
-                              value: candidate.deposit,
-                            ),
-                            _Fact(
-                              icon: Icons.payments_outlined,
+                        : Column(
+                          children: [
+                            _MoneyLine(
                               label: '월세',
                               value: candidate.rent,
+                              fontScale: fontScale,
                             ),
-                            _Fact(
-                              icon: Icons.receipt_long_outlined,
-                              label: '관리비',
-                              value: candidate.maintenance,
-                            ),
-                            _Fact(
-                              icon: Icons.key_outlined,
-                              label: '권리금',
-                              value: candidate.premium,
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                _ChipFact(
+                                  icon: Icons.account_balance_wallet_outlined,
+                                  label: '보증금',
+                                  value: candidate.deposit,
+                                  fontScale: fontScale,
+                                ),
+                                _ChipFact(
+                                  icon: Icons.receipt_long_outlined,
+                                  label: '관리비',
+                                  value: candidate.maintenance,
+                                  fontScale: fontScale,
+                                ),
+                                _ChipFact(
+                                  icon: Icons.key_outlined,
+                                  label: '권리금',
+                                  value: candidate.premium,
+                                  fontScale: fontScale,
+                                ),
+                              ],
                             ),
                           ],
                         ),
               ),
               if (candidate.reason.trim().isNotEmpty) ...[
                 SizedBox(height: sectionGap),
-                _Section(
+                _NoteBlock(
+                  icon: Icons.chat_bubble_outline,
                   title: '이 자리를 고른 이유',
+                  body: candidate.reason,
                   fontScale: fontScale,
-                  child: _FactRow(
-                    icon: Icons.chat_bubble_outline,
-                    label: '이유',
-                    value: candidate.reason,
-                  ),
                 ),
               ],
               if (candidate.interiorNotes.isNotEmpty) ...[
                 SizedBox(height: sectionGap),
-                _Section(
+                _NoteBlock(
+                  icon: Icons.chair_outlined,
                   title: '인테리어에서 볼 점',
+                  body: candidate.interiorNotes.join(' · '),
                   fontScale: fontScale,
-                  child: _FactRow(
-                    icon: Icons.chair_outlined,
-                    label: '메모',
-                    value: candidate.interiorNotes.join(' · '),
-                  ),
                 ),
               ],
             ],
@@ -308,152 +365,324 @@ class _Section extends StatelessWidget {
   }
 }
 
-class _Fact {
-  const _Fact({required this.icon, required this.label, required this.value});
-
-  final IconData icon;
-  final String label;
-  final String value;
-}
-
-class _FactGrid extends StatelessWidget {
-  const _FactGrid({required this.items, required this.fontScale});
-
-  final List<_Fact> items;
-  final double fontScale;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        for (var i = 0; i < items.length; i += 2) ...[
-          if (i > 0) const SizedBox(height: 8),
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: _FactCell(fact: items[i], fontScale: fontScale),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child:
-                      i + 1 < items.length
-                          ? _FactCell(fact: items[i + 1], fontScale: fontScale)
-                          : const SizedBox.shrink(),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _FactCell extends StatelessWidget {
-  const _FactCell({required this.fact, required this.fontScale});
-
-  final _Fact fact;
-  final double fontScale;
-
-  @override
-  Widget build(BuildContext context) {
-    final bool empty = fact.value.trim().isEmpty;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(fact.icon, size: 16, color: AppColors.primary),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    fact.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12 * fontScale,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              empty ? '아직 없어요' : fact.value,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 14 * fontScale,
-                fontWeight: FontWeight.w700,
-                height: 1.3,
-                color: empty ? AppColors.textSecondary : AppColors.textPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FactRow extends StatelessWidget {
-  const _FactRow({
+class _ToneFact extends StatelessWidget {
+  const _ToneFact({
     required this.icon,
     required this.label,
     required this.value,
+    required this.fontScale,
+    this.dark = false,
+    this.stacked = false,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final double fontScale;
+  final bool dark;
+  final bool stacked;
 
   @override
   Widget build(BuildContext context) {
-    final double fontScale = ResponsiveSize.fontScale(context);
     final bool empty = value.trim().isEmpty;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 18, color: AppColors.primary),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final String shown = empty ? '아직 없어요' : value;
+    final Color foreground = dark ? AppColors.white : AppColors.textPrimary;
+    final Color muted =
+        dark ? const Color(0xB3FFFFFF) : AppColors.textSecondary;
+    final Widget body = Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      child:
+          stacked
+              ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    icon,
+                    size: 18,
+                    color: dark ? AppColors.white : AppColors.accent,
+                  ),
+                  const Spacer(),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11 * fontScale,
+                      height: 1.15,
+                      fontWeight: FontWeight.w600,
+                      color: muted,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      shown,
+                      softWrap: false,
+                      style: TextStyle(
+                        fontSize: 22 * fontScale,
+                        height: 1.15,
+                        fontWeight: FontWeight.w700,
+                        color: empty ? muted : foreground,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+              : Row(
+                children: [
+                  Icon(
+                    icon,
+                    size: 18,
+                    color: dark ? AppColors.white : AppColors.accent,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11 * fontScale,
+                            height: 1.15,
+                            fontWeight: FontWeight.w600,
+                            color: muted,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            shown,
+                            softWrap: false,
+                            style: TextStyle(
+                              fontSize: (dark ? 18 : 15) * fontScale,
+                              height: 1.15,
+                              fontWeight: FontWeight.w700,
+                              color: empty ? muted : foreground,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+    );
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: dark ? AppColors.primary : AppColors.background,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: body,
+    );
+  }
+}
+
+class _MoneyLine extends StatelessWidget {
+  const _MoneyLine({
+    required this.label,
+    required this.value,
+    required this.fontScale,
+  });
+
+  final String label;
+  final String value;
+  final double fontScale;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool empty = value.trim().isEmpty;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: SizedBox(
+        height: 64,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Row(
             children: [
+              const Icon(
+                Icons.payments_outlined,
+                size: 20,
+                color: AppColors.white,
+              ),
+              const SizedBox(width: 8),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 12 * fontScale,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+                  color: const Color(0xB3FFFFFF),
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(
-                empty ? '아직 없어요' : value,
-                style: TextStyle(
-                  fontSize: 15 * fontScale,
-                  fontWeight: FontWeight.w600,
-                  height: 1.4,
-                  color:
-                      empty ? AppColors.textSecondary : AppColors.textPrimary,
+              const SizedBox(width: 10),
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    empty ? '아직 없어요' : value,
+                    softWrap: false,
+                    style: TextStyle(
+                      fontSize: 22 * fontScale,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.white,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ChipFact extends StatelessWidget {
+  const _ChipFact({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.fontScale,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final double fontScale;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool empty = value.trim().isEmpty;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 280),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(99),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: AppColors.accent),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  '$label  ${empty ? '아직 없어요' : value}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12 * fontScale,
+                    fontWeight: FontWeight.w600,
+                    color:
+                        empty ? AppColors.textSecondary : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _QuietNote extends StatelessWidget {
+  const _QuietNote({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final double fontScale = ResponsiveSize.fontScale(context);
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: AppColors.accent),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 15 * fontScale,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
       ],
+    );
+  }
+}
+
+class _NoteBlock extends StatelessWidget {
+  const _NoteBlock({
+    required this.icon,
+    required this.title,
+    required this.body,
+    required this.fontScale,
+  });
+
+  final IconData icon;
+  final String title;
+  final String body;
+  final double fontScale;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 0.7),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 20, color: AppColors.accent),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 12 * fontScale,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    body,
+                    style: TextStyle(
+                      fontSize: 16 * fontScale,
+                      fontWeight: FontWeight.w600,
+                      height: 1.4,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:interiorapp_flutter_client/build/domain/entity/construction_progress.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/build/domain/repository/space_repository.dart';
 
@@ -12,11 +13,15 @@ class SpaceUseCase {
   List<SpaceProject> get ongoing => _repository.ongoing;
   List<SpaceProject> get finished => _repository.finished;
 
+  ConstructionProgress? constructionFor(String projectId) =>
+      _repository.constructionFor(projectId);
   PrepRecord? recordFor(String projectId) => _repository.recordFor(projectId);
-  SpaceProject? projectForRecord(String recordId) => _repository.projectForRecord(recordId);
+  SpaceProject? projectForRecord(String recordId) =>
+      _repository.projectForRecord(recordId);
   SpaceProject? find(String id) => _repository.find(id);
 
-  SpaceProject receiveConsult(PrepRecord record) => _repository.receiveConsult(record);
+  SpaceProject receiveConsult(PrepRecord record) =>
+      _repository.receiveConsult(record);
   void saveConsult(PrepRecord record) => _repository.saveConsult(record);
   void saveTrade(TradeCandidate candidate) => _repository.saveTrade(candidate);
 }

@@ -1,3 +1,5 @@
+import 'package:interiorapp_flutter_client/build/domain/entity/construction_plan.dart';
+import 'package:interiorapp_flutter_client/build/domain/entity/construction_progress.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/build/domain/repository/space_repository.dart';
 
@@ -22,7 +24,8 @@ class SpaceApi {
       workScope: '부분공사',
       contact: '010-0000-0000',
       workPlace: '홀, 사무공간',
-      needs: '회의 공간을 나누고, 수납을 늘리고 싶어요. 기존 벽은 일부만 남기고, 입구에서 회의실이 바로 보이지 않게 동선을 나누고 싶어요.',
+      needs:
+          '회의 공간을 나누고, 수납을 늘리고 싶어요. 기존 벽은 일부만 남기고, 입구에서 회의실이 바로 보이지 않게 동선을 나누고 싶어요.',
       floorPlanLabels: ['1층', '2층'],
       referenceImageLabels: ['거실 예상'],
     ),
@@ -77,15 +80,49 @@ class SpaceApi {
     ),
   ];
 
-  final List<SpaceProject> ongoing = const [
+  final List<SpaceProject> ongoing = [
     SpaceProject(
       id: 'project-seongsu-cafe',
       placeName: '성수동 카페',
-      statusLabel: '공사진행 · 주요시공',
-      nextAction: '벽 마감 사진을 확인해 주세요',
+      statusLabel: '공사 진행중',
+      nextAction: '오늘 목공 공사 · 내일 전기 공사',
       phase: SpacePhase.construction,
       imageUrl: 'https://picsum.photos/seed/seongsu-cafe/1200/900',
       completed: false,
+      visitAppointment: VisitAppointment(
+        when: DateTime(2026, 10, 29, 10, 30),
+        place: '서울 성동구 성수이로 00 1층',
+        visitorName: '정하늘',
+        visitorRole: '실사 담당',
+      ),
+      constructionPlan: ConstructionPlan(
+        scope: [
+          PlanDecision(
+            conclusion: '카운터 벽은 낮춰 새로 만듦',
+            customerNote: '카운터를 입구에서 바로 보이게 하고 싶은데, 기존 벽을 남길지 고민이에요.',
+            staffNote: '기존 벽이 입구 시야를 가리고, 콘센트를 새로 달아야 해서 벽을 낮춰 새로 만드는 쪽을 권했어요.',
+          ),
+          PlanDecision(
+            conclusion: '좌석은 창가 쪽으로 둠',
+            customerNote: '좌석은 창가 쪽에 두고 싶어요.',
+            staffNote: '창가 폭에 좌석을 두고, 안쪽은 카운터와 동선으로 남기는 배치가 맞아요.',
+          ),
+        ],
+        excluded: [
+          PlanDecision(
+            conclusion: '화장실은 이번 공사에서 제외',
+            customerNote: '화장실은 이번에 손대지 않아도 돼요.',
+            staffNote: '급배수 이설이 없어서 화장실은 범위 밖에 두기로 했어요.',
+          ),
+        ],
+        constraints: [
+          PlanDecision(
+            conclusion: '전기는 증설이 필요함',
+            customerNote: '머신과 조명을 지금보다 늘리고 싶어요.',
+            staffNote: '현재 용량으로는 부족해서 증설을 공사 조건에 넣었어요.',
+          ),
+        ],
+      ),
     ),
     SpaceProject(
       id: 'project-mangwon-bakery',
@@ -128,7 +165,73 @@ class SpaceApi {
     ),
   ];
 
-  PrepRecord? recordFor(String projectId) => _receivedRecords[projectId];
+  static const Map<String, ConstructionProgress> _construction = {
+    'project-seongsu-cafe': ConstructionProgress(
+      currentLabel: '목공 공사 진행중',
+      expectedCompletion: '11월 18일',
+      today: TodayWorkState.underway,
+      todayTrade: '목공 공사',
+      todaySummary: '벽과 천장 틀을 맞추고 있어요',
+      workers: '목수 2명',
+      trades: ['철거', '설비·급배수', '목공', '전기', '도장', '마감'],
+      tradeIndex: 2,
+      nextWhen: '내일',
+      nextTrade: '전기 공사',
+      nextSummary: '조명과 콘센트 배선을 시작해요',
+      recentPhotos: [
+        PublicSitePhoto(
+          imageUrl: 'https://picsum.photos/seed/seongsu-wood-1/900/900',
+          trade: '목공',
+          takenOn: '10월 22일',
+        ),
+        PublicSitePhoto(
+          imageUrl: 'https://picsum.photos/seed/seongsu-wood-2/900/900',
+          trade: '목공',
+          takenOn: '10월 21일',
+        ),
+        PublicSitePhoto(
+          imageUrl: 'https://picsum.photos/seed/seongsu-demo-1/900/900',
+          trade: '철거',
+          takenOn: '10월 8일',
+        ),
+      ],
+    ),
+  };
+
+  static const Map<String, PrepRecord> _keptConsults = {
+    'project-seongsu-cafe': PrepRecord(
+      id: 'consult-seongsu',
+      placeName: '성수동 카페',
+      buildingType: '상가',
+      address: '서울 성동구 성수이로 00',
+      detailAddress: '1층',
+      area: '32',
+      areaRange: '30평대',
+      buildingCondition: '부분 철거',
+      style: '따뜻한 우드',
+      budget: '8,000만 원',
+      budgetRange: '7~9천만 원',
+      period: '2개월',
+      startTiming: '1개월 안',
+      openTiming: '1~3개월',
+      needs: '카운터를 입구에서 바로 보이게 하고, 좌석은 창가 쪽으로 두고 싶어요.',
+      floorPlanLabels: [],
+      referenceImageLabels: [],
+      industry: '카페',
+      workScope: '전체공사',
+      contact: '010-0000-0000',
+      finishes: {
+        'signboard': PrepFinishAnswer(choices: ['신규 제작']),
+        'lighting': PrepFinishAnswer(choices: ['전체 교체']),
+      },
+    ),
+  };
+
+  ConstructionProgress? constructionFor(String projectId) =>
+      _construction[projectId];
+
+  PrepRecord? recordFor(String projectId) =>
+      _receivedRecords[projectId] ?? _keptConsults[projectId];
 
   SpaceProject? projectForRecord(String recordId) {
     if (recordId.isEmpty) return null;
@@ -149,42 +252,44 @@ class SpaceApi {
     final SpaceProject? existing = projectForRecord(record.id);
     if (existing != null) return existing;
 
-    final String recordId = record.id.isEmpty
-        ? 'consult-${DateTime.now().microsecondsSinceEpoch}'
-        : record.id;
-    final PrepRecord stored = record.id == recordId
-        ? record
-        : PrepRecord(
-            id: recordId,
-            placeName: record.placeName,
-            buildingType: record.buildingType,
-            address: record.address,
-            detailAddress: record.detailAddress,
-            area: record.area,
-            buildingCondition: record.buildingCondition,
-            style: record.style,
-            budget: record.budget,
-            period: record.period,
-            periodStart: record.periodStart,
-            periodEnd: record.periodEnd,
-            needs: record.needs,
-            floorPlanLabels: record.floorPlanLabels,
-            referenceImageLabels: record.referenceImageLabels,
-            floorPlans: record.floorPlans,
-            stylePhotos: record.stylePhotos,
-            industry: record.industry,
-            industryGroup: record.industryGroup,
-            secondaryIndustries: record.secondaryIndustries,
-            areaRange: record.areaRange,
-            budgetRange: record.budgetRange,
-            startTiming: record.startTiming,
-            openTiming: record.openTiming,
-            workScope: record.workScope,
-            contact: record.contact,
-            workPlace: record.workPlace,
-            finishes: record.finishes,
-            styleRef: record.styleRef,
-          );
+    final String recordId =
+        record.id.isEmpty
+            ? 'consult-${DateTime.now().microsecondsSinceEpoch}'
+            : record.id;
+    final PrepRecord stored =
+        record.id == recordId
+            ? record
+            : PrepRecord(
+              id: recordId,
+              placeName: record.placeName,
+              buildingType: record.buildingType,
+              address: record.address,
+              detailAddress: record.detailAddress,
+              area: record.area,
+              buildingCondition: record.buildingCondition,
+              style: record.style,
+              budget: record.budget,
+              period: record.period,
+              periodStart: record.periodStart,
+              periodEnd: record.periodEnd,
+              needs: record.needs,
+              floorPlanLabels: record.floorPlanLabels,
+              referenceImageLabels: record.referenceImageLabels,
+              floorPlans: record.floorPlans,
+              stylePhotos: record.stylePhotos,
+              industry: record.industry,
+              industryGroup: record.industryGroup,
+              secondaryIndustries: record.secondaryIndustries,
+              areaRange: record.areaRange,
+              budgetRange: record.budgetRange,
+              startTiming: record.startTiming,
+              openTiming: record.openTiming,
+              workScope: record.workScope,
+              contact: record.contact,
+              workPlace: record.workPlace,
+              finishes: record.finishes,
+              styleRef: record.styleRef,
+            );
     consults.removeWhere((PrepRecord item) => item.id == stored.id);
     final SpaceProject project = SpaceProject(
       id: 'space-${stored.id}',
@@ -201,7 +306,9 @@ class SpaceApi {
   }
 
   void saveConsult(PrepRecord record) {
-    final int index = consults.indexWhere((PrepRecord item) => item.id == record.id);
+    final int index = consults.indexWhere(
+      (PrepRecord item) => item.id == record.id,
+    );
     if (index >= 0) {
       consults[index] = record;
     } else {
@@ -210,7 +317,9 @@ class SpaceApi {
   }
 
   void saveTrade(TradeCandidate candidate) {
-    final int index = trades.indexWhere((TradeCandidate item) => item.id == candidate.id);
+    final int index = trades.indexWhere(
+      (TradeCandidate item) => item.id == candidate.id,
+    );
     if (index >= 0) {
       trades[index] = candidate;
       return;

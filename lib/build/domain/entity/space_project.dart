@@ -1,3 +1,5 @@
+import 'package:interiorapp_flutter_client/build/domain/entity/construction_plan.dart';
+
 /// 상담 접수 이후의 정식 프로젝트. 고객 화면에서는 현장명으로 보여 준다.
 enum SpacePhase {
   consult('상담'),
@@ -23,6 +25,8 @@ class SpaceProject {
     required this.phase,
     required this.imageUrl,
     required this.completed,
+    this.visitAppointment,
+    this.constructionPlan,
   });
 
   final String id;
@@ -33,7 +37,28 @@ class SpaceProject {
   final String imageUrl;
   final bool completed;
 
+  /// 전화 상담에서 정한 현장 방문. 없으면 아직 일정이 없는 것이다.
+  final VisitAppointment? visitAppointment;
+
+  /// 현장방문 이후 확정된 시공안. 없으면 아직 정리되지 않은 것이다.
+  final ConstructionPlan? constructionPlan;
+
   int get filledSteps => phase.index + 1;
+}
+
+/// 전화 상담에서 정한 방문 일정, 위치, 방문하는 사람.
+class VisitAppointment {
+  const VisitAppointment({
+    required this.when,
+    required this.place,
+    required this.visitorName,
+    required this.visitorRole,
+  });
+
+  final DateTime when;
+  final String place;
+  final String visitorName;
+  final String visitorRole;
 }
 
 enum ShowroomReferenceMarkKind { stroke, rect, ellipse }
@@ -178,7 +203,8 @@ String consultRegion(String address) {
     if (part.endsWith('구') || part.endsWith('군')) return part;
   }
   for (final String part in parts) {
-    if (part.endsWith('시') && !part.contains('특별') && !part.contains('광역')) return part;
+    if (part.endsWith('시') && !part.contains('특별') && !part.contains('광역'))
+      return part;
   }
   return '';
 }
@@ -193,10 +219,14 @@ String consultIndustryShort(String industry) {
 }
 
 /// 이름을 비웠을 때 쓰는 `지역 + 업종`.
-String consultTempPlaceName({required String address, required String industry}) {
+String consultTempPlaceName({
+  required String address,
+  required String industry,
+}) {
   final String region = consultRegion(address);
   final String trade = consultIndustryShort(industry);
-  if (region.isEmpty) return trade == '공간' && industry.trim().isEmpty ? '' : trade;
+  if (region.isEmpty)
+    return trade == '공간' && industry.trim().isEmpty ? '' : trade;
   return '$region $trade';
 }
 
@@ -298,7 +328,8 @@ class PrepRecord {
   /// 쇼룸에서 골라 온 참고 사례. 없으면 일반 상담준비다.
   final ShowroomStyleRef? styleRef;
 
-  bool get industryReady => industry.isNotEmpty && industry != PrepLabels.industryUndecided;
+  bool get industryReady =>
+      industry.isNotEmpty && industry != PrepLabels.industryUndecided;
 
   bool get contactReady => contact.trim().isNotEmpty;
 

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:interiorapp_flutter_client/build/domain/entity/construction_progress.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/build/presentation/provider/build_provider.dart';
+import 'package:interiorapp_flutter_client/build/presentation/vm/space_board_vm.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/prep_consult_screen.dart';
+import 'package:interiorapp_flutter_client/build/ui/widget/project_progress_view.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_theme.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
@@ -25,7 +28,8 @@ class SpaceDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final SpaceProject? project = ref.watch(spaceBoardProvider).find(projectId);
+    final SpaceBoard board = ref.watch(spaceBoardProvider);
+    final SpaceProject? project = board.find(projectId);
     if (project == null) {
       return Scaffold(
         appBar: AppBar(),
@@ -33,10 +37,22 @@ class SpaceDetailScreen extends ConsumerWidget {
       );
     }
 
+    if (!project.completed) {
+      return ProjectProgressView(
+        placeName: project.placeName,
+        stage: _projectStage(project.phase),
+        record: board.recordFor(project.id),
+        progress: board.constructionFor(project.id),
+        visitAppointment: project.visitAppointment,
+        constructionPlan: project.constructionPlan,
+      );
+    }
+
     final double fontScale = ResponsiveSize.fontScale(context);
-    final PrepRecord? received = project.phase == SpacePhase.consult
-        ? ref.read(spaceBoardProvider).recordFor(project.id)
-        : null;
+    final PrepRecord? received =
+        project.phase == SpacePhase.consult
+            ? ref.read(spaceBoardProvider).recordFor(project.id)
+            : null;
 
     return Scaffold(
       backgroundColor: const Color(0xFFFCFCFC),
@@ -45,48 +61,48 @@ class SpaceDetailScreen extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           if (received == null) ...[
-          Text(
-            project.statusLabel,
-            style: TextStyle(
-              fontSize: 15 * fontScale,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF6E6E6E),
-            ),
-          ),
-          const SizedBox(height: 16),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFECECEC)),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '다음 할 일',
-                    style: TextStyle(
-                      fontSize: 12 * fontScale,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF8A8A8A),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    project.nextAction,
-                    style: TextStyle(
-                      fontSize: 18 * fontScale,
-                      fontWeight: FontWeight.w700,
-                      height: 1.35,
-                      color: const Color(0xFF1A1A1A),
-                    ),
-                  ),
-                ],
+            Text(
+              project.statusLabel,
+              style: TextStyle(
+                fontSize: 15 * fontScale,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF6E6E6E),
               ),
             ),
-          ),
+            const SizedBox(height: 16),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFECECEC)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '다음 할 일',
+                      style: TextStyle(
+                        fontSize: 12 * fontScale,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF8A8A8A),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      project.nextAction,
+                      style: TextStyle(
+                        fontSize: 18 * fontScale,
+                        fontWeight: FontWeight.w700,
+                        height: 1.35,
+                        color: const Color(0xFF1A1A1A),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
           const SizedBox(height: 20),
           Text(
@@ -107,9 +123,10 @@ class SpaceDetailScreen extends ConsumerWidget {
                       Container(
                         height: 8,
                         decoration: BoxDecoration(
-                          color: i < project.filledSteps
-                              ? const Color(0xFF1A1A1A)
-                              : const Color(0xFFE6E6E6),
+                          color:
+                              i < project.filledSteps
+                                  ? const Color(0xFF1A1A1A)
+                                  : const Color(0xFFE6E6E6),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       ),
@@ -120,12 +137,14 @@ class SpaceDetailScreen extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 11 * fontScale,
-                          fontWeight: i == project.phase.index
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          color: i == project.phase.index
-                              ? const Color(0xFF1A1A1A)
-                              : const Color(0xFF9A9A9A),
+                          fontWeight:
+                              i == project.phase.index
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                          color:
+                              i == project.phase.index
+                                  ? const Color(0xFF1A1A1A)
+                                  : const Color(0xFF9A9A9A),
                         ),
                       ),
                     ],
@@ -139,30 +158,50 @@ class SpaceDetailScreen extends ConsumerWidget {
             ConsultReceivedBody(record: received)
           else
             for (final String section in _sections)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Material(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(14),
-                child: ListTile(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    side: const BorderSide(color: Color(0xFFECECEC)),
-                  ),
-                  title: Text(
-                    section,
-                    style: TextStyle(
-                      fontSize: 15 * fontScale,
-                      fontWeight: FontWeight.w600,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Material(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  child: ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      side: const BorderSide(color: Color(0xFFECECEC)),
                     ),
+                    title: Text(
+                      section,
+                      style: TextStyle(
+                        fontSize: 15 * fontScale,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    trailing: const Icon(
+                      Icons.chevron_right,
+                      color: Color(0xFFB0B0B0),
+                    ),
+                    onTap: () {},
                   ),
-                  trailing: const Icon(Icons.chevron_right, color: Color(0xFFB0B0B0)),
-                  onTap: () {},
                 ),
               ),
-            ),
         ],
       ),
     );
+  }
+}
+
+ProjectStage _projectStage(SpacePhase phase) {
+  switch (phase) {
+    case SpacePhase.consult:
+      return ProjectStage.consult;
+    case SpacePhase.estimate:
+      return ProjectStage.estimate;
+    case SpacePhase.design:
+      return ProjectStage.plan;
+    case SpacePhase.construction:
+      return ProjectStage.build;
+    case SpacePhase.handover:
+      return ProjectStage.handover;
+    case SpacePhase.afterCare:
+      return ProjectStage.afterCare;
   }
 }

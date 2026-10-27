@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:interiorapp_flutter_client/build/domain/entity/construction_progress.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/build/domain/repository/space_repository.dart';
 import 'package:interiorapp_flutter_client/build/domain/use_case/space_use_case.dart';
@@ -17,8 +18,11 @@ class SpaceBoard extends ChangeNotifier {
   List<SpaceProject> get ongoing => _useCase.ongoing;
   List<SpaceProject> get finished => _useCase.finished;
 
+  ConstructionProgress? constructionFor(String projectId) =>
+      _useCase.constructionFor(projectId);
   PrepRecord? recordFor(String projectId) => _useCase.recordFor(projectId);
-  SpaceProject? projectForRecord(String recordId) => _useCase.projectForRecord(recordId);
+  SpaceProject? projectForRecord(String recordId) =>
+      _useCase.projectForRecord(recordId);
   SpaceProject? find(String id) => _useCase.find(id);
 
   SpaceProject receiveConsult(PrepRecord record) {

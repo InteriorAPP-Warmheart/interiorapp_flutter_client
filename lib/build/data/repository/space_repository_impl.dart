@@ -1,4 +1,5 @@
 import 'package:interiorapp_flutter_client/build/data/source/space_api.dart';
+import 'package:interiorapp_flutter_client/build/domain/entity/construction_progress.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/build/domain/repository/space_repository.dart';
 
@@ -23,10 +24,15 @@ class SpaceRepositoryImpl implements SpaceRepository {
   List<SpaceProject> get finished => _api.finished;
 
   @override
+  ConstructionProgress? constructionFor(String projectId) =>
+      _api.constructionFor(projectId);
+
+  @override
   PrepRecord? recordFor(String projectId) => _api.recordFor(projectId);
 
   @override
-  SpaceProject? projectForRecord(String recordId) => _api.projectForRecord(recordId);
+  SpaceProject? projectForRecord(String recordId) =>
+      _api.projectForRecord(recordId);
 
   @override
   SpaceProject? find(String id) => _api.find(id);
