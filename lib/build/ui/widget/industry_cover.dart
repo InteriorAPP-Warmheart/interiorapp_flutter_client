@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
-/// 업종 표지. 카페만 시험 이미지가 있고, 나머지는 단색이다.
+/// 업종 표지. 카페와 베이커리만 시험 이미지가 있고, 나머지는 단색이다.
 String? industryCoverAsset(String industry) {
   if (industry.contains('카페')) {
     return 'assets/images/app_images/wapll_cafe.png';
+  }
+  if (industry.contains('베이커리') || industry.contains('빵집')) {
+    return 'assets/images/app_images/wapll_bakery.png';
   }
   return null;
 }

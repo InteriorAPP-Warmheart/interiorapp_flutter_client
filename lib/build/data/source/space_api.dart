@@ -1,3 +1,4 @@
+import 'package:interiorapp_flutter_client/build/data/source/quote_sample.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/construction_plan.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/construction_progress.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
@@ -127,11 +128,51 @@ class SpaceApi {
     SpaceProject(
       id: 'project-mangwon-bakery',
       placeName: '망원동 빵집',
-      statusLabel: '견적 · 계약',
-      nextAction: '견적서를 확인해 주세요',
+      statusLabel: '시공 · 견적',
+      nextAction: '시공과 금액을 확인해 주세요',
+      workQuote: sampleWorkQuote,
       phase: SpacePhase.estimate,
       imageUrl: 'https://picsum.photos/seed/mangwon-bakery/1200/900',
       completed: false,
+      visitAppointment: VisitAppointment(
+        when: DateTime(2026, 10, 21, 11, 0),
+        place: '서울 마포구 망원로 00 1층',
+        visitorName: '윤재원',
+        visitorRole: '실사 담당',
+      ),
+      constructionPlan: ConstructionPlan(
+        scope: [
+          PlanDecision(
+            conclusion: '진열대는 입구에서 바로 보이게 둠',
+            customerNote: '진열대를 들어오자마자 보이게 하고 싶어요.',
+            staffNote: '입구 정면 벽을 낮추고, 쇼케이스를 길 쪽에서 보이게 두기로 했어요.',
+          ),
+          PlanDecision(
+            conclusion: '작업 공간은 안쪽에 둠',
+            customerNote: '반죽과 오븐은 손님 쪽에서 덜 보이게 하고 싶어요.',
+            staffNote: '안쪽을 작업대로 두고, 진열대 뒤를 계산대와 동선으로 남기기로 했어요.',
+          ),
+        ],
+        excluded: [
+          PlanDecision(
+            conclusion: '2층 창고는 이번 공사에서 제외',
+            customerNote: '영업은 1층만 해서, 2층은 이번에 손대지 않아도 돼요.',
+            staffNote: '1층 급배수와 전기만 손보기로 하고, 2층 창고는 범위 밖에 뒀어요.',
+          ),
+        ],
+        constraints: [
+          PlanDecision(
+            conclusion: '오븐 때문에 전기 증설이 필요함',
+            customerNote: '오븐이랑 냉장 쇼케이스를 지금보다 늘리고 싶어요.',
+            staffNote: '현재 용량으로는 오븐과 쇼케이스를 같이 쓰기 어려워서 증설을 공사 조건에 넣었어요.',
+          ),
+          PlanDecision(
+            conclusion: '작업대 쪽으로 급배수를 옮겨야 함',
+            customerNote: '싱크를 안쪽 작업대 옆에 두고 싶어요.',
+            staffNote: '기존 배수는 입구 쪽이라, 안쪽 작업대까지 급배수를 옮겨야 해요.',
+          ),
+        ],
+      ),
     ),
   ];
 
@@ -218,6 +259,32 @@ class SpaceApi {
       floorPlanLabels: [],
       referenceImageLabels: [],
       industry: '카페',
+      workScope: '전체공사',
+      contact: '010-0000-0000',
+      finishes: {
+        'signboard': PrepFinishAnswer(choices: ['신규 제작']),
+        'lighting': PrepFinishAnswer(choices: ['전체 교체']),
+      },
+    ),
+    'project-mangwon-bakery': PrepRecord(
+      id: 'consult-mangwon',
+      placeName: '망원동 빵집',
+      buildingType: '상가',
+      address: '서울 마포구 망원로 00',
+      detailAddress: '1층',
+      area: '28',
+      areaRange: '20평대',
+      buildingCondition: '부분 철거',
+      style: '따뜻한 우드',
+      budget: '1억 원',
+      budgetRange: '9천만~1.1억 원',
+      period: '2개월',
+      startTiming: '1개월 안',
+      openTiming: '1~3개월',
+      needs: '진열대를 입구에서 바로 보이게 하고, 작업 공간은 안쪽에 두고 싶어요.',
+      floorPlanLabels: [],
+      referenceImageLabels: [],
+      industry: '베이커리',
       workScope: '전체공사',
       contact: '010-0000-0000',
       finishes: {

@@ -45,6 +45,7 @@ class SpaceDetailScreen extends ConsumerWidget {
         progress: board.constructionFor(project.id),
         visitAppointment: project.visitAppointment,
         constructionPlan: project.constructionPlan,
+        workQuote: project.workQuote,
       );
     }
 
@@ -194,9 +195,8 @@ ProjectStage _projectStage(SpacePhase phase) {
     case SpacePhase.consult:
       return ProjectStage.consult;
     case SpacePhase.estimate:
-      return ProjectStage.estimate;
     case SpacePhase.design:
-      return ProjectStage.plan;
+      return ProjectStage.quote;
     case SpacePhase.construction:
       return ProjectStage.build;
     case SpacePhase.handover:

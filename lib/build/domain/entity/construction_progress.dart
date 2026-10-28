@@ -2,8 +2,7 @@
 enum ProjectStage {
   consult('상담'),
   visit('현장방문·실사'),
-  plan('시공안'),
-  estimate('견적'),
+  quote('시공·견적'),
   contract('계약'),
   prep('착공준비'),
   build('공사진행'),

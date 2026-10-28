@@ -1,4 +1,5 @@
 import 'package:interiorapp_flutter_client/build/domain/entity/construction_plan.dart';
+import 'package:interiorapp_flutter_client/build/domain/entity/work_quote.dart';
 
 /// 상담 접수 이후의 정식 프로젝트. 고객 화면에서는 현장명으로 보여 준다.
 enum SpacePhase {
@@ -27,6 +28,7 @@ class SpaceProject {
     required this.completed,
     this.visitAppointment,
     this.constructionPlan,
+    this.workQuote,
   });
 
   final String id;
@@ -42,6 +44,9 @@ class SpaceProject {
 
   /// 현장방문 이후 확정된 시공안. 없으면 아직 정리되지 않은 것이다.
   final ConstructionPlan? constructionPlan;
+
+  /// 시공 판단과 견적, 받은 자료. 없으면 아직 금액이 없는 것이다.
+  final WorkQuote? workQuote;
 
   int get filledSteps => phase.index + 1;
 }
