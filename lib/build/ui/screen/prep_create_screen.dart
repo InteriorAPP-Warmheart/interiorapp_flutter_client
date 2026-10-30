@@ -857,7 +857,7 @@ class _PrepCreateScreenState extends ConsumerState<PrepCreateScreen>
   @override
   Widget build(BuildContext context) {
     final double fontScale = ResponsiveSize.fontScale(context);
-    final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
+    final EdgeInsets padding = ResponsiveSize.textInset(context);
     final double sectionGap = ResponsiveSize.sectionGap(context);
     final double subGap = ResponsiveSize.subGap(context);
     final double messageFont = MediaQuery.textScalerOf(

@@ -8,7 +8,13 @@ class Section extends StatelessWidget {
   final Widget child;
   final double? gap; // 제목-본문 간 간격 오버라이드
 
-  const Section({super.key, required this.title, required this.child, this.trailing, this.gap});
+  const Section({
+    super.key,
+    required this.title,
+    required this.child,
+    this.trailing,
+    this.gap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -17,12 +23,12 @@ class Section extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(child: title),
-            if (trailing != null) trailing!,
-          ],
+        Padding(
+          padding: ResponsiveSize.textInset(context),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [Expanded(child: title), if (trailing != null) trailing!],
+          ),
         ),
         SizedBox(height: resolvedGap),
         child,
@@ -30,5 +36,3 @@ class Section extends StatelessWidget {
     );
   }
 }
-
-

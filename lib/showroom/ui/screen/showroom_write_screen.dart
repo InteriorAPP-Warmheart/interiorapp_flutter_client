@@ -1,308 +1,290 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
+import 'package:interiorapp_flutter_client/build/presentation/provider/build_provider.dart';
+import 'package:interiorapp_flutter_client/build/presentation/vm/space_board_vm.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
-import 'package:interiorapp_flutter_client/showroom/presentation/provider/showroom_write_provider.dart';
 
 class ShowroomWriteScreen extends ConsumerWidget {
   const ShowroomWriteScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final recentBuildings = ref.watch(showroomWriteProvider);
-    final hasData = ref.watch(showroomDataToggleProvider);
-    final scrollController = ref.watch(showroomScrollControllerProvider);
-    final selectedBuildId = ref.watch(selectedBuildIdProvider);
-
-    // 데이터가 변경될 때만 스크롤을 맨 위로 이동
-    ref.listen(showroomWriteProvider, (previous, next) {
-      next.whenData((data) {
-        if (data.isNotEmpty) {
-          // ListView가 완전히 렌더링된 후 스크롤 이동
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (scrollController.hasClients) {
-                // reverse: true일 때는 최대 스크롤 위치가 맨 위 (최신 데이터)
-                final maxScroll = scrollController.position.maxScrollExtent;
-                scrollController.jumpTo(maxScroll);
-              }
-            });
-          });
-        }
-      });
-    });
+    final SpaceBoard board = ref.watch(spaceBoardProvider);
+    final List<SpaceProject> active = <SpaceProject>[
+      ...board.received,
+      ...board.ongoing,
+    ];
+    final List<SpaceProject> finished = board.finished;
+    final bool hasSpace = active.isNotEmpty || finished.isNotEmpty;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(hasData ? '쇼룸 글쓰기(시공했던 데이터O)' : '쇼룸 글쓰기(시공했던 데이터X)'),
-        actions: [
-          // 스위치로 데이터 표시 상태 토글
-          Switch(
-            value: hasData,
-            onChanged: (value) {
-              ref.read(showroomDataToggleProvider.notifier).setValue(value);
-            },
+      backgroundColor: AppColors.background,
+      appBar: AppBar(title: const Text('쇼룸 글쓰기')),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+              children: [
+                const Text(
+                  '시공한 공간으로 시작해요',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.6,
+                    height: 1.25,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  '진행 중이거나 마친 공간이 있으면 조건과 현장 사진을 가져와 쓸 수 있어요. 본문은 글과 사진을 원하는 순서대로 쌓아요.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.5,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                if (!hasSpace)
+                  const _EmptySpaces()
+                else ...[
+                  if (active.isNotEmpty) ...[
+                    const _SectionLabel('진행 중인 공간'),
+                    for (final SpaceProject project in active) ...[
+                      _SpaceCard(
+                        project: project,
+                        photoCount:
+                            board
+                                .constructionFor(project.id)
+                                ?.recentPhotos
+                                .length ??
+                            0,
+                        onTap:
+                            () => context.push(
+                              '/showroom-write/first-write?buildId=${project.id}',
+                            ),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                    const SizedBox(height: 14),
+                  ],
+                  if (finished.isNotEmpty) ...[
+                    const _SectionLabel('마친 공간'),
+                    for (final SpaceProject project in finished) ...[
+                      _SpaceCard(
+                        project: project,
+                        photoCount:
+                            board
+                                .constructionFor(project.id)
+                                ?.recentPhotos
+                                .length ??
+                            0,
+                        onTap:
+                            () => context.push(
+                              '/showroom-write/first-write?buildId=${project.id}',
+                            ),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                  ],
+                ],
+              ],
+            ),
           ),
+          const _DirectWriteBar(),
         ],
       ),
-      body:
-      // 쇼룸 데이터가 있을때와 없을 때 조건 처리
-      recentBuildings.when(
-        data: (data) {
-          print(
-            '데이터 상태: ${data.length}개, isEmpty: ${data.isEmpty}, hasData: $hasData',
-          );
+    );
+  }
+}
 
-          return data.isNotEmpty
-              ? Center(
-                child: Padding(
-                  padding: EdgeInsets.all(20),
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+class _SpaceCard extends StatelessWidget {
+  const _SpaceCard({
+    required this.project,
+    required this.photoCount,
+    required this.onTap,
+  });
+
+  final SpaceProject project;
+  final int photoCount;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(
+                    width: 72,
+                    height: 72,
+                    child: AppNetworkImage(url: project.imageUrl),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text(
-                            '최근 시공한 내역들이에요',
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Expanded(
-                        child: ListView.builder(
-                          controller: scrollController,
-                          itemCount: data.length,
-                          reverse: true,
-                          itemBuilder: (context, index) {
-                            return Padding(
-                              padding: EdgeInsetsGeometry.symmetric(
-                                vertical: 5,
-                              ),
-                              child: Container(
-                                height: 72,
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.grey[300]!),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Radio<String?>(
-                                      value: data[index]['id'],
-                                      groupValue: selectedBuildId,
-                                      onChanged: (value) {
-                                        ref
-                                            .read(
-                                              selectedBuildIdProvider.notifier,
-                                            )
-                                            .select(value);
-                                      },
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsets.only(right: 10),
-                                      child: SizedBox(
-                                        width: 40,
-                                        height: 40,
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
-                                          child: AppNetworkImage(
-                                            url: data[index]['buildImage'],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          data[index]['buildName'],
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        Text(
-                                          data[index]['buildPeriod'],
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
+                      Text(
+                        project.placeName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.2,
+                          color: AppColors.textPrimary,
                         ),
                       ),
-                      // button section
-                      Padding(
-                        padding: EdgeInsets.only(top: 10),
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: 54,
-                          child: OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onPressed: (selectedBuildId?.isNotEmpty ?? false)
-                                ? () => context.push(
-                                      '/showroom-write/first-write?buildId=$selectedBuildId',
-                                    )
-                                : null,
-                            child: const Text(
-                              '선택된 데이터로 쇼룸 작성하기',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
+                      const SizedBox(height: 4),
+                      Text(
+                        project.statusLabel,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
                         ),
                       ),
-
-                      Padding(
-                        padding: EdgeInsets.only(top: 10, bottom: 30),
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: 54,
-                          child: OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onPressed:
-                                () =>
-                                    context.push('/showroom-write/first-write'),
-                            child: const Text(
-                              '직접 작성하기',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                      if (photoCount > 0) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          '현장 사진 $photoCount장',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.accent,
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
-              )
-              : Center(
-                child: Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text(
-                            '최근 시공한 내역이\n없어요',
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        width: double.infinity,
-                        height: 320,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.build),
-                            SizedBox(height: 10),
-                            Text('그래픽 들어갈 영역'),
-                          ],
-                        ),
-                      ),
-                      // button section
-                      Column(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(top: 10),
-                            child: SizedBox(
-                              width: double.infinity,
-                              height: 54,
-                              child: OutlinedButton(
-                                style: OutlinedButton.styleFrom(
-                                  backgroundColor: Colors.grey[200],
-                                  side: BorderSide(color: Colors.grey[200]!),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                onPressed: () {},
-                                child: const Text(
-                                  '시공 예상 견적 확인하기',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(top: 10, bottom: 30),
-                            child: SizedBox(
-                              width: double.infinity,
-                              height: 54,
-                              child: OutlinedButton(
-                                style: OutlinedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                onPressed:
-                                    () => context.push(
-                                      '/showroom-write/first-write',
-                                    ),
-
-                                child: const Text(
-                                  '직접 작성하기',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 14,
+                  color: AppColors.textSecondary,
                 ),
-              );
-        },
-        error: (error, stackTrace) {
-          return Center(child: Text('쇼룸 데이터 로딩 중 오류가 발생했습니다.'));
-        },
-        loading: () {
-          return Center(child: CircularProgressIndicator());
-        },
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptySpaces extends StatelessWidget {
+  const _EmptySpaces();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 36),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Column(
+        children: [
+          Icon(
+            Icons.apartment_outlined,
+            size: 28,
+            color: AppColors.textSecondary,
+          ),
+          SizedBox(height: 12),
+          Text(
+            '아직 시공한 공간이 없어요',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            '조건과 사진만으로도 쇼룸을 쓸 수 있어요.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.45,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DirectWriteBar extends StatelessWidget {
+  const _DirectWriteBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+        child: SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: OutlinedButton(
+            onPressed: () => context.push('/showroom-write/first-write'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.textPrimary,
+              side: const BorderSide(color: AppColors.border),
+              backgroundColor: AppColors.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            child: const Text(
+              '직접 작성하기',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ),
       ),
     );
   }

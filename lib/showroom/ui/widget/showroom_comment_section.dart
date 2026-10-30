@@ -24,10 +24,12 @@ class _Comment {
 class ShowroomBoardWithComments extends StatefulWidget {
   const ShowroomBoardWithComments({
     super.key,
+    this.headerSlivers = const <Widget>[],
     required this.leading,
     required this.authorName,
   });
 
+  final List<Widget> headerSlivers;
   final List<Widget> leading;
   final String authorName;
 
@@ -114,14 +116,12 @@ class _ShowroomBoardWithCommentsState extends State<ShowroomBoardWithComments> {
   }
 
   List<_Comment> get _best {
-    final List<_Comment> sorted = List<_Comment>.of(_comments)..sort((
-      _Comment a,
-      _Comment b,
-    ) {
-      final int byReplies = b.replies.length.compareTo(a.replies.length);
-      if (byReplies != 0) return byReplies;
-      return b.createdAt.compareTo(a.createdAt);
-    });
+    final List<_Comment> sorted = List<_Comment>.of(_comments)
+      ..sort((_Comment a, _Comment b) {
+        final int byReplies = b.replies.length.compareTo(a.replies.length);
+        if (byReplies != 0) return byReplies;
+        return b.createdAt.compareTo(a.createdAt);
+      });
     return sorted.take(2).toList();
   }
 
@@ -223,85 +223,97 @@ class _ShowroomBoardWithCommentsState extends State<ShowroomBoardWithComments> {
     return Column(
       children: [
         Expanded(
-          child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-          children: [
-            ...widget.leading,
-            const SizedBox(height: 28),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFE7E1D8)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          '댓글 $_total',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.3,
-                            color: AppColors.textPrimary,
-                          ),
+          child: CustomScrollView(
+            slivers: [
+              ...widget.headerSlivers,
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(0, 4, 0, 16),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    ...widget.leading,
+                    const SizedBox(height: 28),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFE7E1D8)),
                         ),
-                        const Spacer(),
-                        if (_comments.isNotEmpty)
-                          GestureDetector(
-                            onTap: _openAll,
-                            behavior: HitTestBehavior.opaque,
-                            child: const Text(
-                              '모두 보기',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primary,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    '댓글 $_total',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: -0.3,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  if (_comments.isNotEmpty)
+                                    GestureDetector(
+                                      onTap: _openAll,
+                                      behavior: HitTestBehavior.opaque,
+                                      child: const Text(
+                                        '모두 보기',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
-                            ),
+                              const SizedBox(height: 14),
+                              if (_comments.isEmpty)
+                                const Padding(
+                                  padding: EdgeInsets.only(bottom: 10),
+                                  child: Text(
+                                    '첫 댓글을 남겨 주세요',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      height: 1.5,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                )
+                              else
+                                for (final _Comment comment in best)
+                                  _CommentCard(
+                                    comment: comment,
+                                    authorName: widget.authorName,
+                                    expanded: _expanded.contains(comment.id),
+                                    onToggle: () {
+                                      setState(() {
+                                        if (!_expanded.add(comment.id)) {
+                                          _expanded.remove(comment.id);
+                                        }
+                                      });
+                                    },
+                                    onReply:
+                                        () =>
+                                            setState(() => _replyTo = comment),
+                                    onReport: _report,
+                                  ),
+                            ],
                           ),
-                      ],
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 14),
-                    if (_comments.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 10),
-                        child: Text(
-                          '첫 댓글을 남겨 주세요',
-                          style: TextStyle(
-                            fontSize: 15,
-                            height: 1.5,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      )
-                    else
-                      for (final _Comment comment in best)
-                        _CommentCard(
-                          comment: comment,
-                          authorName: widget.authorName,
-                          expanded: _expanded.contains(comment.id),
-                          onToggle: () {
-                            setState(() {
-                              if (!_expanded.add(comment.id)) {
-                                _expanded.remove(comment.id);
-                              }
-                            });
-                          },
-                          onReply: () => setState(() => _replyTo = comment),
-                          onReport: _report,
-                        ),
-                  ],
+                  ]),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         ),
         _ComposerBar(
           controller: _text,
@@ -347,49 +359,49 @@ class _AllCommentsSheet extends StatelessWidget {
     final double bottom = MediaQuery.paddingOf(context).bottom;
     return Column(
       children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
+        const SizedBox(height: 8),
+        Container(
+          width: 36,
+          height: 4,
+          decoration: BoxDecoration(
+            color: AppColors.border,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              '댓글 $total',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
+                color: AppColors.textPrimary,
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  '댓글 $total',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.3,
-                    color: AppColors.textPrimary,
+          ),
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+            children: [
+              for (final _Comment comment in comments)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _CommentCard(
+                    comment: comment,
+                    authorName: authorName,
+                    expanded: expanded.contains(comment.id),
+                    onToggle: () => onToggle(comment.id),
+                    onReply: () => onReply(comment),
+                    onReport: onReport,
                   ),
                 ),
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                children: [
-                  for (final _Comment comment in comments)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: _CommentCard(
-                        comment: comment,
-                        authorName: authorName,
-                        expanded: expanded.contains(comment.id),
-                        onToggle: () => onToggle(comment.id),
-                        onReply: () => onReply(comment),
-                        onReport: onReport,
-                      ),
-                    ),
-                ],
-              ),
-            ),
+            ],
+          ),
+        ),
         _ComposerBar(
           controller: text,
           replyName: replyName,
@@ -675,8 +687,7 @@ class _ComposerBar extends StatelessWidget {
                     ),
                     decoration: InputDecoration(
                       isDense: true,
-                      hintText:
-                          replyName == null ? '댓글을 남겨 주세요' : '답글을 남겨 주세요',
+                      hintText: replyName == null ? '댓글을 남겨 주세요' : '답글을 남겨 주세요',
                       hintStyle: const TextStyle(
                         fontSize: 14,
                         height: 1.2,
@@ -748,8 +759,7 @@ class _ReportSheetState extends State<_ReportSheet> {
     super.dispose();
   }
 
-  bool get _canSend =>
-      _selected != null && _detail.text.trim().isNotEmpty;
+  bool get _canSend => _selected != null && _detail.text.trim().isNotEmpty;
 
   @override
   Widget build(BuildContext context) {

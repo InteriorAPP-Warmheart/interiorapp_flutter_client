@@ -38,6 +38,8 @@ dependencies:
   webview_flutter: ^4.14.1
   animations: ^3.0.0
   image_picker: ^1.2.4
+  flutter_quill: ^11.6.0
+  dart_quill_delta: ^10.8.3
 
 dev_dependencies:
   flutter_test:

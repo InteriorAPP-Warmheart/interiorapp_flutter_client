@@ -424,7 +424,6 @@ class _IndexRail extends StatelessWidget {
 
 List<_Beat> _beats(ShowroomStoryModel story) {
   final ShowroomSituation? situation = story.situation;
-  final ShowroomBeforeAfter? beforeAfter = story.beforeAfter;
   final ShowroomCost? cost = story.cost;
   return <_Beat>[
     _Beat(
@@ -442,15 +441,12 @@ List<_Beat> _beats(ShowroomStoryModel story) {
           return StorySituationScene(situation: situation, progress: progress);
         },
       ),
-    if (beforeAfter != null)
+    for (final ShowroomBeforeAfter pair in story.comparisons)
       _Beat(
         light: false,
         reveal: const Duration(milliseconds: 500),
         build: (double progress) {
-          return StoryBeforeAfterScene(
-            beforeAfter: beforeAfter,
-            progress: progress,
-          );
+          return StoryBeforeAfterScene(beforeAfter: pair, progress: progress);
         },
       ),
     if (cost != null)

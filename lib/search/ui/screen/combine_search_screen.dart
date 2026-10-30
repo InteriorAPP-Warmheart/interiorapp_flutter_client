@@ -73,7 +73,7 @@ class _CombineSearchScreenState extends ConsumerState<CombineSearchScreen> {
 
   Widget _buildDefaultScreen() {
     final double fontScale = ResponsiveSize.fontScale(context);
-    final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
+    final EdgeInsets padding = ResponsiveSize.textInset(context);
 
     return Center(
       child: Padding(
@@ -133,7 +133,7 @@ class _CombineSearchScreenState extends ConsumerState<CombineSearchScreen> {
   Widget _buildRecentSearches() {
     final recentSearches = ref.watch(recentSearchHistoryVmProvider);
     final double fontScale = ResponsiveSize.fontScale(context);
-    final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
+    final EdgeInsets padding = ResponsiveSize.textInset(context);
 
     return Padding(
       padding: padding.copyWith(top: 16, bottom: 16),
@@ -194,7 +194,7 @@ class _CombineSearchScreenState extends ConsumerState<CombineSearchScreen> {
   }
 
   Widget _buildSearchSuggestionsContent() {
-    final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
+    final EdgeInsets padding = ResponsiveSize.textInset(context);
 
     return SingleChildScrollView(
       padding: padding.copyWith(top: 16, bottom: 16),

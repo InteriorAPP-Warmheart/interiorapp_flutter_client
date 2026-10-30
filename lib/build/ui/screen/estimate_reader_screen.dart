@@ -115,7 +115,7 @@ class _EstimateReaderScreenState extends State<EstimateReaderScreen> {
   @override
   Widget build(BuildContext context) {
     final double fontScale = ResponsiveSize.fontScale(context);
-    final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
+    final EdgeInsets padding = ResponsiveSize.textInset(context);
     final WorkQuote quote = widget.quote;
     final EstimateSheet sheet = quote.sheet;
     final ProjectDocument? file = quote.documentOf(

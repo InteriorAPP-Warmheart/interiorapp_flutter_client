@@ -8,7 +8,7 @@ class SigninScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final EdgeInsets screenPadding = ResponsiveSize.responsivePadding(context);
+    final EdgeInsets screenPadding = ResponsiveSize.textInset(context);
     final double fontScale = ResponsiveSize.fontScale(context);
     final double subGap = ResponsiveSize.subGap(context);
     final double sectionGap = ResponsiveSize.sectionGap(context);

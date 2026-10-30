@@ -88,8 +88,10 @@ class ResponsiveSize {
       decidedAspectRatio = 16 / 9;
     }
 
-    final double responsiveHeight = (maxWidth / decidedAspectRatio)
-        .clamp(minHeight, maxHeight);
+    final double responsiveHeight = (maxWidth / decidedAspectRatio).clamp(
+      minHeight,
+      maxHeight,
+    );
     return responsiveHeight;
   }
 
@@ -106,7 +108,8 @@ class ResponsiveSize {
     double maxHeight = 380.0,
   }) {
     final Size size = MediaQuery.of(context).size;
-    final double contentWidth = size.width - (horizontalPadding * 2) - (horizontalGap * (columns - 1));
+    final double contentWidth =
+        size.width - (horizontalPadding * 2) - (horizontalGap * (columns - 1));
     final double tileWidth = (contentWidth / columns).clamp(80.0, size.width);
     final double height = tileWidth / aspectRatio;
     return height.clamp(minHeight, maxHeight);
@@ -133,7 +136,8 @@ class ResponsiveSize {
     double max = 160.0,
   }) {
     final Size size = MediaQuery.of(context).size;
-    final double contentWidth = size.width - (horizontalPadding * 2) - (horizontalGap * (columns - 1));
+    final double contentWidth =
+        size.width - (horizontalPadding * 2) - (horizontalGap * (columns - 1));
     final double tileWidth = (contentWidth / columns).clamp(min, max);
     return tileWidth;
   }
@@ -165,13 +169,18 @@ class ResponsiveSize {
     return 64.0;
   }
 
-  /// 반응형 패딩 (화면 너비 브레이크포인트 기반)
+  /// 글, 카드, 슬라이더가 같이 쓰는 좌우 여백.
+  /// 맨 위 대표 사진만 이 여백 없이 화면 끝까지 둔다.
   static EdgeInsets responsivePadding(BuildContext context) {
     final AppWindow window = AppWindow.of(context);
     if (window.isExpanded) return const EdgeInsets.symmetric(horizontal: 24.0);
     if (window.isMedium) return const EdgeInsets.symmetric(horizontal: 20.0);
     return const EdgeInsets.symmetric(horizontal: 16.0);
   }
+
+  /// [responsivePadding]과 같다. 제목과 그 아래 내용이 같은 선에서 시작하게 쓴다.
+  static EdgeInsets textInset(BuildContext context) =>
+      responsivePadding(context);
 
   /// 섹션 간 기본 간격 (디바이스 폭 기준 고정 비율)
   static double sectionGap(BuildContext context) {
@@ -204,5 +213,3 @@ class ResponsiveSize {
     return Size(cardWidth, cardWidth * 1.25);
   }
 }
-
-

@@ -19,11 +19,26 @@ class ShowroomStoryApi {
             budget: '8,400만원',
             period: '6주',
           ),
-          beforeAfter: ShowroomBeforeAfter(
-            beforeUrl: 'assets/images/showroom/16.jpg',
-            afterUrl: 'assets/images/showroom/01.jpg',
-            caption: '홀 중앙 수조와 객석',
-          ),
+          comparisons: <ShowroomBeforeAfter>[
+            ShowroomBeforeAfter(
+              zone: '홀',
+              beforeUrl: 'assets/images/showroom/16.jpg',
+              afterUrl: 'assets/images/showroom/01.jpg',
+              caption: '홀 중앙 수조와 객석',
+            ),
+            ShowroomBeforeAfter(
+              zone: '주방',
+              beforeUrl: 'assets/images/showroom/17.jpg',
+              afterUrl: 'assets/images/showroom/06.jpg',
+              caption: '작업대와 선어 진열',
+            ),
+            ShowroomBeforeAfter(
+              zone: '실외',
+              beforeUrl: 'assets/images/showroom/15.jpg',
+              afterUrl: 'assets/images/showroom/05.jpg',
+              caption: '간판과 입구',
+            ),
+          ],
           cost: ShowroomCost(
             total: '8,400만원',
             lines: <ShowroomCostLine>[
@@ -68,11 +83,14 @@ class ShowroomStoryApi {
             budget: '5,200만원',
             period: '4주',
           ),
-          beforeAfter: ShowroomBeforeAfter(
-            beforeUrl: 'assets/images/showroom/05.jpg',
-            afterUrl: 'assets/images/showroom/02.jpg',
-            caption: '계산대에서 보이는 진열대',
-          ),
+          comparisons: <ShowroomBeforeAfter>[
+            ShowroomBeforeAfter(
+              zone: '홀',
+              beforeUrl: 'assets/images/showroom/05.jpg',
+              afterUrl: 'assets/images/showroom/02.jpg',
+              caption: '계산대에서 보이는 진열대',
+            ),
+          ],
           cost: ShowroomCost(
             total: '5,200만원',
             lines: <ShowroomCostLine>[
@@ -116,11 +134,14 @@ class ShowroomStoryApi {
             budget: '1억 2,000만원',
             period: '8주',
           ),
-          beforeAfter: ShowroomBeforeAfter(
-            beforeUrl: 'assets/images/showroom/15.jpg',
-            afterUrl: 'assets/images/showroom/03.jpg',
-            caption: '좌석 열과 중앙 통로',
-          ),
+          comparisons: <ShowroomBeforeAfter>[
+            ShowroomBeforeAfter(
+              zone: '좌석',
+              beforeUrl: 'assets/images/showroom/15.jpg',
+              afterUrl: 'assets/images/showroom/03.jpg',
+              caption: '좌석 열과 중앙 통로',
+            ),
+          ],
           cost: ShowroomCost(
             total: '1억 2,000만원',
             lines: <ShowroomCostLine>[
@@ -164,11 +185,14 @@ class ShowroomStoryApi {
             budget: '7,600만원',
             period: '5주',
           ),
-          beforeAfter: ShowroomBeforeAfter(
-            beforeUrl: 'assets/images/showroom/09.jpg',
-            afterUrl: 'assets/images/showroom/04.jpg',
-            caption: '테이블과 배기 후드',
-          ),
+          comparisons: <ShowroomBeforeAfter>[
+            ShowroomBeforeAfter(
+              zone: '홀',
+              beforeUrl: 'assets/images/showroom/09.jpg',
+              afterUrl: 'assets/images/showroom/04.jpg',
+              caption: '테이블과 배기 후드',
+            ),
+          ],
           cost: ShowroomCost(
             total: '7,600만원',
             lines: <ShowroomCostLine>[

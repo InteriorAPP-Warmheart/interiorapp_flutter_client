@@ -27,7 +27,7 @@ class _ContractReviewScreenState extends State<ContractReviewScreen> {
   @override
   Widget build(BuildContext context) {
     final double fontScale = ResponsiveSize.fontScale(context);
-    final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
+    final EdgeInsets padding = ResponsiveSize.textInset(context);
     final EstimateSheet sheet = widget.quote.sheet;
     final int percent = (sheet.vatRate * 100).round();
     final List<_PayRound> rounds = _payRounds(sheet.grandTotal);

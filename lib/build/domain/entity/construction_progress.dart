@@ -52,13 +52,19 @@ class PublicSitePhoto {
     required this.imageUrl,
     required this.trade,
     required this.takenOn,
+    this.area = '',
   });
 
   final String imageUrl;
+
+  /// 그날의 공정. 예: 목공, 전기, 철거.
   final String trade;
 
   /// 고객에게 보이는 날짜. 예: 10월 22일.
   final String takenOn;
+
+  /// 사진이 찍힌 구역. 예: 홀, 주방, 실외. 없으면 비운다.
+  final String area;
 }
 
 /// 공사진행 단계에서 보여 주는 오늘·다음 공정. 작업자 원문은 담지 않는다.

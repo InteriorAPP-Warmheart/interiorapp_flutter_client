@@ -14,7 +14,7 @@ class PrepHubScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
+    final EdgeInsets padding = ResponsiveSize.textInset(context);
     final double subGap = ResponsiveSize.subGap(context);
     final double sectionGap = ResponsiveSize.sectionGap(context);
     final double fontScale = ResponsiveSize.fontScale(context);

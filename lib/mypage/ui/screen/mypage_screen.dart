@@ -21,7 +21,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   Widget build(BuildContext context) {
     final double fontScale = ResponsiveSize.fontScale(context);
     final double subGap = ResponsiveSize.subGap(context);
-    final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
+    final EdgeInsets padding = ResponsiveSize.textInset(context);
 
     return Scaffold(
       backgroundColor: AppColors.background,

@@ -145,7 +145,7 @@ class _CombineSearchResultScreenState
 
   Widget _buildSearchResultsWithCategories() {
     final double fontScale = ResponsiveSize.fontScale(context);
-    final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
+    final EdgeInsets padding = ResponsiveSize.textInset(context);
 
     return SingleChildScrollView(
       padding: padding.copyWith(top: 16, bottom: 16),
@@ -251,7 +251,7 @@ class _CombineSearchResultScreenState
     return searchResultAsync.when(
       data: (data) {
         return SingleChildScrollView(
-          padding: ResponsiveSize.responsivePadding(context).copyWith(top: 16, bottom: 16),
+          padding: ResponsiveSize.textInset(context).copyWith(top: 16, bottom: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

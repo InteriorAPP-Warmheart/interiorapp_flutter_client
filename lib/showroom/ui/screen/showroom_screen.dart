@@ -24,7 +24,7 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
   @override
   Widget build(BuildContext context) {
     final double sectionGap = ResponsiveSize.sectionGap(context);
-    final EdgeInsets screenPadding = ResponsiveSize.responsivePadding(context);
+    final EdgeInsets screenPadding = ResponsiveSize.textInset(context);
     final hasSelectedFilters = ref.watch(hasSelectedFiltersProvider);
 
     return Scaffold(
@@ -68,7 +68,7 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
               ),
               if (!hasSelectedFilters)
                 Padding(
-                  padding: screenPadding.add(const EdgeInsets.only(top: 28)),
+                  padding: const EdgeInsets.only(top: 28),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -78,8 +78,10 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
                         child: const PopularShowroomCardList(),
                       ),
                       SizedBox(height: sectionGap),
-                      // 전체 | 동네 세그먼트 탭 + 핀터레스트 마소니리 그리드
-                      const ShowroomFeedSegment(),
+                      Padding(
+                        padding: screenPadding,
+                        child: const ShowroomFeedSegment(),
+                      ),
                       // TODO: 추천 시공 - 데이터 준비 후 활성화
                       // SizedBox(height: sectionGap),
                       // PostSection(

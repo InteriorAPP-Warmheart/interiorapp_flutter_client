@@ -66,8 +66,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       'https://picsum.photos/400/300?random=4',
     ];
 
-    final EdgeInsets screenPadding = ResponsiveSize.responsivePadding(context);
-
     final projects = ref.watch(projectListProvider);
     final bool isProjectBuilding =
         projects.isNotEmpty; // 테스트용: 리스트가 비어있지 않으면 표시
@@ -100,18 +98,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             onPointerDown: (_) => _consult.close(),
             child: SingleChildScrollView(
               controller: _scrollController,
-              padding: screenPadding.copyWith(bottom: projectCardReserve),
+              padding: EdgeInsets.only(bottom: projectCardReserve),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 메인 이미지 슬라이더
                   SizedBox(height: sectionGap),
-                  AdvWidget(
-                    imageUrls: sampleImages,
-                    borderRadius: 16,
-                    indicatorColor: Colors.white54,
-                    activeIndicatorColor: Colors.white,
-                    indicatorSize: 8,
+                  Padding(
+                    padding: ResponsiveSize.textInset(context),
+                    child: AdvWidget(
+                      imageUrls: sampleImages,
+                      borderRadius: 16,
+                      indicatorColor: Colors.white54,
+                      activeIndicatorColor: Colors.white,
+                      indicatorSize: 8,
+                    ),
                   ),
                   SizedBox(height: sectionGap),
 

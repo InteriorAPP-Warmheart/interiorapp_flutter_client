@@ -2,6 +2,7 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
+import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/hot_showroom_model.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
@@ -22,51 +23,50 @@ class PopularShowroomCardList extends ConsumerWidget {
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final double cardWidth = constraints.maxWidth * 0.78;
-        final double imageHeight = cardWidth * 5 / 4;
-        return SizedBox(
-          height: imageHeight,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: items.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 18),
-            itemBuilder: (context, index) {
-              final HotShowroomModel item = items[index];
-              return SizedBox(
-                width: cardWidth,
-                child: OpenContainer(
-                  useRootNavigator: true,
-                  tappable: false,
-                  closedElevation: 0,
-                  openElevation: 0,
-                  closedColor: storyInk,
-                  openColor: storyInk,
-                  closedShape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  openShape: const RoundedRectangleBorder(),
-                  closedBuilder: (BuildContext context, VoidCallback open) {
-                    return _LookbookCard(
-                      item: item,
-                      onOpen: open,
-                      onFavorite: () {
-                        ref
-                            .read(hotShowroomSliderVm.notifier)
-                            .toggleFavoriteByIndex(item.id);
-                      },
-                    );
+    final double inset = ResponsiveSize.textInset(context).left;
+    final double screen = MediaQuery.sizeOf(context).width;
+    final double cardWidth = screen - inset - 48;
+    final double imageHeight = cardWidth * 5 / 4;
+    return SizedBox(
+      height: imageHeight,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: inset),
+        itemCount: items.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 18),
+        itemBuilder: (context, index) {
+          final HotShowroomModel item = items[index];
+          return SizedBox(
+            width: cardWidth,
+            child: OpenContainer(
+              useRootNavigator: true,
+              tappable: false,
+              closedElevation: 0,
+              openElevation: 0,
+              closedColor: storyInk,
+              openColor: storyInk,
+              closedShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              openShape: const RoundedRectangleBorder(),
+              closedBuilder: (BuildContext context, VoidCallback open) {
+                return _LookbookCard(
+                  item: item,
+                  onOpen: open,
+                  onFavorite: () {
+                    ref
+                        .read(hotShowroomSliderVm.notifier)
+                        .toggleFavoriteByIndex(item.id);
                   },
-                  openBuilder: (BuildContext context, VoidCallback close) {
-                    return ShowroomStoryScreen(showroomId: item.id);
-                  },
-                ),
-              );
-            },
-          ),
-        );
-      },
+                );
+              },
+              openBuilder: (BuildContext context, VoidCallback close) {
+                return ShowroomStoryScreen(showroomId: item.id);
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 }

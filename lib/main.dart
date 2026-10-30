@@ -3,12 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:interiorapp_flutter_client/app/router.dart';
+import 'package:interiorapp_flutter_client/core/editor/quill_simulator_guard.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_theme.dart';
 import 'package:interiorapp_flutter_client/core/widget/keyboard_dismiss.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  installQuillSimulatorGuard();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(ProviderScope(child: const MainApp()));
 }
@@ -31,6 +34,7 @@ class MainApp extends StatelessWidget {
           (context, child) => MaterialApp.router(
             // Localization
             localizationsDelegates: const [
+              FlutterQuillLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,

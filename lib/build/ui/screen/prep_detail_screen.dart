@@ -57,7 +57,7 @@ class _PrepDetailScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
+    final EdgeInsets padding = ResponsiveSize.textInset(context);
     final double subGap = ResponsiveSize.subGap(context);
 
     return Scaffold(
@@ -438,7 +438,7 @@ class PrepDetailView extends ConsumerWidget {
       return ListView(children: sections);
     }
 
-    final EdgeInsets pagePadding = ResponsiveSize.responsivePadding(context);
+    final EdgeInsets pagePadding = ResponsiveSize.textInset(context);
     return CustomScrollView(
       slivers: [
         industryCoverBar(record.industryLine),

@@ -87,6 +87,7 @@ class SpaceApi {
       placeName: '성수동 카페',
       statusLabel: '공사 진행중',
       nextAction: '오늘 목공 공사 · 내일 전기 공사',
+      workQuote: sampleWorkQuote,
       phase: SpacePhase.construction,
       imageUrl: 'https://picsum.photos/seed/seongsu-cafe/1200/900',
       completed: false,
@@ -206,6 +207,369 @@ class SpaceApi {
     ),
   ];
 
+  static const List<PublicSitePhoto> _seongsuPhotos = [
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1024-paint-hall/900/900',
+      trade: '도장',
+      area: '홀',
+      takenOn: '10월 24일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1024-wood-hall/900/900',
+      trade: '목공',
+      area: '홀',
+      takenOn: '10월 24일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1024-wood-counter/900/900',
+      trade: '목공',
+      area: '카운터',
+      takenOn: '10월 24일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1024-paint-window/900/900',
+      trade: '도장',
+      area: '창가',
+      takenOn: '10월 24일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1022-wood-kitchen/900/900',
+      trade: '목공',
+      area: '주방',
+      takenOn: '10월 22일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1022-elec-hall/900/900',
+      trade: '전기',
+      area: '홀',
+      takenOn: '10월 22일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1022-elec-counter/900/900',
+      trade: '전기',
+      area: '카운터',
+      takenOn: '10월 22일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1022-wood-window/900/900',
+      trade: '목공',
+      area: '창가',
+      takenOn: '10월 22일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1021-wood-hall/900/900',
+      trade: '목공',
+      area: '홀',
+      takenOn: '10월 21일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1021-wood-kitchen/900/900',
+      trade: '목공',
+      area: '주방',
+      takenOn: '10월 21일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1018-plumb-kitchen/900/900',
+      trade: '설비·급배수',
+      area: '주방',
+      takenOn: '10월 18일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1018-plumb-hall/900/900',
+      trade: '설비·급배수',
+      area: '홀',
+      takenOn: '10월 18일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1018-wood-counter/900/900',
+      trade: '목공',
+      area: '카운터',
+      takenOn: '10월 18일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1014-plumb-kitchen/900/900',
+      trade: '설비·급배수',
+      area: '주방',
+      takenOn: '10월 14일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1014-demo-kitchen/900/900',
+      trade: '철거',
+      area: '주방',
+      takenOn: '10월 14일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1008-demo-hall/900/900',
+      trade: '철거',
+      area: '홀',
+      takenOn: '10월 8일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1008-demo-counter/900/900',
+      trade: '철거',
+      area: '카운터',
+      takenOn: '10월 8일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1008-demo-kitchen/900/900',
+      trade: '철거',
+      area: '주방',
+      takenOn: '10월 8일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1007-demo-front/900/900',
+      trade: '철거',
+      area: '외관',
+      takenOn: '10월 7일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/seongsu-1007-demo-hall/900/900',
+      trade: '철거',
+      area: '홀',
+      takenOn: '10월 7일',
+    ),
+  ];
+
+  static const List<PublicSitePhoto> _mangwonPhotos = [
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/mangwon-1021-hall/900/900',
+      trade: '실사',
+      area: '홀',
+      takenOn: '10월 21일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/mangwon-1021-case/900/900',
+      trade: '실사',
+      area: '진열대',
+      takenOn: '10월 21일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/mangwon-1021-kitchen/900/900',
+      trade: '실사',
+      area: '주방',
+      takenOn: '10월 21일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/mangwon-1021-work/900/900',
+      trade: '실사',
+      area: '작업대',
+      takenOn: '10월 21일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/mangwon-1020-front/900/900',
+      trade: '실사',
+      area: '외관',
+      takenOn: '10월 20일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/mangwon-1020-hall/900/900',
+      trade: '실사',
+      area: '홀',
+      takenOn: '10월 20일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/mangwon-1020-kitchen/900/900',
+      trade: '실사',
+      area: '주방',
+      takenOn: '10월 20일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/mangwon-1016-front/900/900',
+      trade: '실사',
+      area: '외관',
+      takenOn: '10월 16일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/mangwon-1016-case/900/900',
+      trade: '실사',
+      area: '진열대',
+      takenOn: '10월 16일',
+    ),
+  ];
+
+  static const List<PublicSitePhoto> _yeonnamPhotos = [
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/yeonnam-0928-finish-room/900/900',
+      trade: '마감',
+      area: '방',
+      takenOn: '9월 28일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/yeonnam-0928-finish-bath/900/900',
+      trade: '마감',
+      area: '욕실',
+      takenOn: '9월 28일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/yeonnam-0928-finish-entry/900/900',
+      trade: '마감',
+      area: '현관',
+      takenOn: '9월 28일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/yeonnam-0922-paint-room/900/900',
+      trade: '도장',
+      area: '방',
+      takenOn: '9월 22일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/yeonnam-0922-paint-kitchen/900/900',
+      trade: '도장',
+      area: '주방',
+      takenOn: '9월 22일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/yeonnam-0916-wood-room/900/900',
+      trade: '목공',
+      area: '방',
+      takenOn: '9월 16일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/yeonnam-0916-wood-entry/900/900',
+      trade: '목공',
+      area: '현관',
+      takenOn: '9월 16일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/yeonnam-0908-plumb-kitchen/900/900',
+      trade: '설비',
+      area: '주방',
+      takenOn: '9월 8일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/yeonnam-0908-plumb-bath/900/900',
+      trade: '설비',
+      area: '욕실',
+      takenOn: '9월 8일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/yeonnam-0902-demo-room/900/900',
+      trade: '철거',
+      area: '방',
+      takenOn: '9월 2일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/yeonnam-0902-demo-kitchen/900/900',
+      trade: '철거',
+      area: '주방',
+      takenOn: '9월 2일',
+    ),
+  ];
+
+  static const List<PublicSitePhoto> _jamwonPhotos = [
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/jamwon-0819-finish-hall/900/900',
+      trade: '마감',
+      area: '홀',
+      takenOn: '8월 19일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/jamwon-0819-finish-wash/900/900',
+      trade: '마감',
+      area: '샴푸대',
+      takenOn: '8월 19일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/jamwon-0812-elec-hall/900/900',
+      trade: '전기',
+      area: '홀',
+      takenOn: '8월 12일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/jamwon-0812-elec-wash/900/900',
+      trade: '전기',
+      area: '샴푸대',
+      takenOn: '8월 12일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/jamwon-0807-wood-hall/900/900',
+      trade: '목공',
+      area: '홀',
+      takenOn: '8월 7일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/jamwon-0807-wood-front/900/900',
+      trade: '목공',
+      area: '외관',
+      takenOn: '8월 7일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/jamwon-0803-plumb-wash/900/900',
+      trade: '설비',
+      area: '샴푸대',
+      takenOn: '8월 3일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/jamwon-0728-demo-hall/900/900',
+      trade: '철거',
+      area: '홀',
+      takenOn: '7월 28일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/jamwon-0728-demo-front/900/900',
+      trade: '철거',
+      area: '외관',
+      takenOn: '7월 28일',
+    ),
+  ];
+
+  static const List<PublicSitePhoto> _haeundaePhotos = [
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/haeundae-0815-finish-room/900/900',
+      trade: '마감',
+      area: '객실',
+      takenOn: '8월 15일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/haeundae-0815-finish-bath/900/900',
+      trade: '마감',
+      area: '욕실',
+      takenOn: '8월 15일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/haeundae-0815-finish-terrace/900/900',
+      trade: '마감',
+      area: '테라스',
+      takenOn: '8월 15일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/haeundae-0808-wood-room/900/900',
+      trade: '목공',
+      area: '객실',
+      takenOn: '8월 8일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/haeundae-0808-wood-terrace/900/900',
+      trade: '목공',
+      area: '테라스',
+      takenOn: '8월 8일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/haeundae-0802-elec-room/900/900',
+      trade: '전기',
+      area: '객실',
+      takenOn: '8월 2일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/haeundae-0802-plumb-bath/900/900',
+      trade: '설비',
+      area: '욕실',
+      takenOn: '8월 2일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/haeundae-0726-demo-room/900/900',
+      trade: '철거',
+      area: '객실',
+      takenOn: '7월 26일',
+    ),
+    PublicSitePhoto(
+      imageUrl: 'https://picsum.photos/seed/haeundae-0726-demo-terrace/900/900',
+      trade: '철거',
+      area: '테라스',
+      takenOn: '7월 26일',
+    ),
+  ];
+
   static const Map<String, ConstructionProgress> _construction = {
     'project-seongsu-cafe': ConstructionProgress(
       currentLabel: '목공 공사 진행중',
@@ -219,23 +583,40 @@ class SpaceApi {
       nextWhen: '내일',
       nextTrade: '전기 공사',
       nextSummary: '조명과 콘센트 배선을 시작해요',
-      recentPhotos: [
-        PublicSitePhoto(
-          imageUrl: 'https://picsum.photos/seed/seongsu-wood-1/900/900',
-          trade: '목공',
-          takenOn: '10월 22일',
-        ),
-        PublicSitePhoto(
-          imageUrl: 'https://picsum.photos/seed/seongsu-wood-2/900/900',
-          trade: '목공',
-          takenOn: '10월 21일',
-        ),
-        PublicSitePhoto(
-          imageUrl: 'https://picsum.photos/seed/seongsu-demo-1/900/900',
-          trade: '철거',
-          takenOn: '10월 8일',
-        ),
-      ],
+      recentPhotos: _seongsuPhotos,
+    ),
+    'project-mangwon-bakery': ConstructionProgress(
+      currentLabel: '실사 내용 정리중',
+      today: TodayWorkState.checking,
+      todayTrade: '실사',
+      todaySummary: '진열대 위치와 배수를 확인하고 있어요',
+      trades: ['실사', '철거', '설비', '목공', '마감'],
+      tradeIndex: 0,
+      recentPhotos: _mangwonPhotos,
+    ),
+    'project-yeonnam-room': ConstructionProgress(
+      currentLabel: '준공 완료',
+      today: TodayWorkState.closing,
+      todaySummary: '시공 기록을 다시 볼 수 있어요',
+      trades: ['철거', '설비', '목공', '도장', '마감'],
+      tradeIndex: 4,
+      recentPhotos: _yeonnamPhotos,
+    ),
+    'project-jamwon-salon': ConstructionProgress(
+      currentLabel: '준공 완료',
+      today: TodayWorkState.closing,
+      todaySummary: '시공 기록을 다시 볼 수 있어요',
+      trades: ['철거', '설비', '목공', '전기', '마감'],
+      tradeIndex: 4,
+      recentPhotos: _jamwonPhotos,
+    ),
+    'project-haeundae-stay': ConstructionProgress(
+      currentLabel: '준공 완료',
+      today: TodayWorkState.closing,
+      todaySummary: '시공 기록을 다시 볼 수 있어요',
+      trades: ['철거', '설비', '전기', '목공', '마감'],
+      tradeIndex: 4,
+      recentPhotos: _haeundaePhotos,
     ),
   };
 

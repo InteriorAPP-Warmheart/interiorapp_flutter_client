@@ -12,6 +12,9 @@ import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_mo
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/showroom_story_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_comment_section.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_process_tour.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_space_header.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_zone_compare.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/story/showroom_story_scenes.dart';
 
 /// 스토리를 생략하지 않고, 같은 데이터를 구역별로 펼쳐 보여 준다.
@@ -21,7 +24,8 @@ class ShowroomBoardScreen extends ConsumerStatefulWidget {
   final String showroomId;
 
   @override
-  ConsumerState<ShowroomBoardScreen> createState() => _ShowroomBoardScreenState();
+  ConsumerState<ShowroomBoardScreen> createState() =>
+      _ShowroomBoardScreenState();
 }
 
 class _ShowroomBoardScreenState extends ConsumerState<ShowroomBoardScreen> {
@@ -42,65 +46,71 @@ class _ShowroomBoardScreenState extends ConsumerState<ShowroomBoardScreen> {
         setState(() => _picking = false);
       },
       child: Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          onPressed: () {
-            if (_picking) {
-              setState(() => _picking = false);
-              return;
-            }
-            Navigator.of(context).pop();
-          },
-          icon: const Icon(Icons.arrow_back),
-        ),
-        actions: [
-          storyAsync.maybeWhen(
-            data: (ShowroomStoryModel? story) {
-              final ShowroomStoryModel? overview =
-                  story ?? _overviewFromList(listed, showroomId);
-              if (overview == null) return const SizedBox.shrink();
-              final bool favorite =
-                  listed
-                      .where((HotShowroomModel item) => item.id == overview.id)
-                      .map((HotShowroomModel item) => item.favoriteStatus)
-                      .firstOrNull ??
-                  overview.favoriteStatus;
-              return IconButton(
-                onPressed: () {
-                  ref
-                      .read(hotShowroomSliderVm.notifier)
-                      .toggleFavoriteByIndex(overview.id);
-                },
-                icon: Icon(
-                  favorite ? Icons.favorite : Icons.favorite_border,
-                  color:
-                      favorite
-                          ? const Color(0xFFFF4D6A)
-                          : Theme.of(context).colorScheme.onSurface,
-                ),
-              );
+        appBar: AppBar(
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          forceMaterialTransparency: true,
+          notificationPredicate: (ScrollNotification notification) => false,
+          leading: IconButton(
+            onPressed: () {
+              if (_picking) {
+                setState(() => _picking = false);
+                return;
+              }
+              Navigator.of(context).pop();
             },
-            orElse: () => const SizedBox.shrink(),
+            icon: const Icon(Icons.arrow_back),
           ),
-        ],
-      ),
-      body: () {
-        final ShowroomStoryModel? overview =
-            storyAsync.asData?.value ?? _overviewFromList(listed, showroomId);
-        if (overview != null) {
-          return _Board(
-            story: overview,
-            picking: _picking,
-            onPicking: (bool value) => setState(() => _picking = value),
-          );
-        }
-        if (storyAsync.hasError) {
-          return const Center(child: Text('이야기를 불러오지 못했어요'));
-        }
-        return const SizedBox.shrink();
-      }(),
+          actions: [
+            storyAsync.maybeWhen(
+              data: (ShowroomStoryModel? story) {
+                final ShowroomStoryModel? overview =
+                    story ?? _overviewFromList(listed, showroomId);
+                if (overview == null) return const SizedBox.shrink();
+                final bool favorite =
+                    listed
+                        .where(
+                          (HotShowroomModel item) => item.id == overview.id,
+                        )
+                        .map((HotShowroomModel item) => item.favoriteStatus)
+                        .firstOrNull ??
+                    overview.favoriteStatus;
+                return IconButton(
+                  onPressed: () {
+                    ref
+                        .read(hotShowroomSliderVm.notifier)
+                        .toggleFavoriteByIndex(overview.id);
+                  },
+                  icon: Icon(
+                    favorite ? Icons.favorite : Icons.favorite_border,
+                    color:
+                        favorite
+                            ? const Color(0xFFFF4D6A)
+                            : Theme.of(context).colorScheme.onSurface,
+                  ),
+                );
+              },
+              orElse: () => const SizedBox.shrink(),
+            ),
+          ],
+        ),
+        body: () {
+          final ShowroomStoryModel? overview =
+              storyAsync.asData?.value ?? _overviewFromList(listed, showroomId);
+          if (overview != null) {
+            return _Board(
+              story: overview,
+              picking: _picking,
+              onPicking: (bool value) => setState(() => _picking = value),
+            );
+          }
+          if (storyAsync.hasError) {
+            return const Center(child: Text('이야기를 불러오지 못했어요'));
+          }
+          return const SizedBox.shrink();
+        }(),
       ),
     );
   }
@@ -152,7 +162,6 @@ class _Board extends StatelessWidget {
             ('기간', situation.period),
           ],
         ].where(((String, String) fact) => fact.$2.trim().isNotEmpty).toList();
-    final ShowroomBeforeAfter? beforeAfter = story.beforeAfter;
     final ShowroomCost? cost = story.cost;
 
     return _BoardScaffold(
@@ -160,33 +169,60 @@ class _Board extends StatelessWidget {
       picking: picking,
       onPicking: onPicking,
       child: ShowroomBoardWithComments(
-      authorName: story.userName,
-      leading: [
-        _IntroCard(story: story, likes: likes),
-        if (facts.isNotEmpty) ...[
-          const _SectionTitle('이 공간'),
-          _Surface(child: _FactGrid(facts: facts)),
-        ],
-        if (beforeAfter != null) ...[
-          const _SectionTitle('시공 전후'),
-          _Surface(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
-            child: _BeforeAfterBlock(beforeAfter: beforeAfter),
+        authorName: story.userName,
+        headerSlivers: [
+          showroomThumbnailBar(
+            context,
+            imageUrl: story.thumbnailUrl,
+            style: story.themeName,
+            title: story.title,
+            authorName: story.userName,
+            authorPhotoUrl: story.userProfileUrl,
+            likes: likes,
           ),
         ],
-        if (cost != null) ...[
-          const _SectionTitle('공사비'),
-          _Surface(child: _CostBlock(cost: cost)),
+        leading: [
+          if (facts.isNotEmpty || showroomHasCostDetail(cost)) ...[
+            const _SectionTitle('이 공간'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ShowroomFactCard(
+                facts: facts,
+                cost: showroomHasCostDetail(cost) ? cost : null,
+              ),
+            ),
+          ],
+          if (story.comparisons.isNotEmpty) ...[
+            const _SectionTitle('시공 전후'),
+            _BoardComparisons(comparisons: story.comparisons),
+          ],
+          if (story.process.isNotEmpty) ...[
+            const _SectionTitle('현장 기록'),
+            ShowroomProcessTour(
+              frames: story.process,
+              wrapPhoto: (int index, ShowroomProcessFrame frame, Widget photo) {
+                final String trade = frame.trade.trim();
+                final String caption = frame.caption.trim();
+                return ShowroomReferablePhoto(
+                  id: 'process-$index',
+                  label:
+                      caption.isEmpty
+                          ? (trade.isEmpty ? '현장 기록 ${index + 1}' : trade)
+                          : caption,
+                  imageUrl: frame.imageUrl,
+                  child: photo,
+                );
+              },
+            ),
+          ],
+          if (story.guide.isNotEmpty) ...[
+            const _SectionTitle('알고 가면'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _Surface(child: _GuideBlock(lines: story.guide)),
+            ),
+          ],
         ],
-        if (story.process.isNotEmpty) ...[
-          const _SectionTitle('현장 기록'),
-          _ProcessLog(frames: story.process),
-        ],
-        if (story.guide.isNotEmpty) ...[
-          const _SectionTitle('알고 가면'),
-          _Surface(child: _GuideBlock(lines: story.guide)),
-        ],
-      ],
       ),
     );
   }
@@ -211,7 +247,8 @@ class _BoardScaffold extends StatefulWidget {
 
 class _BoardScaffoldState extends State<_BoardScaffold> {
   final ExpandingActionController _consult = ExpandingActionController();
-  Map<String, ShowroomReferenceRegion> _regions = <String, ShowroomReferenceRegion>{};
+  Map<String, ShowroomReferenceRegion> _regions =
+      <String, ShowroomReferenceRegion>{};
   final Set<String> _aspects = <String>{};
 
   @override
@@ -230,7 +267,11 @@ class _BoardScaffoldState extends State<_BoardScaffold> {
       if (next.containsKey(id)) {
         next.remove(id);
       } else {
-        next[id] = ShowroomReferenceRegion(id: id, label: label, imageUrl: imageUrl);
+        next[id] = ShowroomReferenceRegion(
+          id: id,
+          label: label,
+          imageUrl: imageUrl,
+        );
       }
       _regions = next;
     });
@@ -238,7 +279,8 @@ class _BoardScaffoldState extends State<_BoardScaffold> {
 
   void _save(ShowroomReferenceRegion region) {
     setState(() {
-      _regions = Map<String, ShowroomReferenceRegion>.from(_regions)..[region.id] = region;
+      _regions = Map<String, ShowroomReferenceRegion>.from(_regions)
+        ..[region.id] = region;
     });
   }
 
@@ -248,7 +290,8 @@ class _BoardScaffoldState extends State<_BoardScaffold> {
     final bool sameIndustry = _aspects.contains('같은 업종');
     final bool sameBudget = _aspects.contains('동일한 예산');
     final bool sameStyle = _aspects.contains('동일한 스타일');
-    final int? budgetWon = sameBudget ? _wonFromLabel(situation?.budget ?? '') : null;
+    final int? budgetWon =
+        sameBudget ? _wonFromLabel(situation?.budget ?? '') : null;
     context.push(
       SpaceRoutes.prepCreate,
       extra: PrepRecord(
@@ -297,7 +340,10 @@ class _BoardScaffoldState extends State<_BoardScaffold> {
                   child: Listener(
                     behavior: HitTestBehavior.translucent,
                     onPointerDown: (_) => _consult.close(),
-                    child: widget.picking ? _ReferenceBoard(story: widget.story) : widget.child,
+                    child:
+                        widget.picking
+                            ? _ReferenceBoard(story: widget.story)
+                            : widget.child,
                   ),
                 ),
               ),
@@ -346,14 +392,15 @@ class _ReferenceBoard extends StatelessWidget {
   Widget build(BuildContext context) {
     final ShowroomSituation? situation = story.situation;
     final List<String> facts = <String>[
-      if (situation != null && situation.industry.trim().isNotEmpty) situation.industry.trim(),
-      if (situation != null && situation.area.trim().isNotEmpty) situation.area.trim(),
-      if (situation != null && situation.budget.trim().isNotEmpty) situation.budget.trim(),
-      if (situation != null && situation.period.trim().isNotEmpty) situation.period.trim(),
-      if (story.cost != null && story.cost!.total.trim().isNotEmpty) '공사비 ${story.cost!.total.trim()}',
+      if (situation != null && situation.industry.trim().isNotEmpty)
+        situation.industry.trim(),
+      if (situation != null && situation.area.trim().isNotEmpty)
+        situation.area.trim(),
+      if (situation != null && situation.budget.trim().isNotEmpty)
+        situation.budget.trim(),
+      if (situation != null && situation.period.trim().isNotEmpty)
+        situation.period.trim(),
     ];
-    final ShowroomBeforeAfter? beforeAfter = story.beforeAfter;
-
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       children: [
@@ -370,7 +417,11 @@ class _ReferenceBoard extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           '${story.themeName} · ${story.userName}',
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textSecondary,
+          ),
         ),
         if (facts.isNotEmpty) ...[
           const SizedBox(height: 8),
@@ -391,31 +442,13 @@ class _ReferenceBoard extends StatelessWidget {
           label: '대표 사진',
           imageUrl: story.thumbnailUrl,
         ),
-        if (beforeAfter != null) ...[
+        if (story.comparisons.isNotEmpty) ...[
           const SizedBox(height: 22),
           const _ReferenceLabel('시공 전후'),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _ReferencePhoto(
-                  id: 'before',
-                  label: '시공 전',
-                  imageUrl: beforeAfter.beforeUrl,
-                  caption: '시공 전',
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _ReferencePhoto(
-                  id: 'after',
-                  label: '시공 후',
-                  imageUrl: beforeAfter.afterUrl,
-                  caption: '시공 후',
-                ),
-              ),
-            ],
-          ),
+          for (var i = 0; i < story.comparisons.length; i++) ...[
+            if (i > 0) const SizedBox(height: 12),
+            _ReferencePair(pair: story.comparisons[i], index: i),
+          ],
         ],
         if (story.process.isNotEmpty) ...[
           const SizedBox(height: 22),
@@ -424,9 +457,10 @@ class _ReferenceBoard extends StatelessWidget {
             if (i > 0) const SizedBox(height: 12),
             _ReferencePhoto(
               id: 'process-$i',
-              label: story.process[i].caption.trim().isEmpty
-                  ? '현장 기록 ${i + 1}'
-                  : story.process[i].caption.trim(),
+              label:
+                  story.process[i].caption.trim().isEmpty
+                      ? '현장 기록 ${i + 1}'
+                      : story.process[i].caption.trim(),
               imageUrl: story.process[i].imageUrl,
               caption: story.process[i].caption.trim(),
             ),
@@ -507,260 +541,50 @@ class _ReferencePhoto extends StatelessWidget {
   }
 }
 
-class _IntroCard extends StatelessWidget {
-  const _IntroCard({required this.story, required this.likes});
+class _ReferencePair extends StatelessWidget {
+  const _ReferencePair({required this.pair, required this.index});
 
-  final ShowroomStoryModel story;
-  final String likes;
-
-  @override
-  Widget build(BuildContext context) {
-    return _Surface(
-      padding: EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            child: ShowroomReferablePhoto(
-              id: 'cover',
-              label: '대표 사진',
-              imageUrl: story.thumbnailUrl,
-              child: AspectRatio(
-                aspectRatio: 3 / 2,
-                child: StoryPhoto(url: story.thumbnailUrl),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: const Color(0xFFE4E4E4)),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
-                    child: Text(
-                      story.themeName,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.2,
-                        color: storyInk,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  story.title,
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.6,
-                    height: 1.2,
-                    color: storyInk,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundImage: NetworkImage(story.userProfileUrl),
-                      radius: 14,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        story.userName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: storyInk,
-                        ),
-                      ),
-                    ),
-                    const Icon(
-                      Icons.favorite,
-                      size: 15,
-                      color: Color(0xFF8A847A),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      likes,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF8A847A),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BeforeAfterBlock extends StatefulWidget {
-  const _BeforeAfterBlock({required this.beforeAfter});
-
-  final ShowroomBeforeAfter beforeAfter;
-
-  @override
-  State<_BeforeAfterBlock> createState() => _BeforeAfterBlockState();
-}
-
-class _BeforeAfterBlockState extends State<_BeforeAfterBlock>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _wipe = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 560),
-  );
-  bool _after = false;
-
-  @override
-  void dispose() {
-    _wipe.dispose();
-    super.dispose();
-  }
-
-  void _setAfter(bool after) {
-    if (_after == after) return;
-    setState(() => _after = after);
-    if (after) {
-      _wipe.forward();
-    } else {
-      _wipe.reverse();
-    }
-  }
+  final ShowroomBeforeAfter pair;
+  final int index;
 
   @override
   Widget build(BuildContext context) {
-    final ShowroomBeforeAfter beforeAfter = widget.beforeAfter;
-    final TextStyle sideStyle = TextStyle(
-      fontSize: 14,
-      fontWeight: FontWeight.w700,
-      color: _after ? const Color(0xFF8A847A) : storyInk,
-    );
+    final String zone = pair.zone.trim();
+    final String beforeLabel = zone.isEmpty ? '시공 전' : '$zone 시공 전';
+    final String afterLabel = zone.isEmpty ? '시공 후' : '$zone 시공 후';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: AspectRatio(
-            aspectRatio: 4 / 5,
-            child: AnimatedBuilder(
-              animation: _wipe,
-              builder: (BuildContext context, Widget? child) {
-                final double reveal = Curves.easeInOutCubic.transform(_wipe.value);
-                final bool showingAfter = reveal >= 0.5;
-                return LayoutBuilder(
-                  builder: (BuildContext context, BoxConstraints constraints) {
-                    final double edge = (1 - reveal) * constraints.maxWidth;
-                    return Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    StoryPhoto(url: beforeAfter.afterUrl),
-                    ClipRect(
-                      clipper: _LeftFractionClipper(1 - reveal),
-                      child: StoryPhoto(url: beforeAfter.beforeUrl),
-                    ),
-                    const DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Color(0x00000000), Color(0xCC000000)],
-                          stops: [0.62, 1],
-                        ),
-                      ),
-                    ),
-                    if (reveal > 0.02 && reveal < 0.98)
-                      Positioned(
-                        left: edge - 1,
-                        top: 0,
-                        bottom: 0,
-                        width: 2,
-                        child: const ColoredBox(color: Colors.white),
-                      ),
-                    Positioned(
-                      left: 14,
-                      bottom: 12,
-                      child: Text(
-                        showingAfter ? '시공 후' : '시공 전',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Text('시공 전', style: sideStyle),
-            const Spacer(),
-            Switch(
-              value: _after,
-              activeThumbColor: AppColors.white,
-              activeTrackColor: AppColors.primary,
-              inactiveThumbColor: AppColors.white,
-              inactiveTrackColor: const Color(0xFFE4E4E4),
-              onChanged: _setAfter,
-            ),
-            const Spacer(),
-            Text(
-              '시공 후',
-              style: sideStyle.copyWith(
-                color: _after ? storyInk : const Color(0xFF8A847A),
-              ),
-            ),
-          ],
-        ),
-        if (beforeAfter.caption.trim().isNotEmpty) ...[
-          const SizedBox(height: 4),
+        if (zone.isNotEmpty) ...[
           Text(
-            beforeAfter.caption,
+            zone,
             style: const TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w600,
-              height: 1.4,
-              color: Color(0xFF3A3834),
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
             ),
           ),
+          const SizedBox(height: 8),
         ],
-        ShowroomReferenceTargets(
-          targets: [
-            ShowroomReferenceTarget(
-              id: 'before',
-              label: '시공 전',
-              imageUrl: beforeAfter.beforeUrl,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _ReferencePhoto(
+                id: 'zone-$index-before',
+                label: beforeLabel,
+                imageUrl: pair.beforeUrl,
+                caption: '시공 전',
+              ),
             ),
-            ShowroomReferenceTarget(
-              id: 'after',
-              label: '시공 후',
-              imageUrl: beforeAfter.afterUrl,
+            const SizedBox(width: 8),
+            Expanded(
+              child: _ReferencePhoto(
+                id: 'zone-$index-after',
+                label: afterLabel,
+                imageUrl: pair.afterUrl,
+                caption: '시공 후',
+              ),
             ),
           ],
         ),
@@ -769,223 +593,54 @@ class _BeforeAfterBlockState extends State<_BeforeAfterBlock>
   }
 }
 
-class _LeftFractionClipper extends CustomClipper<Rect> {
-  const _LeftFractionClipper(this.fraction);
+class _BoardComparisons extends StatelessWidget {
+  const _BoardComparisons({required this.comparisons});
 
-  final double fraction;
-
-  @override
-  Rect getClip(Size size) {
-    return Rect.fromLTWH(0, 0, size.width * fraction.clamp(0.0, 1.0), size.height);
-  }
-
-  @override
-  bool shouldReclip(covariant _LeftFractionClipper oldClipper) {
-    return oldClipper.fraction != fraction;
-  }
-}
-
-class _CostBlock extends StatelessWidget {
-  const _CostBlock({required this.cost});
-
-  final ShowroomCost cost;
+  final List<ShowroomBeforeAfter> comparisons;
 
   @override
   Widget build(BuildContext context) {
-    final List<ShowroomCostLine> lines =
-        cost.lines
-            .where(
-              (ShowroomCostLine line) =>
-                  line.name.trim().isNotEmpty || line.amount.trim().isNotEmpty,
-            )
-            .toList();
+    var unnamed = 0;
+    final List<ShowroomZone> zones = <ShowroomZone>[];
+    for (final ShowroomBeforeAfter item in comparisons) {
+      final String zone = item.zone.trim();
+      if (zone.isEmpty) unnamed += 1;
+      zones.add(
+        ShowroomZone(
+          label: zone.isEmpty ? '구역 $unnamed' : zone,
+          beforeUrl: item.beforeUrl,
+          afterUrl: item.afterUrl,
+          note: item.caption,
+        ),
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFE4E4E4)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    '총 공사비',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF8A847A),
-                    ),
-                  ),
-                ),
-                Text(
-                  cost.total,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.4,
-                    color: storyInk,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (lines.isNotEmpty) const SizedBox(height: 6),
-        for (var i = 0; i < lines.length; i++) ...[
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 11),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    lines[i].name,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF3A3834),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  lines[i].amount,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: storyInk,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (i != lines.length - 1)
-            const Divider(height: 1, thickness: 1, color: Color(0xFFE8E8E8)),
-        ],
-      ],
-    );
-  }
-}
-
-class _ProcessLog extends StatelessWidget {
-  const _ProcessLog({required this.frames});
-
-  final List<ShowroomProcessFrame> frames;
-
-  @override
-  Widget build(BuildContext context) {
-    return _Surface(
-      padding: const EdgeInsets.fromLTRB(14, 16, 14, 8),
-      child: Column(
-        children: [
-          for (var i = 0; i < frames.length; i++)
-            _ProcessStep(
-              frame: frames[i],
-              index: i,
-              last: i == frames.length - 1,
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProcessStep extends StatelessWidget {
-  const _ProcessStep({
-    required this.frame,
-    required this.index,
-    required this.last,
-  });
-
-  final ShowroomProcessFrame frame;
-  final int index;
-  final bool last;
-
-  @override
-  Widget build(BuildContext context) {
-    final String caption = frame.caption.trim();
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 28,
-            child: Column(
-              children: [
-                DecoratedBox(
-                  decoration: const BoxDecoration(
-                    color: storyInk,
-                    shape: BoxShape.circle,
-                  ),
-                  child: SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: Center(
-                      child: Text(
-                        '${index + 1}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                if (!last)
-                  const Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 6),
-                      child: SizedBox(
-                        width: 1,
-                        child: ColoredBox(color: Color(0xFFE4E4E4)),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: last ? 8 : 22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: ShowroomReferablePhoto(
-                      id: 'process-$index',
-                      label: caption.isEmpty ? '현장 기록 ${index + 1}' : caption,
-                      imageUrl: frame.imageUrl,
-                      child: AspectRatio(
-                        aspectRatio: 4 / 3,
-                        child: StoryPhoto(url: frame.imageUrl),
-                      ),
-                    ),
-                  ),
-                  if (caption.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Text(
-                      caption,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        height: 1.45,
-                        letterSpacing: -0.2,
-                        color: storyInk,
-                      ),
-                    ),
-                  ],
-                ],
+        ShowroomZoneCompare(zones: zones),
+        ShowroomReferenceTargets(
+          targets: [
+            for (var i = 0; i < comparisons.length; i++) ...[
+              ShowroomReferenceTarget(
+                id: 'zone-$i-before',
+                label:
+                    comparisons[i].zone.trim().isEmpty
+                        ? '시공 전'
+                        : '${comparisons[i].zone.trim()} 시공 전',
+                imageUrl: comparisons[i].beforeUrl,
               ),
-            ),
-          ),
-        ],
-      ),
+              ShowroomReferenceTarget(
+                id: 'zone-$i-after',
+                label:
+                    comparisons[i].zone.trim().isEmpty
+                        ? '시공 후'
+                        : '${comparisons[i].zone.trim()} 시공 후',
+                imageUrl: comparisons[i].afterUrl,
+              ),
+            ],
+          ],
+        ),
+      ],
     );
   }
 }
@@ -1058,7 +713,7 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 28, 4, 10),
+      padding: const EdgeInsets.fromLTRB(16, 28, 16, 10),
       child: Text(
         label,
         style: const TextStyle(
@@ -1073,10 +728,9 @@ class _SectionTitle extends StatelessWidget {
 }
 
 class _Surface extends StatelessWidget {
-  const _Surface({required this.child, this.padding});
+  const _Surface({required this.child});
 
   final Widget child;
-  final EdgeInsetsGeometry? padding;
 
   @override
   Widget build(BuildContext context) {
@@ -1088,88 +742,7 @@ class _Surface extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: padding ?? const EdgeInsets.all(16),
-          child: child,
-        ),
-      ),
-    );
-  }
-}
-
-class _FactGrid extends StatelessWidget {
-  const _FactGrid({required this.facts});
-
-  final List<(String, String)> facts;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        for (var i = 0; i < facts.length; i += 2)
-          Padding(
-            padding: EdgeInsets.only(bottom: i + 2 < facts.length ? 10 : 0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: _Fact(label: facts[i].$1, value: facts[i].$2)),
-                const SizedBox(width: 10),
-                Expanded(
-                  child:
-                      i + 1 < facts.length
-                          ? _Fact(
-                            label: facts[i + 1].$1,
-                            value: facts[i + 1].$2,
-                          )
-                          : const SizedBox.shrink(),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _Fact extends StatelessWidget {
-  const _Fact({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE4E4E4)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF8A847A),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.3,
-                height: 1.25,
-                color: storyInk,
-              ),
-            ),
-          ],
-        ),
+        child: Padding(padding: const EdgeInsets.all(16), child: child),
       ),
     );
   }
@@ -1179,9 +752,12 @@ String _matchingStyle(String themeName) {
   for (final StyleMoodCard card in styleMoodCards) {
     if (themeName.contains(card.title)) return card.title;
   }
-  if (themeName.contains('내추럴') || themeName.contains('우드')) return '따뜻하고 자연스러운';
+  if (themeName.contains('내추럴') || themeName.contains('우드'))
+    return '따뜻하고 자연스러운';
   if (themeName.contains('다크')) return '묵직하고 도시적인';
-  if (themeName.contains('미니멀') || themeName.contains('화이트') || themeName.contains('라이트')) {
+  if (themeName.contains('미니멀') ||
+      themeName.contains('화이트') ||
+      themeName.contains('라이트')) {
     return '밝고 정돈된';
   }
   return '';

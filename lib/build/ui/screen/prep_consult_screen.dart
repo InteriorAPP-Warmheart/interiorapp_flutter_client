@@ -33,7 +33,7 @@ class _PrepConsultScreenState extends ConsumerState<PrepConsultScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
+    final EdgeInsets padding = ResponsiveSize.textInset(context);
     final double subGap = ResponsiveSize.subGap(context);
 
     return Scaffold(

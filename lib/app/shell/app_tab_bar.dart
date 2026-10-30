@@ -88,7 +88,7 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
   }
 
   Widget _buildTab() {
-    final EdgeInsets inset = ResponsiveSize.responsivePadding(context);
+    final EdgeInsets inset = ResponsiveSize.textInset(context);
     final double tabGap = ResponsiveSize.subGap(context) * 0.5;
     final double barHeight = AppTabBarTheme.height(context);
     return Padding(

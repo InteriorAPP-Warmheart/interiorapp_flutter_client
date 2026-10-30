@@ -32,9 +32,9 @@ class _ConsultStage extends StatelessWidget {
         SliverToBoxAdapter(
           child: Padding(
             padding: EdgeInsets.fromLTRB(
-              ResponsiveSize.responsivePadding(context).left,
+              ResponsiveSize.textInset(context).left,
               4,
-              ResponsiveSize.responsivePadding(context).right,
+              ResponsiveSize.textInset(context).right,
               24 + MediaQuery.paddingOf(context).bottom,
             ),
             child: Column(

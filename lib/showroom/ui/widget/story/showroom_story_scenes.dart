@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
+import 'package:interiorapp_flutter_client/showroom/presentation/vm/showroom_write_vm.dart';
 
 const Color storyInk = Color(0xFF111111);
 const Color storyPaper = Color(0xFFF6F3EE);
@@ -296,6 +297,22 @@ class StorySituationScene extends StatelessWidget {
                                 color: storyInk,
                               ),
                             ),
+                            if (facts[i].$1 == '예산')
+                              if (CostFormattingViewModel.wonReading(
+                                    facts[i].$2,
+                                  )
+                                  case final String reading
+                                  when reading.isNotEmpty) ...[
+                                const SizedBox(height: 6),
+                                Text(
+                                  reading,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF8A8A8A),
+                                  ),
+                                ),
+                              ],
                           ],
                         ),
                       ),
@@ -417,7 +434,12 @@ class _StoryBeforeAfterSceneState extends State<StoryBeforeAfterScene> {
                 ),
               ),
             ),
-            const StoryKicker('시공 전후', onDark: true),
+            StoryKicker(
+              widget.beforeAfter.zone.trim().isEmpty
+                  ? '시공 전후'
+                  : widget.beforeAfter.zone.trim(),
+              onDark: true,
+            ),
             Positioned(
               left: 32,
               top: 0,
@@ -451,7 +473,7 @@ class StoryCostScene extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const StoryKicker('공사비', onDark: true),
+          const StoryKicker('세부 공사비', onDark: true),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -459,26 +481,6 @@ class StoryCostScene extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '총 공사비',
-                    style: TextStyle(
-                      color: Color(0xFF9A9A9A),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    cost.total,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 40,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -1,
-                      height: 1.1,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
                   for (var i = 0; i < cost.lines.length; i++)
                     _Rise(
                       progress: progress,
@@ -497,13 +499,33 @@ class StoryCostScene extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            Text(
-                              cost.lines[i].amount,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  cost.lines[i].amount,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                if (CostFormattingViewModel.wonReading(
+                                      cost.lines[i].amount,
+                                    )
+                                    case final String reading
+                                    when reading.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    reading,
+                                    style: const TextStyle(
+                                      color: Color(0xFFB5B5B5),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                           ],
                         ),

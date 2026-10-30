@@ -24,7 +24,7 @@ class BuildScreen extends ConsumerStatefulWidget {
 class _BuildScreenState extends ConsumerState<BuildScreen> {
   @override
   Widget build(BuildContext context) {
-    final EdgeInsets padding = ResponsiveSize.responsivePadding(context);
+    final EdgeInsets padding = ResponsiveSize.textInset(context);
     final double fontScale = ResponsiveSize.fontScale(context);
     final double subGap = ResponsiveSize.subGap(context);
     final double sectionGap = ResponsiveSize.sectionGap(context);
