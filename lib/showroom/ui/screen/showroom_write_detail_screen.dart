@@ -38,8 +38,10 @@ class _ShowroomWriteDetailScreenState
   final TextEditingController _budget = TextEditingController();
   final FocusNode _bodyFocus = FocusNode();
   final ScrollController _bodyScroll = ScrollController();
+  final GlobalKey _previewKey = GlobalKey();
   QuillController? _quill;
   bool _emojiOpen = false;
+  double _previewHeight = 0;
   bool _normalizingQuill = false;
   int _embedSeq = 0;
 
@@ -55,6 +57,14 @@ class _ShowroomWriteDetailScreenState
     setState(() {
       if (!_bodyFocus.hasFocus) _emojiOpen = false;
     });
+  }
+
+  void _syncPreviewHeight() {
+    final double? height = _previewKey.currentContext?.size?.height;
+    if (!mounted || height == null || (height - _previewHeight).abs() < 0.5) {
+      return;
+    }
+    setState(() => _previewHeight = height);
   }
 
   void _ensureQuill(List<ShowroomBlock> blocks) {
@@ -435,15 +445,25 @@ class _ShowroomWriteDetailScreenState
         fromSpace ? board.constructionFor(draft.projectId) : null;
     final WorkQuote? quote =
         fromSpace ? board.find(draft.projectId)?.workQuote : null;
+    final double keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    final bool writingBody = _bodyFocus.hasFocus;
+    // 미리보기 높이보다 키보드가 커지면 막대는 화면 아래에 남기고 공간만 본문에 넘긴다.
+    final bool tuckPreview =
+        writingBody && _previewHeight > 0 && keyboard >= _previewHeight;
+    if (!tuckPreview) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _syncPreviewHeight());
+    }
     return Scaffold(
       backgroundColor: AppColors.background,
+      resizeToAvoidBottomInset: !writingBody,
       appBar: AppBar(title: const Text('쇼룸 글쓰기')),
       body: Column(
         children: [
           Expanded(
             child: ListView(
+              controller: _bodyScroll,
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+              padding: EdgeInsets.fromLTRB(20, 4, 20, writingBody ? 220 : 48),
               children: [
                 Text(
                   fromSpace
@@ -598,21 +618,26 @@ class _ShowroomWriteDetailScreenState
               ],
             ),
           ),
-          if (_bodyFocus.hasFocus)
-            ShowroomQuillToolbar(
-              controller: quill,
-              focusNode: _bodyFocus,
-              emojiOpen: _emojiOpen,
-              onEmojiToggle: () => setState(() => _emojiOpen = !_emojiOpen),
-              onEmoji: _insertEmoji,
-              onImage: _attachImages,
-              onArea: _addArea,
-              onRecord: _addProcess,
+          if (writingBody)
+            Padding(
+              padding: EdgeInsets.only(bottom: tuckPreview ? keyboard : 0),
+              child: ShowroomQuillToolbar(
+                controller: quill,
+                focusNode: _bodyFocus,
+                emojiOpen: _emojiOpen,
+                onEmojiToggle: () => setState(() => _emojiOpen = !_emojiOpen),
+                onEmoji: _insertEmoji,
+                onImage: _attachImages,
+                onArea: _addArea,
+                onRecord: _addProcess,
+              ),
             ),
-          _PreviewBar(
-            enabled: draft.canPreview,
-            onPressed: () => _openPreview(draft),
-          ),
+          if (!tuckPreview)
+            _PreviewBar(
+              key: _previewKey,
+              enabled: draft.canPreview,
+              onPressed: () => _openPreview(draft),
+            ),
         ],
       ),
     );
@@ -760,7 +785,11 @@ class _LayoutBone extends StatelessWidget {
 }
 
 class _PreviewBar extends StatelessWidget {
-  const _PreviewBar({required this.enabled, required this.onPressed});
+  const _PreviewBar({
+    super.key,
+    required this.enabled,
+    required this.onPressed,
+  });
 
   final bool enabled;
   final VoidCallback onPressed;
@@ -769,6 +798,7 @@ class _PreviewBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
+      maintainBottomViewPadding: true,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
         child: Column(

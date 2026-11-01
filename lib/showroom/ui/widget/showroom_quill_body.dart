@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:interiorapp_flutter_client/core/editor/quill_simulator_guard.dart';
 import 'package:interiorapp_flutter_client/core/editor/rich_text_document.dart';
@@ -32,11 +35,126 @@ class ShowroomQuillBody extends StatefulWidget {
   State<ShowroomQuillBody> createState() => _ShowroomQuillBodyState();
 }
 
-class _ShowroomQuillBodyState extends State<ShowroomQuillBody> {
+class _ShowroomQuillBodyState extends State<ShowroomQuillBody>
+    with WidgetsBindingObserver {
+  final GlobalKey<EditorState> _editorKey = GlobalKey<EditorState>();
+  final ScrollController _editorScroll = ScrollController();
+  bool _revealScheduled = false;
+
   @override
   void initState() {
     super.initState();
     installQuillSimulatorGuard();
+    WidgetsBinding.instance.addObserver(this);
+    widget.focusNode.addListener(_handleFocus);
+    widget.controller.addListener(_handleEdit);
+  }
+
+  @override
+  void didUpdateWidget(ShowroomQuillBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusNode != widget.focusNode) {
+      oldWidget.focusNode.removeListener(_handleFocus);
+      widget.focusNode.addListener(_handleFocus);
+    }
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_handleEdit);
+      widget.controller.addListener(_handleEdit);
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    widget.focusNode.removeListener(_handleFocus);
+    widget.controller.removeListener(_handleEdit);
+    _editorScroll.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    _scheduleReveal();
+  }
+
+  void _handleFocus() {
+    if (widget.focusNode.hasFocus) _scheduleReveal();
+  }
+
+  void _handleEdit() {
+    if (widget.focusNode.hasFocus) _scheduleReveal();
+  }
+
+  void _scheduleReveal() {
+    if (_revealScheduled) return;
+    _revealScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _revealScheduled = false;
+      if (mounted) _revealBody();
+    });
+  }
+
+  /// 본문이 키보드 위 칸에 다 들어오면 그 칸의 맨 위까지 올린다.
+  /// 칸보다 길면 입력 중인 줄이 아래에 붙지 않게 더 올린다.
+  void _revealBody() {
+    if (!widget.focusNode.hasFocus) return;
+    final ScrollController scroll = widget.scrollController;
+    if (!scroll.hasClients) return;
+    final RenderBox? body = context.findRenderObject() as RenderBox?;
+    if (body == null || !body.hasSize || !body.attached) return;
+    final RenderAbstractViewport? viewport = RenderAbstractViewport.maybeOf(
+      body,
+    );
+    if (viewport is! RenderBox) return;
+    final RenderBox view = viewport as RenderBox;
+    if (!view.hasSize) return;
+
+    final Offset viewOrigin = view.localToGlobal(Offset.zero);
+    final double viewTop = viewOrigin.dy;
+    final double viewHeight = view.size.height;
+    final double viewBottom = viewTop + viewHeight;
+    final Offset bodyOrigin = body.localToGlobal(Offset.zero);
+    final double bodyTop = bodyOrigin.dy;
+    final double bodyHeight = body.size.height;
+    const double margin = 12;
+
+    final double delta;
+    if (bodyHeight + margin <= viewHeight) {
+      delta = bodyTop - (viewTop + margin);
+    } else {
+      double anchorTop = bodyTop;
+      double anchorBottom = bodyTop + bodyHeight;
+      final EditorState? editor = _editorKey.currentState;
+      final TextSelection selection = widget.controller.selection;
+      if (editor != null && selection.isValid) {
+        try {
+          final Rect caret = editor.renderEditor.getLocalRectForCaret(
+            selection.extent,
+          );
+          final Offset caretOrigin = editor.renderEditor.localToGlobal(
+            caret.topLeft,
+          );
+          anchorTop = caretOrigin.dy;
+          anchorBottom = caretOrigin.dy + caret.height;
+        } catch (_) {}
+      }
+      final double keepBelow = math.max(96, viewHeight * 0.42);
+      if (anchorBottom > viewBottom - keepBelow) {
+        delta = anchorBottom - (viewBottom - keepBelow);
+      } else if (anchorTop < viewTop + margin) {
+        delta = anchorTop - (viewTop + margin);
+      } else {
+        delta = 0;
+      }
+    }
+
+    if (delta.abs() < 1) return;
+    final double target = (scroll.offset + delta).clamp(
+      scroll.position.minScrollExtent,
+      scroll.position.maxScrollExtent,
+    );
+    if ((target - scroll.offset).abs() < 1) return;
+    scroll.jumpTo(target);
   }
 
   late final ShowroomEmbedBuilder _embeds = ShowroomEmbedBuilder(
@@ -109,8 +227,9 @@ class _ShowroomQuillBodyState extends State<ShowroomQuillBody> {
           child: QuillEditor(
             controller: widget.controller,
             focusNode: widget.focusNode,
-            scrollController: widget.scrollController,
+            scrollController: _editorScroll,
             config: QuillEditorConfig(
+              editorKey: _editorKey,
               scrollable: false,
               minHeight: 200,
               placeholder: '이 칸에 적을 내용',
