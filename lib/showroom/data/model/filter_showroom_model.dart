@@ -8,6 +8,9 @@ class FilteredShowroomModel {
   final bool favoriteStatus;
   final int likeCount;
   final List<String> tags;
+  final DateTime? _publishedAt;
+
+  DateTime get publishedAt => _publishedAt ?? DateTime.utc(2025, 1, 1);
 
   /// 사진 가로 / 세로. 마소니리 카드 높이에 쓴다.
   final double imageRatio;
@@ -22,8 +25,9 @@ class FilteredShowroomModel {
     required this.favoriteStatus,
     required this.likeCount,
     required this.tags,
+    DateTime? publishedAt,
     this.imageRatio = 0.8,
-  });
+  }) : _publishedAt = publishedAt;
 
   factory FilteredShowroomModel.fromJson(Map<String, dynamic> json) {
     if (json.isEmpty) {
@@ -73,8 +77,10 @@ class FilteredShowroomModel {
       return defaultValue;
     }
 
+    final String publishedRaw = readString('publishedAt');
+    final String id = readString('id');
     return FilteredShowroomModel(
-      id: readString('id'),
+      id: id,
       thumbnailUrl: readString('thumbnailUrl'),
       title: readString('title'),
       themeName: readString('themeName'),
@@ -83,6 +89,7 @@ class FilteredShowroomModel {
       favoriteStatus: readBool('favoriteStatus'),
       likeCount: readInt('likeCount'),
       tags: readStringList('tags'),
+      publishedAt: DateTime.tryParse(publishedRaw) ?? _publishedAtFromId(id),
       imageRatio: readDouble('imageRatio'),
     );
   }
@@ -97,6 +104,7 @@ class FilteredShowroomModel {
     'favoriteStatus': favoriteStatus,
     'likeCount': likeCount,
     'tags': tags,
+    'publishedAt': publishedAt.toIso8601String(),
     'imageRatio': imageRatio,
   };
 
@@ -110,6 +118,7 @@ class FilteredShowroomModel {
     bool? favoriteStatus,
     int? likeCount,
     List<String>? tags,
+    DateTime? publishedAt,
     double? imageRatio,
   }) {
     return FilteredShowroomModel(
@@ -122,6 +131,7 @@ class FilteredShowroomModel {
       favoriteStatus: favoriteStatus ?? this.favoriteStatus,
       likeCount: likeCount ?? this.likeCount,
       tags: tags ?? this.tags,
+      publishedAt: publishedAt ?? this.publishedAt,
       imageRatio: imageRatio ?? this.imageRatio,
     );
   }
@@ -147,4 +157,9 @@ class FilteredShowroomModel {
 
   @override
   int get hashCode => id.hashCode;
+}
+
+DateTime _publishedAtFromId(String id) {
+  final int day = id.hashCode.abs() % 500;
+  return DateTime.utc(2025, 1, 1).add(Duration(days: day));
 }

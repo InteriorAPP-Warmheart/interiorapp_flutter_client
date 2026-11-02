@@ -4,8 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/hot_showroom_model.dart';
+import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_city_catalog.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
+import 'package:interiorapp_flutter_client/showroom/presentation/provider/showroom_feed_browse_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_board_screen.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_city_sheet.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_sort_toggle.dart';
 
 enum _FeedType { all, neighborhood }
 
@@ -23,27 +27,52 @@ class _ShowroomFeedSegmentState extends ConsumerState<ShowroomFeedSegment> {
 
   @override
   Widget build(BuildContext context) {
+    final String? place = ref.watch(showroomFeedBrowseProvider).place;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SegmentControl(
           selected: _selected,
-          onChanged: (v) => setState(() => _selected = v),
+          neighborhoodLabel: place ?? '동네',
+          onAll: () => setState(() => _selected = _FeedType.all),
+          onNeighborhood: () => _openNeighborhood(place),
         ),
+        const SizedBox(height: 12),
+        const ShowroomSortToggle(),
         const SizedBox(height: 14),
-        _ShowroomMasonryGrid(type: _selected),
+        _ShowroomMasonryGrid(type: _selected, place: place),
       ],
     );
+  }
+
+  Future<void> _openNeighborhood(String? place) async {
+    final bool already = _selected == _FeedType.neighborhood;
+    if (place != null && !already) {
+      setState(() => _selected = _FeedType.neighborhood);
+      return;
+    }
+    final String? picked = await showShowroomCitySheet(context, current: place);
+    if (!mounted || picked == null) return;
+    await ref.read(showroomFeedBrowseProvider.notifier).setPlace(picked);
+    if (!mounted) return;
+    setState(() => _selected = _FeedType.neighborhood);
   }
 }
 
 // ─── 세그먼트 컨트롤 ────────────────────────────────────────────────────────
 
 class _SegmentControl extends StatelessWidget {
-  const _SegmentControl({required this.selected, required this.onChanged});
+  const _SegmentControl({
+    required this.selected,
+    required this.neighborhoodLabel,
+    required this.onAll,
+    required this.onNeighborhood,
+  });
 
   final _FeedType selected;
-  final ValueChanged<_FeedType> onChanged;
+  final String neighborhoodLabel;
+  final VoidCallback onAll;
+  final VoidCallback onNeighborhood;
 
   @override
   Widget build(BuildContext context) {
@@ -55,12 +84,13 @@ class _SegmentControl extends StatelessWidget {
             _FeedTab(
               label: '전체',
               selected: selected == _FeedType.all,
-              onTap: () => onChanged(_FeedType.all),
+              onTap: onAll,
             ),
             _FeedTab(
-              label: '동네',
+              label: neighborhoodLabel,
               selected: selected == _FeedType.neighborhood,
-              onTap: () => onChanged(_FeedType.neighborhood),
+              showChevron: true,
+              onTap: onNeighborhood,
             ),
           ],
         ),
@@ -104,30 +134,47 @@ class _FeedTab extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.showChevron = false,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final bool showChevron;
 
   @override
   Widget build(BuildContext context) {
+    final Color color =
+        selected ? AppColors.textPrimary : AppColors.textSecondary;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: Padding(
           padding: const EdgeInsets.only(top: 2, bottom: 10),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              height: 1.2,
-              letterSpacing: -0.3,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              color: selected ? AppColors.textPrimary : AppColors.textSecondary,
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    height: 1.2,
+                    letterSpacing: -0.3,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    color: color,
+                  ),
+                ),
+              ),
+              if (showChevron) ...[
+                const SizedBox(width: 2),
+                Icon(Icons.keyboard_arrow_down, size: 18, color: color),
+              ],
+            ],
           ),
         ),
       ),
@@ -138,29 +185,54 @@ class _FeedTab extends StatelessWidget {
 // ─── 마소니리 그리드 ────────────────────────────────────────────────────────
 
 class _ShowroomMasonryGrid extends ConsumerWidget {
-  const _ShowroomMasonryGrid({required this.type});
+  const _ShowroomMasonryGrid({required this.type, required this.place});
 
   final _FeedType type;
+  final String? place;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: 전체/동네 전용 프로바이더로 교체
+    final ShowroomFeedBrowse browse = ref.watch(showroomFeedBrowseProvider);
     final List<HotShowroomModel> source = ref.watch(hotShowroomSliderVm);
-    final List<HotShowroomModel> items =
+    final String? place = this.place;
+    final List<HotShowroomModel> scoped =
         type == _FeedType.all
             ? source
-            : [
-              for (int i = 0; i < source.length; i++)
-                if (i.isOdd) source[i],
+            : <HotShowroomModel>[
+              for (final HotShowroomModel item in source)
+                if (place != null && showroomPlaceIncludes(place, item.city))
+                  item,
             ];
+    final List<HotShowroomModel> items = sortedShowroomFeed(
+      scoped,
+      browse.sort,
+      likes: (HotShowroomModel item) => item.likeCount,
+      publishedAt: (HotShowroomModel item) => item.publishedAt,
+      pinFavorites: browse.pinFavorites,
+      favorite: (HotShowroomModel item) => item.favoriteStatus,
+    );
 
-    if (items.isEmpty) {
+    if (type == _FeedType.neighborhood && (place == null || place.isEmpty)) {
       return const SizedBox(
         height: 200,
         child: Center(
           child: Text(
-            '게시물이 없어요',
+            '시나 도를 고르면 그 동네 글이 보여요',
             style: TextStyle(color: AppColors.textSecondary),
+          ),
+        ),
+      );
+    }
+
+    if (items.isEmpty) {
+      final String message =
+          type == _FeedType.neighborhood ? '$place에는 아직 글이 없어요' : '게시물이 없어요';
+      return SizedBox(
+        height: 200,
+        child: Center(
+          child: Text(
+            message,
+            style: const TextStyle(color: AppColors.textSecondary),
           ),
         ),
       );
@@ -284,80 +356,82 @@ class _MasonryCard extends StatelessWidget {
       openShape: const RoundedRectangleBorder(),
       closedBuilder: (BuildContext context, VoidCallback open) {
         return GestureDetector(
-      onTap: open,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AspectRatio(
-            aspectRatio: imageAspectRatio,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  AppNetworkImage(url: item.imageUrl),
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: Icon(
-                      item.favoriteStatus
-                          ? Icons.favorite
-                          : Icons.favorite_border,
-                      color:
+          onTap: open,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AspectRatio(
+                aspectRatio: imageAspectRatio,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      AppNetworkImage(url: item.imageUrl),
+                      Positioned(
+                        top: 6,
+                        right: 6,
+                        child: Icon(
                           item.favoriteStatus
-                              ? const Color(0xFFFF4D6A)
-                              : Colors.white,
-                      size: 16,
-                      shadows: const [
-                        Shadow(
-                          color: Color(0x99000000),
-                          blurRadius: 6,
-                          offset: Offset(0, 1),
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          color:
+                              item.favoriteStatus
+                                  ? const Color(0xFFFF4D6A)
+                                  : Colors.white,
+                          size: 16,
+                          shadows: const [
+                            Shadow(
+                              color: Color(0x99000000),
+                              blurRadius: 6,
+                              offset: Offset(0, 1),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      item.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.2,
+                        height: 1.2,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    item.favoriteStatus
+                        ? Icons.favorite
+                        : Icons.favorite_border,
+                    size: 11,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    likeLabel,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      height: 1.2,
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ],
               ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  item.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -0.2,
-                    height: 1.2,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              Icon(
-                item.favoriteStatus ? Icons.favorite : Icons.favorite_border,
-                size: 11,
-                color: AppColors.textSecondary,
-              ),
-              const SizedBox(width: 2),
-              Text(
-                likeLabel,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  height: 1.2,
-                  color: AppColors.textSecondary,
-                ),
-              ),
             ],
           ),
-        ],
-      ),
         );
       },
       openBuilder: (BuildContext context, VoidCallback close) {

@@ -1,41 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/home/ui/widget/section.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
-class PostSection extends ConsumerWidget {
+class PostSection extends StatelessWidget {
   final String sectionTitle;
-  final VoidCallback onPressed;
   final Widget child;
 
   const PostSection({
     super.key,
     required this.sectionTitle,
-    required this.onPressed,
     required this.child,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final double fontScale = ResponsiveSize.fontScale(context);
     final Widget title = Text(
       sectionTitle,
       style: TextStyle(fontSize: 18 * fontScale, fontWeight: FontWeight.bold),
     );
-    final Widget trailing = TextButton(
-      onPressed: onPressed,
-      style: TextButton.styleFrom(
-        textStyle: const TextStyle(
-          decoration: TextDecoration.underline,
-          color: Colors.black,
-        ),
-      ),
-      child: const Text('더보기', style: TextStyle(color: Colors.black)),
-    );
 
     return Section(
       title: title,
-      trailing: trailing,
       gap: ResponsiveSize.subGap(context),
       child: child,
     );

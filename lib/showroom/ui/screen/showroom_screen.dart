@@ -4,13 +4,16 @@ import 'package:go_router/go_router.dart';
 // TODO: 추천 시공 활성화 시 다시 추가
 // import 'package:interiorapp_flutter_client/home/ui/widget/image_slider_widget.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
+import 'package:interiorapp_flutter_client/showroom/data/model/filter_showroom_model.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/filter_provider.dart';
+import 'package:interiorapp_flutter_client/showroom/presentation/provider/showroom_feed_browse_provider.dart';
 // TODO: 폴라로이드 카드 다시 쓸 때 복구
 // import 'package:interiorapp_flutter_client/showroom/ui/widget/panorama_showroom_card.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/quick_filter_bar.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/popular_showroom_card.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/post_section.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_feed_segment.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_sort_toggle.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
 class ShowroomScreen extends ConsumerStatefulWidget {
@@ -74,7 +77,6 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
                     children: [
                       PostSection(
                         sectionTitle: '인기 쇼룸',
-                        onPressed: () {},
                         child: const PopularShowroomCardList(),
                       ),
                       SizedBox(height: sectionGap),
@@ -86,7 +88,6 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
                       // SizedBox(height: sectionGap),
                       // PostSection(
                       //   sectionTitle: '추천 시공',
-                      //   onPressed: () {},
                       //   child: ImageSliderWidget().recommendBuildInfo(ref: ref),
                       // ),
                     ],
@@ -132,42 +133,37 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
 
     return filteredShowrooms.when(
       skipLoadingOnReload: true,
-      data: (showrooms) {
-        if (showrooms.isEmpty) {
-          return _filterEmptyPostsSection();
-        }
+      data: (List<FilteredShowroomModel> showrooms) {
+        final ShowroomFeedBrowse browse = ref.watch(showroomFeedBrowseProvider);
+        final List<FilteredShowroomModel> ordered = sortedShowroomFeed(
+          showrooms,
+          browse.sort,
+          likes: (FilteredShowroomModel item) => item.likeCount,
+          publishedAt: (FilteredShowroomModel item) => item.publishedAt,
+          pinFavorites: browse.pinFavorites,
+          favorite: (FilteredShowroomModel item) => item.favoriteStatus,
+        );
 
-        // TODO: 폴라로이드 한 장 리스트. 영역이 넓어 잠시 끈다.
-        // return ListView.separated(
-        //   shrinkWrap: true,
-        //   physics: NeverScrollableScrollPhysics(),
-        //   itemCount: showrooms.length,
-        //   separatorBuilder: (context, index) => const SizedBox(height: 20),
-        //   itemBuilder: (context, index) {
-        //     final item = showrooms[index];
-        //     return ShowroomPostCard(
-        //       imageUrl: item.thumbnailUrl,
-        //       title: item.title,
-        //       themeName: item.themeName,
-        //       userName: item.userName,
-        //       userProfileUrl: item.userProfileUrl,
-        //       favoriteStatus: item.favoriteStatus,
-        //       likeCount: item.likeCount,
-        //       imageHeight: showroomCardImageHeight(context),
-        //       onFavorite: () {},
-        //     );
-        //   },
-        // );
-        return ShowroomMasonryGrid(
-          items: [
-            for (final item in showrooms)
-              ShowroomMasonryEntry(
-                id: item.id,
-                imageUrl: item.thumbnailUrl,
-                title: item.title,
-                imageRatio: item.imageRatio,
-                likeCount: item.likeCount,
-                favoriteStatus: item.favoriteStatus,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const ShowroomSortToggle(),
+            const SizedBox(height: 14),
+            if (ordered.isEmpty)
+              _filterEmptyPostsSection()
+            else
+              ShowroomMasonryGrid(
+                items: [
+                  for (final FilteredShowroomModel item in ordered)
+                    ShowroomMasonryEntry(
+                      id: item.id,
+                      imageUrl: item.thumbnailUrl,
+                      title: item.title,
+                      imageRatio: item.imageRatio,
+                      likeCount: item.likeCount,
+                      favoriteStatus: item.favoriteStatus,
+                    ),
+                ],
               ),
           ],
         );

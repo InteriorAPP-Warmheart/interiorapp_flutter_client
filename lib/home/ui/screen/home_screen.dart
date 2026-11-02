@@ -118,10 +118,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   // 인기 상품 슬라이더
                   Section(
                     title: Text('인기 쇼룸', style: AppTypography.title(context)),
-                    trailing: TextButton(
-                      onPressed: () {},
-                      child: Text('더보기', style: AppTypography.caption(context)),
-                    ),
                     gap: ResponsiveSize.subGap(context) * 0,
                     child: const PopularShowroomCardList(),
                   ),

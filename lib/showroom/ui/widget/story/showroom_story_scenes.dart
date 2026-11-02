@@ -468,6 +468,8 @@ class StoryCostScene extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String total = cost.total.trim();
+    final String reading = CostFormattingViewModel.wonReading(total);
     return ColoredBox(
       color: storyInk,
       child: Column(
@@ -481,6 +483,49 @@ class StoryCostScene extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (total.isNotEmpty)
+                    _Rise(
+                      progress: progress,
+                      start: 0.08,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 28),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              '예산',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFFB5B5B5),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              total,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 32,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.6,
+                                height: 1.15,
+                              ),
+                            ),
+                            if (reading.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                reading,
+                                style: const TextStyle(
+                                  color: Color(0xFFB5B5B5),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
                   for (var i = 0; i < cost.lines.length; i++)
                     _Rise(
                       progress: progress,

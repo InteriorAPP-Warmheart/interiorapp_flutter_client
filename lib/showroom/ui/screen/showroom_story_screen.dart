@@ -441,20 +441,20 @@ List<_Beat> _beats(ShowroomStoryModel story) {
           return StorySituationScene(situation: situation, progress: progress);
         },
       ),
-    for (final ShowroomBeforeAfter pair in story.comparisons)
-      _Beat(
-        light: false,
-        reveal: const Duration(milliseconds: 500),
-        build: (double progress) {
-          return StoryBeforeAfterScene(beforeAfter: pair, progress: progress);
-        },
-      ),
     if (cost != null)
       _Beat(
         light: false,
         reveal: const Duration(milliseconds: 720),
         build: (double progress) {
           return StoryCostScene(cost: cost, progress: progress);
+        },
+      ),
+    for (final ShowroomBeforeAfter pair in story.comparisons)
+      _Beat(
+        light: false,
+        reveal: const Duration(milliseconds: 500),
+        build: (double progress) {
+          return StoryBeforeAfterScene(beforeAfter: pair, progress: progress);
         },
       ),
     for (var i = 0; i < story.process.length; i++)

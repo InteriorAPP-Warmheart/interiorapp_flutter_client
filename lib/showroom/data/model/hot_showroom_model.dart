@@ -8,6 +8,13 @@ class HotShowroomModel {
   final bool favoriteStatus;
   final int likeCount;
 
+  /// 시 단위 동네. 예: 서울, 수원시.
+  final String city;
+
+  final DateTime? _publishedAt;
+
+  DateTime get publishedAt => _publishedAt ?? DateTime.utc(2025, 1, 1);
+
   /// 사진 가로 / 세로. 마소니리에서 카드 높이를 이 값으로 잡는다.
   final double imageRatio;
 
@@ -20,8 +27,10 @@ class HotShowroomModel {
     required this.userProfileUrl,
     required this.favoriteStatus,
     required this.likeCount,
+    this.city = '',
+    DateTime? publishedAt,
     this.imageRatio = 0.8,
-  });
+  }) : _publishedAt = publishedAt;
 
   /// 서버 JSON -> Model
   /// 안전한 파싱: 키 누락/타입 불일치 시 의미있는 예외를 던지거나 기본값을 적용합니다.
@@ -64,6 +73,7 @@ class HotShowroomModel {
       return defaultValue;
     }
 
+    final String publishedRaw = readString('publishedAt');
     return HotShowroomModel(
       id: readString('id'),
       thumbnailUrl: readString('thumbnailUrl'),
@@ -73,6 +83,8 @@ class HotShowroomModel {
       userProfileUrl: readString('userProfileUrl'),
       favoriteStatus: readBool('favoriteStatus'),
       likeCount: readInt('likeCount'),
+      city: readString('city'),
+      publishedAt: DateTime.tryParse(publishedRaw),
       imageRatio: readDouble('imageRatio'),
     );
   }
@@ -87,6 +99,8 @@ class HotShowroomModel {
     'userProfileUrl': userProfileUrl,
     'favoriteStatus': favoriteStatus,
     'likeCount': likeCount,
+    'city': city,
+    'publishedAt': publishedAt.toIso8601String(),
     'imageRatio': imageRatio,
   };
 
@@ -100,6 +114,8 @@ class HotShowroomModel {
     String? userProfileUrl,
     bool? favoriteStatus,
     int? likeCount,
+    String? city,
+    DateTime? publishedAt,
     double? imageRatio,
   }) {
     return HotShowroomModel(
@@ -111,6 +127,8 @@ class HotShowroomModel {
       userProfileUrl: userProfileUrl ?? this.userProfileUrl,
       favoriteStatus: favoriteStatus ?? this.favoriteStatus,
       likeCount: likeCount ?? this.likeCount,
+      city: city ?? this.city,
+      publishedAt: publishedAt ?? this.publishedAt,
       imageRatio: imageRatio ?? this.imageRatio,
     );
   }
@@ -141,6 +159,8 @@ class HotShowroomModel {
         other.userProfileUrl == userProfileUrl &&
         other.favoriteStatus == favoriteStatus &&
         other.likeCount == likeCount &&
+        other.city == city &&
+        other.publishedAt == publishedAt &&
         other.imageRatio == imageRatio;
   }
 
@@ -154,6 +174,8 @@ class HotShowroomModel {
     userProfileUrl,
     favoriteStatus,
     likeCount,
+    city,
+    publishedAt,
     imageRatio,
   );
 }
