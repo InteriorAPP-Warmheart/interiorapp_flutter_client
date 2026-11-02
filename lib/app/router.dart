@@ -9,6 +9,7 @@ import 'package:interiorapp_flutter_client/build/ui/screen/prep_consult_screen.d
 import 'package:interiorapp_flutter_client/build/ui/screen/prep_create_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/prep_detail_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/prep_hub_screen.dart';
+import 'package:interiorapp_flutter_client/build/ui/screen/process_schedule_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/space_detail_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/trade_create_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/trade_detail_screen.dart';
@@ -131,6 +132,12 @@ class AppRouter {
             ],
           ),
           GoRoute(
+            path: 'schedule',
+            builder:
+                (context, state) =>
+                    const AdaptiveFrame(child: ProcessScheduleScreen()),
+          ),
+          GoRoute(
             path: ':projectId',
             builder:
                 (context, state) => AdaptiveFrame(
@@ -143,8 +150,7 @@ class AppRouter {
       ),
       GoRoute(
         path: '/my',
-        builder:
-            (context, state) => const AdaptiveFrame(child: MyPageScreen()),
+        builder: (context, state) => const AdaptiveFrame(child: MyPageScreen()),
       ),
       GoRoute(
         path: '/notifications',

@@ -5,6 +5,7 @@ import 'package:interiorapp_flutter_client/build/domain/entity/construction_plan
 import 'package:interiorapp_flutter_client/build/domain/entity/construction_progress.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/work_quote.dart';
+import 'package:interiorapp_flutter_client/build/ui/screen/contract_reader_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/contract_review_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/estimate_reader_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/consult_chat_panel.dart';
@@ -13,12 +14,14 @@ import 'package:interiorapp_flutter_client/build/ui/screen/prep_detail_screen.da
 import 'package:interiorapp_flutter_client/build/ui/screen/proposal_reader_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/industry_cover.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/slide_to_confirm.dart';
+import 'package:interiorapp_flutter_client/build/ui/widget/schedule/process_week_strip.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_bottom_sheet.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_dialog.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
+import 'package:interiorapp_flutter_client/core/widget/calendar/app_calendar_date.dart';
 
 part 'progress/progress_shared.dart';
 part 'progress/consult_stage.dart';
@@ -165,7 +168,6 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
     final double fontScale = ResponsiveSize.fontScale(context);
     final EdgeInsets padding = ResponsiveSize.textInset(context);
     final double subGap = ResponsiveSize.subGap(context);
-    final double sectionGap = ResponsiveSize.sectionGap(context);
     final bool preview = _stage != widget.stage;
     final ConstructionProgress? progress =
         _stage == ProjectStage.build ? widget.progress ?? _sampleBuild : null;
@@ -177,9 +179,35 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
     final double fabLift = quoteBar ? 76 : 0;
     final double chatBottom = safeBottom + 16 + 56 + 12 + fabLift;
 
+    final bool quoteArchive = _stage.index >= ProjectStage.contract.index;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: Text(widget.placeName)),
+      appBar: AppBar(
+        title: Text(widget.placeName),
+        actions: [
+          if (quoteArchive)
+            TextButton(
+              onPressed:
+                  () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder:
+                          (BuildContext context) => _QuoteArchiveScreen(
+                            plan: widget.constructionPlan,
+                            quote: widget.workQuote,
+                          ),
+                    ),
+                  ),
+              child: Text(
+                '문서',
+                style: TextStyle(
+                  fontSize: 15 * fontScale,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+        ],
+      ),
       floatingActionButton: Padding(
         padding: EdgeInsets.only(bottom: fabLift),
         child: FloatingActionButton.extended(
@@ -288,9 +316,9 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
                         : ListView(
                           physics: const _ScrollOnlyWhenNeeded(),
                           padding: EdgeInsets.fromLTRB(
-                            padding.left,
+                            _stage == ProjectStage.build ? 0 : padding.left,
                             subGap,
-                            padding.right,
+                            _stage == ProjectStage.build ? 0 : padding.right,
                             barGap + MediaQuery.paddingOf(context).bottom,
                           ),
                           children: [
@@ -299,8 +327,6 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
                               _BuildBody(
                                 progress: progress,
                                 fontScale: fontScale,
-                                sectionGap: sectionGap,
-                                subGap: subGap,
                               )
                             else
                               _JourneyStage(
@@ -474,6 +500,41 @@ class _QuoteActionBar extends StatelessWidget {
                   label: '모든 내용 열람완료시 밀어주세요',
                   onCompleted: onSlideDone,
                 ),
+      ),
+    );
+  }
+}
+
+/// 계약 이후에 시공·견적 단계에서 보던 자료를 다시 연다.
+class _QuoteArchiveScreen extends StatelessWidget {
+  const _QuoteArchiveScreen({required this.plan, required this.quote});
+
+  final ConstructionPlan? plan;
+  final WorkQuote? quote;
+
+  @override
+  Widget build(BuildContext context) {
+    final double fontScale = ResponsiveSize.fontScale(context);
+    final EdgeInsets padding = ResponsiveSize.textInset(context);
+    final double subGap = ResponsiveSize.subGap(context);
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(title: const Text('문서')),
+      body: ListView(
+        padding: EdgeInsets.fromLTRB(
+          padding.left,
+          subGap,
+          padding.right,
+          subGap + MediaQuery.paddingOf(context).bottom,
+        ),
+        children: [
+          _QuoteStage(
+            plan: plan,
+            quote: quote,
+            fontScale: fontScale,
+            includeContract: true,
+          ),
+        ],
       ),
     );
   }

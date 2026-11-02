@@ -23,11 +23,15 @@ class _QuoteStage extends StatelessWidget {
     required this.plan,
     required this.quote,
     required this.fontScale,
+    this.includeContract = false,
   });
 
   final ConstructionPlan? plan;
   final WorkQuote? quote;
   final double fontScale;
+
+  /// 계약 이후 문서에서만 계약서를 함께 보여 준다.
+  final bool includeContract;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +43,17 @@ class _QuoteStage extends StatelessWidget {
             : current.documents;
     final List<ProjectDocument> documents = [
       for (final ProjectDocument document in source)
-        if (document.kind != ProjectDocumentKind.estimate) document,
+        if (document.kind != ProjectDocumentKind.estimate &&
+            document.kind != ProjectDocumentKind.contract)
+          document,
+      if (includeContract)
+        ProjectDocument(
+          kind: ProjectDocumentKind.contract,
+          title: '계약서',
+          note: current == null ? '아직 없어요' : '원본과 정리본',
+          fileName: current == null ? '' : '${current.documentTitle} 계약서.pdf',
+          ready: current != null,
+        ),
     ];
 
     return Column(
@@ -436,6 +450,8 @@ IconData _documentIcon(ProjectDocumentKind kind) {
       return Icons.view_in_ar_outlined;
     case ProjectDocumentKind.draft:
       return Icons.architecture_outlined;
+    case ProjectDocumentKind.contract:
+      return Icons.article_outlined;
   }
 }
 
@@ -575,6 +591,12 @@ void _openDocument(
     case ProjectDocumentKind.model:
     case ProjectDocumentKind.draft:
       return;
+    case ProjectDocumentKind.contract:
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (BuildContext context) => ContractReaderScreen(quote: quote),
+        ),
+      );
   }
 }
 

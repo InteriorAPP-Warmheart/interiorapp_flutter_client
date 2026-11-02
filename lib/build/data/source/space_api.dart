@@ -1,6 +1,7 @@
 import 'package:interiorapp_flutter_client/build/data/source/quote_sample.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/construction_plan.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/construction_progress.dart';
+import 'package:interiorapp_flutter_client/build/domain/entity/process_schedule.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/build/domain/repository/space_repository.dart';
 
@@ -527,7 +528,8 @@ class SpaceApi {
       takenOn: '8월 15일',
     ),
     PublicSitePhoto(
-      imageUrl: 'https://picsum.photos/seed/haeundae-0815-finish-terrace/900/900',
+      imageUrl:
+          'https://picsum.photos/seed/haeundae-0815-finish-terrace/900/900',
       trade: '마감',
       area: '테라스',
       takenOn: '8월 15일',
@@ -578,6 +580,11 @@ class SpaceApi {
       todayTrade: '목공 공사',
       todaySummary: '벽과 천장 틀을 맞추고 있어요',
       workers: '목수 2명',
+      supervisor: SiteSupervisor(name: '오세진', duty: '현장 진행, 일정, 오늘 작업'),
+      crew: <SiteWorker>[
+        SiteWorker(name: '한도윤', role: '목수', work: '벽과 천장 틀'),
+        SiteWorker(name: '서민재', role: '목수', work: '문틀과 몰딩'),
+      ],
       trades: ['철거', '설비·급배수', '목공', '전기', '도장', '마감'],
       tradeIndex: 2,
       nextWhen: '내일',
@@ -675,8 +682,30 @@ class SpaceApi {
     ),
   };
 
-  ConstructionProgress? constructionFor(String projectId) =>
-      _construction[projectId];
+  ConstructionProgress? constructionFor(String projectId) {
+    final ConstructionProgress? progress = _construction[projectId];
+    if (progress == null || projectId != 'project-seongsu-cafe') {
+      return progress;
+    }
+    return ConstructionProgress(
+      currentLabel: progress.currentLabel,
+      expectedCompletion: progress.expectedCompletion,
+      today: progress.today,
+      todayTrade: progress.todayTrade,
+      todaySummary: progress.todaySummary,
+      workers: progress.workers,
+      supervisor: progress.supervisor,
+      crew: progress.crew,
+      sideTrades: progress.sideTrades,
+      idleReason: progress.idleReason,
+      nextWhen: progress.nextWhen,
+      nextTrade: progress.nextTrade,
+      nextSummary: progress.nextSummary,
+      trades: progress.trades,
+      tradeIndex: progress.tradeIndex,
+      recentPhotos: _photosOnProcessDays(progress.recentPhotos, DateTime.now()),
+    );
+  }
 
   PrepRecord? recordFor(String projectId) =>
       _receivedRecords[projectId] ?? _keptConsults[projectId];
@@ -775,4 +804,43 @@ class SpaceApi {
     if (trades.length >= SpaceRepository.maxTrades) return;
     trades.insert(0, candidate);
   }
+}
+
+/// 성수 현장 사진을 오늘 기준 공정 날에 나눠 둔다. 설비는 철거 기간에 둔다.
+List<PublicSitePhoto> _photosOnProcessDays(
+  List<PublicSitePhoto> photos,
+  DateTime today,
+) {
+  final DateTime anchor = DateTime(today.year, today.month, today.day);
+  final Map<String, List<int>> daysByTrade = <String, List<int>>{};
+  for (final ProcessScheduleTask task in sampleProcessSchedule(anchor)) {
+    final List<int> days = task.days.toList()..sort();
+    daysByTrade[task.name] = days;
+  }
+  final List<int> demolition = daysByTrade['철거'] ?? const <int>[];
+  if (demolition.isNotEmpty) daysByTrade['설비·급배수'] = demolition;
+
+  final Map<String, int> cursor = <String, int>{};
+  return <PublicSitePhoto>[
+    for (final PublicSitePhoto photo in photos)
+      PublicSitePhoto(
+        imageUrl: photo.imageUrl,
+        trade: photo.trade,
+        area: photo.area,
+        takenOn: _processPhotoDay(photo.trade, daysByTrade, cursor, anchor),
+      ),
+  ];
+}
+
+String _processPhotoDay(
+  String trade,
+  Map<String, List<int>> daysByTrade,
+  Map<String, int> cursor,
+  DateTime anchor,
+) {
+  final List<int> days = daysByTrade[trade] ?? <int>[processDayKey(anchor)];
+  final int index = cursor[trade] ?? 0;
+  cursor[trade] = index + 1;
+  final DateTime day = processDayFromKey(days[index % days.length]);
+  return '${day.month}월 ${day.day}일';
 }

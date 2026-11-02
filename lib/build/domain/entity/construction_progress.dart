@@ -46,6 +46,30 @@ class SideTrade {
   final String when;
 }
 
+/// 공사 진행을 맡은 감리. 그날 현장 인력과 따로 둔다.
+class SiteSupervisor {
+  const SiteSupervisor({required this.name, this.role = '감리', this.duty = ''});
+
+  final String name;
+  final String role;
+
+  /// 고객에게 소개하는 맡은 일. 예: 현장 진행, 일정, 오늘 작업.
+  final String duty;
+}
+
+/// 현장에 나온 사람. 고객에게 보이는 프로필만 담는다.
+class SiteWorker {
+  const SiteWorker({required this.name, required this.role, this.work = ''});
+
+  final String name;
+
+  /// 역할. 예: 목수, 전기.
+  final String role;
+
+  /// 이 사람이 맡은 일. 예: 벽체 틀.
+  final String work;
+}
+
 /// 현장관리가 고객에게 공개한 사진.
 class PublicSitePhoto {
   const PublicSitePhoto({
@@ -78,6 +102,8 @@ class ConstructionProgress {
     this.todayTrade = '',
     this.todaySummary = '',
     this.workers = '',
+    this.supervisor,
+    this.crew = const <SiteWorker>[],
     this.sideTrades = const <SideTrade>[],
     this.idleReason = '',
     this.nextWhen = '',
@@ -102,6 +128,12 @@ class ConstructionProgress {
 
   /// 오늘 투입 인원 요약. 개인 평가는 넣지 않는다.
   final String workers;
+
+  /// 이 공사를 맡은 감리. 없으면 소개를 보여 주지 않는다.
+  final SiteSupervisor? supervisor;
+
+  /// 그날 현장 사람. 비어 있으면 프로필 카드를 보여 주지 않는다.
+  final List<SiteWorker> crew;
 
   final List<SideTrade> sideTrades;
 

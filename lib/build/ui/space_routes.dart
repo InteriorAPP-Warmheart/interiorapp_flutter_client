@@ -5,6 +5,7 @@ abstract final class SpaceRoutes {
   static const String prepRecord = '/build/prep/record';
   static const String trade = '/build/prep/trade';
   static const String tradeCreate = '/build/prep/trade/create';
+  static const String schedule = '/build/schedule';
 
   static String prepEdit(int step) => '$prepCreate?step=$step';
 

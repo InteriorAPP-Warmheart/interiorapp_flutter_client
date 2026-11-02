@@ -16,6 +16,7 @@ import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_bottom_sheet.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_dialog.dart';
+import 'package:interiorapp_flutter_client/core/widget/calendar/app_calendar_dialog.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_reference_pick.dart';
 
@@ -460,18 +461,14 @@ class _PrepCreateScreenState extends ConsumerState<PrepCreateScreen>
   Future<void> _pickTargetRange() async {
     final DateTime now = DateTime.now();
     final DateTime today = DateTime(now.year, now.month, now.day);
-    final DateTime lastDate = DateTime(today.year + 3);
+    final DateTime lastDate = DateTime(today.year, today.month + 12, today.day);
     final DateTimeRange? initial = _targetRange;
-    final DateTimeRange? picked = await showDateRangePicker(
+    final DateTimeRange? picked = await showAppDateRangeDialog(
       context: context,
-      initialDateRange: initial,
+      initialRange: initial,
       firstDate: today,
       lastDate: lastDate,
-      helpText: '희망공사기간',
-      cancelText: '취소',
-      saveText: '선택',
-      fieldStartLabelText: '시작',
-      fieldEndLabelText: '종료',
+      title: '희망공사기간',
     );
     if (!mounted || picked == null) return;
     setState(() {

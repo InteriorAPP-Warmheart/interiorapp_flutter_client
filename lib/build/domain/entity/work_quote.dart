@@ -32,7 +32,7 @@ class QuoteJudgment {
 }
 
 /// 고객이 받는 자료 종류.
-enum ProjectDocumentKind { estimate, proposal, model, draft }
+enum ProjectDocumentKind { estimate, proposal, model, draft, contract }
 
 /// 견적서, 제안서, 3D 도면, 공사시안.
 class ProjectDocument {
