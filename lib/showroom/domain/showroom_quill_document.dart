@@ -134,11 +134,7 @@ bool stripShowroomHeadings(QuillController controller) {
   }
   if (newlines.isEmpty) return false;
   for (final int index in newlines) {
-    controller.formatText(
-      index,
-      1,
-      Attribute.clone(Attribute.header, null),
-    );
+    controller.formatText(index, 1, Attribute.clone(Attribute.header, null));
   }
   return true;
 }
@@ -193,11 +189,21 @@ void replaceShowroomEmbed(
   int offset,
   ShowroomBlock block,
 ) {
+  // 임베드 줄의 캐럿 높이는 카드 전체다. 카드가 보이는 칸보다 높으면
+  // 위와 아래를 번갈아 맞추다 스크롤이 끝나지 않는다. 커서는 다음 글줄에 둔다.
+  final int end =
+      controller.document.length == 0 ? 0 : controller.document.length - 1;
+  if (offset + 2 > end) {
+    controller.replaceText(end, 0, '\n', null, ignoreFocus: true);
+  }
+  final int caretEnd =
+      controller.document.length == 0 ? 0 : controller.document.length - 1;
+  final int caret = offset + 2 > caretEnd ? caretEnd : offset + 2;
   controller.replaceText(
     offset,
     1,
     BlockEmbed(kShowroomEmbedType, jsonEncode(block.toJson())),
-    TextSelection.collapsed(offset: offset + 1),
+    TextSelection.collapsed(offset: caret),
     ignoreFocus: true,
   );
 }

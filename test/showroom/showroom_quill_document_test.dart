@@ -452,6 +452,271 @@ void main() {
     await tester.pump();
     expect(focus.hasFocus, isTrue);
   });
+
+  test('전후 사진을 갈아 끼워도 커서는 카드 줄에 두지 않는다', () {
+    final QuillController controller = QuillController(
+      document: documentFromShowroomBlocks(<ShowroomBlock>[
+        text('post', '안녕하세요'),
+        ShowroomBlock.images(
+          id: 'pair',
+          layout: ShowroomImageLayout.beforeAfter,
+          pairs: const <ShowroomBeforeAfterPair>[
+            ShowroomBeforeAfterPair(id: 'hall'),
+          ],
+        ),
+      ]),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+    addTearDown(controller.dispose);
+
+    final int embedAt = controller.document.toPlainText().indexOf(
+      Embed.kObjectReplacementCharacter,
+    );
+    expect(embedAt, greaterThanOrEqualTo(0));
+    controller.updateSelection(
+      TextSelection.collapsed(offset: embedAt),
+      ChangeSource.local,
+    );
+    replaceShowroomEmbed(
+      controller,
+      embedAt,
+      ShowroomBlock.images(
+        id: 'pair',
+        layout: ShowroomImageLayout.beforeAfter,
+        pairs: const <ShowroomBeforeAfterPair>[
+          ShowroomBeforeAfterPair(id: 'hall', beforeUrl: 'file:///tmp/a.jpg'),
+        ],
+      ),
+    );
+
+    final Node? line =
+        controller.document.queryChild(controller.selection.extentOffset).node;
+    expect(line, isA<Line>());
+    expect((line! as Line).hasEmbed, isFalse);
+    final ShowroomBlock card = blocksFromQuillDocument(
+      controller.document,
+    ).firstWhere((ShowroomBlock block) => block.id == 'pair');
+    expect(card.pairs.single.beforeUrl, 'file:///tmp/a.jpg');
+    expect(controller.document.toPlainText().split('\n').length, lessThan(6));
+  });
+
+  test('카드보다 좁은 칸에서는 스크롤 방향을 뒤집지 않는다', () {
+    const double viewTop = 100;
+    const double viewBottom = 400;
+    const double margin = 12;
+    const double keepBelow = 168;
+    expect(
+      showroomCaretRevealDelta(
+        viewTop: viewTop,
+        viewBottom: viewBottom,
+        anchorTop: 80,
+        anchorBottom: 580,
+        margin: margin,
+        keepBelow: keepBelow,
+      ),
+      0,
+    );
+
+    const double belowTop = 500;
+    const double belowBottom = 1000;
+    final double pull = showroomCaretRevealDelta(
+      viewTop: viewTop,
+      viewBottom: viewBottom,
+      anchorTop: belowTop,
+      anchorBottom: belowBottom,
+      margin: margin,
+      keepBelow: keepBelow,
+    );
+    expect(pull, greaterThan(0));
+    expect(
+      showroomCaretRevealDelta(
+        viewTop: viewTop,
+        viewBottom: viewBottom,
+        anchorTop: belowTop - pull,
+        anchorBottom: belowBottom - pull,
+        margin: margin,
+        keepBelow: keepBelow,
+      ),
+      0,
+    );
+
+    const double lineTop = 390;
+    const double lineBottom = 414;
+    final double linePull = showroomCaretRevealDelta(
+      viewTop: viewTop,
+      viewBottom: viewBottom,
+      anchorTop: lineTop,
+      anchorBottom: lineBottom,
+      margin: margin,
+      keepBelow: keepBelow,
+    );
+    expect(linePull, closeTo(lineBottom - (viewBottom - keepBelow), 0.01));
+    expect(
+      showroomCaretRevealDelta(
+        viewTop: viewTop,
+        viewBottom: viewBottom,
+        anchorTop: lineTop - linePull,
+        anchorBottom: lineBottom - linePull,
+        margin: margin,
+        keepBelow: keepBelow,
+      ),
+      0,
+    );
+  });
+
+  testWidgets('전후 카드에 붙은 커서가 본문 스크롤을 반복시키지 않는다', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(390, 520);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetViewInsets);
+
+    final QuillController controller = QuillController(
+      document: documentFromShowroomBlocks(<ShowroomBlock>[
+        text('post', '안녕하세요'),
+        ShowroomBlock.images(
+          id: 'pair',
+          layout: ShowroomImageLayout.beforeAfter,
+          pairs: const <ShowroomBeforeAfterPair>[
+            ShowroomBeforeAfterPair(id: 'hall', caption: '홀'),
+          ],
+        ),
+      ]),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+    final FocusNode focus = FocusNode();
+    final ScrollController scroll = ScrollController();
+    addTearDown(controller.dispose);
+    addTearDown(focus.dispose);
+    addTearDown(scroll.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
+          FlutterQuillLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const <Locale>[Locale('ko')],
+        home: Scaffold(
+          body: ListView(
+            controller: scroll,
+            children: <Widget>[
+              ShowroomQuillBody(
+                controller: controller,
+                focusNode: focus,
+                scrollController: scroll,
+                pickImages: ({bool multiple = false}) async => const <String>[],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final int embedAt = controller.document.toPlainText().indexOf(
+      Embed.kObjectReplacementCharacter,
+    );
+    focus.requestFocus();
+    controller.updateSelection(
+      TextSelection.collapsed(offset: embedAt),
+      ChangeSource.local,
+    );
+    await tester.pump();
+
+    final Node? parked =
+        controller.document.queryChild(controller.selection.extentOffset).node;
+    expect(parked, isA<Line>());
+    expect((parked! as Line).hasEmbed, isFalse);
+
+    tester.view.viewInsets = const FakeViewPadding(bottom: 280);
+    final List<double> offsets = <double>[];
+    for (var frame = 0; frame < 12; frame++) {
+      await tester.pump();
+      offsets.add(scroll.offset);
+      final Node? line =
+          controller.document
+              .queryChild(controller.selection.extentOffset)
+              .node;
+      expect(line, isA<Line>());
+      expect((line! as Line).hasEmbed, isFalse, reason: 'frame $frame');
+    }
+    expect(
+      offsets.sublist(offsets.length - 6).toSet().length,
+      1,
+      reason: '스크롤이 멈추지 않음: $offsets',
+    );
+  });
+
+  testWidgets('전후 전환은 글쓰기 포커스와 스크롤을 카드 아래로 가져가지 않는다', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 700);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final QuillController controller = QuillController(
+      document: documentFromShowroomBlocks(<ShowroomBlock>[
+        text('post', '안녕하세요'),
+        ShowroomBlock.images(
+          id: 'pair',
+          layout: ShowroomImageLayout.beforeAfter,
+          pairs: const <ShowroomBeforeAfterPair>[
+            ShowroomBeforeAfterPair(id: 'hall', beforeUrl: 'file:///tmp/a.jpg'),
+          ],
+        ),
+      ]),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+    final FocusNode focus = FocusNode();
+    final ScrollController scroll = ScrollController();
+    addTearDown(controller.dispose);
+    addTearDown(focus.dispose);
+    addTearDown(scroll.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
+          FlutterQuillLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const <Locale>[Locale('ko')],
+        home: Scaffold(
+          body: ListView(
+            controller: scroll,
+            children: <Widget>[
+              ShowroomQuillBody(
+                controller: controller,
+                focusNode: focus,
+                scrollController: scroll,
+                pickImages: ({bool multiple = false}) async => const <String>[],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final Finder after = find.text('시공 후');
+    await tester.ensureVisible(after);
+    await tester.pump();
+    final double beforeScroll = scroll.offset;
+    final int beforeCaret = controller.selection.extentOffset;
+
+    await tester.tap(after);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(focus.hasFocus, isFalse);
+    expect(controller.selection.extentOffset, beforeCaret);
+    expect(scroll.offset, closeTo(beforeScroll, 1));
+  });
 }
 
 double? _paintedSize(WidgetTester tester, String text) {
