@@ -13,6 +13,32 @@ import 'package:interiorapp_flutter_client/showroom/domain/showroom_quill_docume
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_process_editor.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/write_body_editor.dart';
 
+/// 입력 중인 줄을 키보드 위 칸에 두기 위한 스크롤 이동량.
+///
+/// 전후 카드처럼 앵커가 그 칸보다 크면 위와 아래를 동시에 맞출 수 없다.
+/// 이미 칸과 겹치면 그대로 두고, 완전히 벗어나 있을 때만 위쪽을 칸에 붙인다.
+double showroomCaretRevealDelta({
+  required double viewTop,
+  required double viewBottom,
+  required double anchorTop,
+  required double anchorBottom,
+  required double margin,
+  required double keepBelow,
+}) {
+  final double bandTop = viewTop + margin;
+  final double bandBottom = viewBottom - keepBelow;
+  final double band = bandBottom - bandTop;
+  final double height = anchorBottom - anchorTop;
+  if (height > band) {
+    final bool intersects = anchorBottom > bandTop && anchorTop < bandBottom;
+    if (intersects) return 0;
+    return anchorTop - bandTop;
+  }
+  if (anchorBottom > bandBottom) return anchorBottom - bandBottom;
+  if (anchorTop < bandTop) return anchorTop - bandTop;
+  return 0;
+}
+
 class ShowroomQuillBody extends StatefulWidget {
   const ShowroomQuillBody({
     super.key,
@@ -40,6 +66,8 @@ class _ShowroomQuillBodyState extends State<ShowroomQuillBody>
   final GlobalKey<EditorState> _editorKey = GlobalKey<EditorState>();
   final ScrollController _editorScroll = ScrollController();
   bool _revealScheduled = false;
+  bool _parkingCaret = false;
+  int _revealHold = 0;
 
   @override
   void initState() {
@@ -82,7 +110,73 @@ class _ShowroomQuillBodyState extends State<ShowroomQuillBody>
   }
 
   void _handleEdit() {
+    if (_parkingCaret) return;
+    // 카드 줄에 커서가 있으면 캐럿 높이가 카드 전체가 된다.
+    // 그 상태로는 아래 맞추기와 위 맞추기가 서로를 취소해서 스크롤이 끝없이 뒤집힌다.
+    if (_parkCaretPastEmbed() || _revealHold > 0) return;
     if (widget.focusNode.hasFocus) _scheduleReveal();
+  }
+
+  /// 전후·기록 카드 줄에 놓인 커서를 다음 글줄로 옮긴다.
+  /// 카드가 문서 끝이면 빈 줄을 하나 붙여 커서가 머물 자리를 만든다.
+  bool _parkCaretPastEmbed() {
+    final QuillController controller = widget.controller;
+    final TextSelection selection = controller.selection;
+    if (!selection.isValid || !selection.isCollapsed) return false;
+    final Node? node =
+        controller.document.queryChild(selection.extentOffset).node;
+    if (node is! Line || !node.hasEmbed) return false;
+
+    _parkingCaret = true;
+    try {
+      var guard = 0;
+      while (guard++ < 8) {
+        final TextSelection current = controller.selection;
+        final Node? line =
+            controller.document.queryChild(current.extentOffset).node;
+        if (line is! Line || !line.hasEmbed) return true;
+        final int end =
+            controller.document.length == 0
+                ? 0
+                : controller.document.length - 1;
+        final int next = line.documentOffset + line.length;
+        if (next <= end && next != current.extentOffset) {
+          controller.updateSelection(
+            TextSelection.collapsed(offset: next),
+            ChangeSource.local,
+          );
+          continue;
+        }
+        controller.replaceText(
+          end,
+          0,
+          '\n',
+          TextSelection.collapsed(offset: end + 1),
+          ignoreFocus: true,
+        );
+      }
+      return true;
+    } finally {
+      _parkingCaret = false;
+    }
+  }
+
+  /// 전후·기록 카드 안의 탭은 글을 치는 탭이 아니다.
+  /// 에디터가 같이 받으면 포커스가 켜지고, 카드 아래 줄로 스크롤이 붙는다.
+  bool _tapHitsEmbed(
+    TapUpDetails details,
+    TextPosition Function(Offset offset) positionOf,
+  ) {
+    try {
+      final TextPosition position = positionOf(details.globalPosition);
+      final Node? line =
+          widget.controller.document.queryChild(position.offset).node;
+      if (line is! Line || !line.hasEmbed) return false;
+    } catch (_) {
+      return false;
+    }
+    if (widget.focusNode.hasFocus) widget.focusNode.unfocus();
+    return true;
   }
 
   void _scheduleReveal() {
@@ -138,14 +232,14 @@ class _ShowroomQuillBodyState extends State<ShowroomQuillBody>
           anchorBottom = caretOrigin.dy + caret.height;
         } catch (_) {}
       }
-      final double keepBelow = math.max(96, viewHeight * 0.42);
-      if (anchorBottom > viewBottom - keepBelow) {
-        delta = anchorBottom - (viewBottom - keepBelow);
-      } else if (anchorTop < viewTop + margin) {
-        delta = anchorTop - (viewTop + margin);
-      } else {
-        delta = 0;
-      }
+      delta = showroomCaretRevealDelta(
+        viewTop: viewTop,
+        viewBottom: viewBottom,
+        anchorTop: anchorTop,
+        anchorBottom: anchorBottom,
+        margin: margin,
+        keepBelow: math.max(96, viewHeight * 0.42),
+      );
     }
 
     if (delta.abs() < 1) return;
@@ -168,7 +262,12 @@ class _ShowroomQuillBodyState extends State<ShowroomQuillBody>
       return choose();
     },
     onReplace: (int offset, ShowroomBlock block) {
-      replaceShowroomEmbed(widget.controller, offset, block);
+      _revealHold++;
+      try {
+        replaceShowroomEmbed(widget.controller, offset, block);
+      } finally {
+        _revealHold--;
+      }
     },
     onDelete: (int offset) => deleteShowroomEmbed(widget.controller, offset),
   );
@@ -235,6 +334,7 @@ class _ShowroomQuillBodyState extends State<ShowroomQuillBody>
               placeholder: '이 칸에 적을 내용',
               padding: EdgeInsets.zero,
               onTapOutsideEnabled: false,
+              onTapUp: _tapHitsEmbed,
               customStyles: styles,
               embedBuilders: <EmbedBuilder>[_embeds],
             ),
