@@ -59,15 +59,47 @@ class _ProcessWeekStripState extends ConsumerState<ProcessWeekStrip> {
     return _origin.add(Duration(days: index * 7));
   }
 
-  String _rangeLabel(DateTime start) {
+  Widget _rangeLabel(DateTime start, double fontScale) {
     final DateTime end = start.add(const Duration(days: 6));
-    if (start.year == end.year && start.month == end.month) {
-      return '${start.month}월 ${start.day}일 – ${end.day}일';
-    }
-    if (start.year == end.year) {
-      return '${start.month}월 ${start.day}일 – ${end.month}월 ${end.day}일';
-    }
-    return '${start.year}년 ${start.month}월 ${start.day}일 – ${end.month}월 ${end.day}일';
+    final bool sameMonth = start.year == end.year && start.month == end.month;
+    final TextStyle month = TextStyle(
+      fontSize: 13 * fontScale,
+      fontWeight: FontWeight.w700,
+      height: 1.2,
+      color: AppColors.textSecondary,
+    );
+    final TextStyle day = TextStyle(
+      fontSize: 17 * fontScale,
+      fontWeight: FontWeight.w700,
+      height: 1.15,
+      letterSpacing: -0.4,
+      color: AppColors.textPrimary,
+    );
+    final String startMonth =
+        start.year == end.year
+            ? '${start.month}월'
+            : '${start.year}년 ${start.month}월';
+    final String endMonth =
+        start.year == end.year ? '${end.month}월' : '${end.year}년 ${end.month}월';
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(text: startMonth, style: month),
+          const TextSpan(text: '  '),
+          if (sameMonth)
+            TextSpan(text: '${start.day}~${end.day}일', style: day)
+          else ...[
+            TextSpan(text: '${start.day}일', style: day),
+            TextSpan(text: '  ~  ', style: month),
+            TextSpan(text: endMonth, style: month),
+            const TextSpan(text: '  '),
+            TextSpan(text: '${end.day}일', style: day),
+          ],
+        ],
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
   }
 
   @override
@@ -81,17 +113,7 @@ class _ProcessWeekStripState extends ConsumerState<ProcessWeekStrip> {
           padding: const EdgeInsets.only(bottom: 8),
           child: Row(
             children: [
-              Expanded(
-                child: Text(
-                  _rangeLabel(weekStart),
-                  style: TextStyle(
-                    fontSize: 14 * fontScale,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.2,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
+              Expanded(child: _rangeLabel(weekStart, fontScale)),
               GestureDetector(
                 onTap: () => context.push(SpaceRoutes.schedule),
                 behavior: HitTestBehavior.opaque,
@@ -101,7 +123,7 @@ class _ProcessWeekStripState extends ConsumerState<ProcessWeekStrip> {
                     vertical: 4,
                   ),
                   child: Text(
-                    '공정표',
+                    '전체보기',
                     style: TextStyle(
                       fontSize: 13 * fontScale,
                       fontWeight: FontWeight.w700,
@@ -341,7 +363,7 @@ class ProcessDayPanel extends StatelessWidget {
             color: AppColors.textPrimary,
           ),
         ),
-        if (detail != null) ...[const SizedBox(height: 16), detail!],
+        if (detail != null) ...[const SizedBox(height: 10), detail!],
       ],
     );
   }

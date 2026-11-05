@@ -180,69 +180,6 @@ class _SignalBar extends StatelessWidget {
   }
 }
 
-class _PrepTile extends StatelessWidget {
-  const _PrepTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.fontScale,
-    this.emphasized = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-  final double fontScale;
-  final bool emphasized;
-
-  @override
-  Widget build(BuildContext context) {
-    final Color foreground =
-        emphasized ? AppColors.white : AppColors.textPrimary;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: emphasized ? AppColors.primary : AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: emphasized ? null : Border.all(color: AppColors.border),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: emphasized ? AppColors.white : AppColors.accent,
-            ),
-            const SizedBox(height: 18),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12 * fontScale,
-                fontWeight: FontWeight.w600,
-                color:
-                    emphasized
-                        ? const Color(0xB3FFFFFF)
-                        : AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 16 * fontScale,
-                fontWeight: FontWeight.w700,
-                color: foreground,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 const BoxDecoration _card = BoxDecoration(
   color: AppColors.surface,
   borderRadius: BorderRadius.all(Radius.circular(16)),

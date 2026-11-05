@@ -2,6 +2,7 @@ import 'package:interiorapp_flutter_client/build/data/source/quote_sample.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/construction_plan.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/construction_progress.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/process_schedule.dart';
+import 'package:interiorapp_flutter_client/build/domain/entity/site_photo_record.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/build/domain/repository/space_repository.dart';
 
@@ -214,9 +215,48 @@ class SpaceApi {
       trade: '도장',
       area: '홀',
       takenOn: '10월 24일',
+      note: '벽 도장 완료',
+    ),
+    PublicSitePhoto(
+      imageUrl:
+          'https://picsum.photos/seed/seongsu-1024-paint-hall-wall/900/900',
+      trade: '도장',
+      area: '홀',
+      takenOn: '10월 24일',
+      note: '벽 도장 완료',
+    ),
+    PublicSitePhoto(
+      imageUrl:
+          'https://picsum.photos/seed/seongsu-1024-paint-hall-ceiling/900/900',
+      trade: '도장',
+      area: '홀',
+      takenOn: '10월 24일',
+      note: '벽 도장 완료',
+    ),
+    PublicSitePhoto(
+      imageUrl:
+          'https://picsum.photos/seed/seongsu-1024-paint-hall-corner/900/900',
+      trade: '도장',
+      area: '홀',
+      takenOn: '10월 24일',
+      note: '벽 도장 완료',
     ),
     PublicSitePhoto(
       imageUrl: 'https://picsum.photos/seed/seongsu-1024-wood-hall/900/900',
+      trade: '목공',
+      area: '홀',
+      takenOn: '10월 24일',
+    ),
+    PublicSitePhoto(
+      imageUrl:
+          'https://picsum.photos/seed/seongsu-1024-wood-hall-frame/900/900',
+      trade: '목공',
+      area: '홀',
+      takenOn: '10월 24일',
+    ),
+    PublicSitePhoto(
+      imageUrl:
+          'https://picsum.photos/seed/seongsu-1024-wood-hall-ceiling/900/900',
       trade: '목공',
       area: '홀',
       takenOn: '10월 24일',
@@ -228,10 +268,37 @@ class SpaceApi {
       takenOn: '10월 24일',
     ),
     PublicSitePhoto(
+      imageUrl:
+          'https://picsum.photos/seed/seongsu-1024-wood-counter-front/900/900',
+      trade: '목공',
+      area: '카운터',
+      takenOn: '10월 24일',
+    ),
+    PublicSitePhoto(
       imageUrl: 'https://picsum.photos/seed/seongsu-1024-paint-window/900/900',
       trade: '도장',
       area: '창가',
       takenOn: '10월 24일',
+      status: SitePhotoStatus.underway,
+      note: '창틀 주변은 내일',
+    ),
+    PublicSitePhoto(
+      imageUrl:
+          'https://picsum.photos/seed/seongsu-1024-paint-window-sill/900/900',
+      trade: '도장',
+      area: '창가',
+      takenOn: '10월 24일',
+      status: SitePhotoStatus.underway,
+      note: '창틀 주변은 내일',
+    ),
+    PublicSitePhoto(
+      imageUrl:
+          'https://picsum.photos/seed/seongsu-1024-paint-window-side/900/900',
+      trade: '도장',
+      area: '창가',
+      takenOn: '10월 24일',
+      status: SitePhotoStatus.underway,
+      note: '창틀 주변은 내일',
     ),
     PublicSitePhoto(
       imageUrl: 'https://picsum.photos/seed/seongsu-1022-wood-kitchen/900/900',
@@ -580,10 +647,35 @@ class SpaceApi {
       todayTrade: '목공 공사',
       todaySummary: '벽과 천장 틀을 맞추고 있어요',
       workers: '목수 2명',
-      supervisor: SiteSupervisor(name: '오세진', duty: '현장 진행, 일정, 오늘 작업'),
+      supervisor: SiteSupervisor(
+        name: '오세진',
+        duty: '현장 진행, 일정, 오늘 작업',
+        organization: '바론 인테리어',
+        bio: '현장 일정과 마감 품질을 함께 보고 있습니다',
+        imageUrl:
+            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&crop=faces&w=800&h=1000&q=80',
+      ),
       crew: <SiteWorker>[
-        SiteWorker(name: '한도윤', role: '목수', work: '벽과 천장 틀'),
-        SiteWorker(name: '서민재', role: '목수', work: '문틀과 몰딩'),
+        SiteWorker(
+          name: '한도윤',
+          role: '목수',
+          work: '벽과 천장 틀',
+          organization: '한결목공',
+          career: '14년',
+          bio: '평생 노가다로 밥벌어먹고 살아왔읍니다.',
+          imageUrl:
+              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&crop=faces&w=800&h=1000&q=80',
+        ),
+        SiteWorker(
+          name: '서민재',
+          role: '목수',
+          work: '문틀과 몰딩',
+          organization: '한결목공',
+          career: '9년',
+          bio: '안녕하세요 평생을 일해온 목수의 자부심을 다마서 좋은 결과물로 보답해드리겠읍니다.',
+          imageUrl:
+              'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&crop=faces&w=800&h=1000&q=80',
+        ),
       ],
       trades: ['철거', '설비·급배수', '목공', '전기', '도장', '마감'],
       tradeIndex: 2,
@@ -821,15 +913,28 @@ List<PublicSitePhoto> _photosOnProcessDays(
   if (demolition.isNotEmpty) daysByTrade['설비·급배수'] = demolition;
 
   final Map<String, int> cursor = <String, int>{};
-  return <PublicSitePhoto>[
-    for (final PublicSitePhoto photo in photos)
-      PublicSitePhoto(
-        imageUrl: photo.imageUrl,
-        trade: photo.trade,
-        area: photo.area,
-        takenOn: _processPhotoDay(photo.trade, daysByTrade, cursor, anchor),
-      ),
-  ];
+  final List<PublicSitePhoto> mapped = <PublicSitePhoto>[];
+  for (final SitePhotoRecord record in sitePhotoRecords(photos)) {
+    final String day = _processPhotoDay(
+      record.trade,
+      daysByTrade,
+      cursor,
+      anchor,
+    );
+    for (final PublicSitePhoto photo in record.photos) {
+      mapped.add(
+        PublicSitePhoto(
+          imageUrl: photo.imageUrl,
+          trade: photo.trade,
+          area: photo.area,
+          takenOn: day,
+          status: photo.status,
+          note: photo.note,
+        ),
+      );
+    }
+  }
+  return mapped;
 }
 
 String _processPhotoDay(

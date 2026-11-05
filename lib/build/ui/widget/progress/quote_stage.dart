@@ -18,20 +18,32 @@ const List<ProjectDocument> _waitingDocuments = [
   ),
 ];
 
+enum _QuotePhase { estimate, requested, done }
+
 class _QuoteStage extends StatelessWidget {
   const _QuoteStage({
     required this.plan,
     required this.quote,
     required this.fontScale,
+    this.phase = _QuotePhase.estimate,
+    this.showStatus = false,
     this.includeContract = false,
+    this.onSelectPhase,
+    this.onOpenContract,
   });
 
   final ConstructionPlan? plan;
   final WorkQuote? quote;
   final double fontScale;
+  final _QuotePhase phase;
 
-  /// 계약 이후 문서에서만 계약서를 함께 보여 준다.
+  /// 시공·견적 본화면에서 견적, 계약요청, 계약완료를 위에 보여 준다.
+  final bool showStatus;
+  final ValueChanged<_QuotePhase>? onSelectPhase;
+
+  /// 문서 보관에서 계약서를 함께 보여 준다.
   final bool includeContract;
+  final VoidCallback? onOpenContract;
 
   @override
   Widget build(BuildContext context) {
@@ -41,12 +53,14 @@ class _QuoteStage extends StatelessWidget {
         current == null || current.documents.isEmpty
             ? _waitingDocuments
             : current.documents;
+    final bool contractFile = includeContract || phase == _QuotePhase.done;
+    final VoidCallback? openContract = onOpenContract;
     final List<ProjectDocument> documents = [
       for (final ProjectDocument document in source)
         if (document.kind != ProjectDocumentKind.estimate &&
             document.kind != ProjectDocumentKind.contract)
           document,
-      if (includeContract)
+      if (contractFile)
         ProjectDocument(
           kind: ProjectDocumentKind.contract,
           title: '계약서',
@@ -59,8 +73,46 @@ class _QuoteStage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _Headline(text: '시공과 금액을 함께 봐요', fontScale: fontScale),
-        const SizedBox(height: 16),
+        if (showStatus) ...[
+          _QuoteStatus(
+            phase: phase,
+            fontScale: fontScale,
+            onSelect: onSelectPhase,
+          ),
+          if (phase == _QuotePhase.requested && openContract != null) ...[
+            const SizedBox(height: 20),
+            _SectionLabel(text: '계약 내용', fontScale: fontScale),
+            const SizedBox(height: 8),
+            _ContractEntry(
+              title: '계약서',
+              note: '금액과 공사 범위',
+              fontScale: fontScale,
+              onTap: openContract,
+            ),
+            const SizedBox(height: 8),
+            _ContractEntry(
+              title: '결제 요율',
+              note: '선납금, 중도금, 잔금',
+              fontScale: fontScale,
+              onTap: openContract,
+            ),
+            const SizedBox(height: 8),
+            _ContractEntry(
+              title: '결제 방식',
+              note: '제3자 은행이 맡았다가 결제일에 빠져나가요',
+              fontScale: fontScale,
+              onTap: openContract,
+            ),
+          ],
+          if (phase == _QuotePhase.done) ...[
+            const SizedBox(height: 20),
+            _PrepStage(fontScale: fontScale),
+          ],
+          const SizedBox(height: 20),
+        ] else ...[
+          _Headline(text: '시공과 금액을 함께 봐요', fontScale: fontScale),
+          const SizedBox(height: 16),
+        ],
         _QuoteHero(quote: current, fontScale: fontScale),
         const SizedBox(height: 20),
         _SectionLabel(text: '시공 자료', fontScale: fontScale),
@@ -101,6 +153,194 @@ class _QuoteStage extends StatelessWidget {
           _ConditionCard(lines: current.sheet.conditions, fontScale: fontScale),
         ],
       ],
+    );
+  }
+}
+
+class _QuoteStatus extends StatelessWidget {
+  const _QuoteStatus({
+    required this.phase,
+    required this.fontScale,
+    this.onSelect,
+  });
+
+  final _QuotePhase phase;
+  final double fontScale;
+  final ValueChanged<_QuotePhase>? onSelect;
+
+  static const List<String> _steps = <String>['제안확인', '계약요청', '계약완료'];
+
+  @override
+  Widget build(BuildContext context) {
+    final int index = phase.index;
+    final String title = switch (phase) {
+      _QuotePhase.estimate => '시공과 금액을 확인해요',
+      _QuotePhase.requested => '계약을 요청했어요',
+      _QuotePhase.done => '계약이 완료되었어요',
+    };
+    final String note = switch (phase) {
+      _QuotePhase.estimate => '확인이 끝나면 계약요청으로 넘어가요',
+      _QuotePhase.requested => '통화 후에 찾아뵙겠습니다. 계약은 만나서 진행해요',
+      _QuotePhase.done => '만나서 계약을 마쳤어요',
+    };
+
+    return DecoratedBox(
+      decoration: _card,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 18, 12, 18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (var i = 0; i < _steps.length; i++)
+                  Expanded(
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap:
+                            onSelect == null
+                                ? null
+                                : () => onSelect!(_QuotePhase.values[i]),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                height: 22,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                        height: 2,
+                                        color:
+                                            i == 0
+                                                ? Colors.transparent
+                                                : i <= index
+                                                ? AppColors.primary
+                                                : AppColors.border,
+                                      ),
+                                    ),
+                                    _ProcessDot(
+                                      done: i < index,
+                                      current: i == index,
+                                    ),
+                                    Expanded(
+                                      child: Container(
+                                        height: 2,
+                                        color:
+                                            i == _steps.length - 1
+                                                ? Colors.transparent
+                                                : i < index
+                                                ? AppColors.primary
+                                                : AppColors.border,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _steps[i],
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: (i == index ? 13 : 12) * fontScale,
+                                  height: 1.25,
+                                  fontWeight:
+                                      i == index
+                                          ? FontWeight.w700
+                                          : FontWeight.w600,
+                                  color:
+                                      i < index || i == index
+                                          ? AppColors.textPrimary
+                                          : AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 20 * fontScale,
+                      height: 1.3,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.4,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    note,
+                    style: TextStyle(
+                      fontSize: 14 * fontScale,
+                      height: 1.45,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProcessDot extends StatelessWidget {
+  const _ProcessDot({required this.done, required this.current});
+
+  final bool done;
+  final bool current;
+
+  @override
+  Widget build(BuildContext context) {
+    final double size = current ? 22 : 16;
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color:
+            current
+                ? AppColors.accent
+                : done
+                ? AppColors.primary
+                : AppColors.surface,
+        shape: BoxShape.circle,
+        border:
+            done || current
+                ? null
+                : Border.all(color: AppColors.border, width: 1.5),
+      ),
+      child:
+          done
+              ? const Icon(Icons.check, size: 10, color: AppColors.white)
+              : current
+              ? Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: AppColors.white,
+                  shape: BoxShape.circle,
+                ),
+              )
+              : null,
     );
   }
 }

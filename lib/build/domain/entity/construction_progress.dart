@@ -48,35 +48,83 @@ class SideTrade {
 
 /// 공사 진행을 맡은 감리. 그날 현장 인력과 따로 둔다.
 class SiteSupervisor {
-  const SiteSupervisor({required this.name, this.role = '감리', this.duty = ''});
+  const SiteSupervisor({
+    required this.name,
+    this.role = '감리',
+    this.duty = '',
+    this.organization = '',
+    this.bio = '',
+    this.imageUrl = '',
+  });
 
   final String name;
+
+  /// 직책. 예: 감리.
   final String role;
 
   /// 고객에게 소개하는 맡은 일. 예: 현장 진행, 일정, 오늘 작업.
   final String duty;
+
+  /// 소속. 예: 바론 인테리어.
+  final String organization;
+
+  /// 한 줄 소개. 없으면 비운다.
+  final String bio;
+
+  final String imageUrl;
 }
 
 /// 현장에 나온 사람. 고객에게 보이는 프로필만 담는다.
 class SiteWorker {
-  const SiteWorker({required this.name, required this.role, this.work = ''});
+  const SiteWorker({
+    required this.name,
+    required this.role,
+    this.work = '',
+    this.organization = '',
+    this.career = '',
+    this.bio = '',
+    this.imageUrl = '',
+  });
 
   final String name;
 
-  /// 역할. 예: 목수, 전기.
+  /// 주특기. 예: 목수, 전기, 필름.
   final String role;
 
   /// 이 사람이 맡은 일. 예: 벽체 틀.
   final String work;
+
+  /// 소속. 예: 한결목공. 없으면 비운다.
+  final String organization;
+
+  /// 경력. 예: 14년. 없으면 비운다.
+  final String career;
+
+  /// 한 줄 소개. 없으면 비운다.
+  final String bio;
+
+  final String imageUrl;
 }
 
-/// 현장관리가 고객에게 공개한 사진.
+/// 한 묶음 사진이 그 구역의 공정을 끝낸 모습인지, 아직 진행 중인지.
+enum SitePhotoStatus {
+  done('완료'),
+  underway('작업 중');
+
+  const SitePhotoStatus(this.label);
+
+  final String label;
+}
+
+/// 현장관리가 고객에게 공개한 사진 한 장.
 class PublicSitePhoto {
   const PublicSitePhoto({
     required this.imageUrl,
     required this.trade,
     required this.takenOn,
     this.area = '',
+    this.status = SitePhotoStatus.done,
+    this.note = '',
   });
 
   final String imageUrl;
@@ -89,6 +137,11 @@ class PublicSitePhoto {
 
   /// 사진이 찍힌 구역. 예: 홀, 주방, 실외. 없으면 비운다.
   final String area;
+
+  final SitePhotoStatus status;
+
+  /// 같은 묶음에 붙는 한 줄. 없으면 비운다.
+  final String note;
 }
 
 /// 공사진행 단계에서 보여 주는 오늘·다음 공정. 작업자 원문은 담지 않는다.

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/construction_plan.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/construction_progress.dart';
+import 'package:interiorapp_flutter_client/build/domain/entity/site_photo_record.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/work_quote.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/contract_reader_screen.dart';
@@ -12,6 +13,8 @@ import 'package:interiorapp_flutter_client/build/ui/widget/consult_chat_panel.da
 import 'package:interiorapp_flutter_client/build/ui/widget/quote_money_summary.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/prep_detail_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/proposal_reader_screen.dart';
+import 'package:interiorapp_flutter_client/build/ui/screen/site_photo_library_screen.dart';
+import 'package:interiorapp_flutter_client/build/ui/screen/site_photo_viewer_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/industry_cover.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/slide_to_confirm.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/schedule/process_week_strip.dart';
@@ -20,7 +23,8 @@ import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_bottom_sheet.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_dialog.dart';
-import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
+import 'package:interiorapp_flutter_client/build/ui/widget/site_person_dialog.dart';
+import 'package:interiorapp_flutter_client/build/ui/widget/site_photo_record_tile.dart';
 import 'package:interiorapp_flutter_client/core/widget/calendar/app_calendar_date.dart';
 
 part 'progress/progress_shared.dart';
@@ -70,6 +74,7 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
   late ProjectStage _stage;
   bool _quoteReviewed = false;
   bool _contractSigned = false;
+  _QuotePhase? _quoteLook;
   late final AnimationController _chat = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 340),
@@ -89,7 +94,7 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
   @override
   void initState() {
     super.initState();
-    _stage = widget.stage;
+    _stage = _quoteHome(widget.stage);
     _chat.addStatusListener((_) {
       if (mounted) setState(() {});
     });
@@ -114,7 +119,8 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
   }
 
   void _reveal(ProjectStage stage) {
-    final BuildContext? target = _stageKeys[stage.index].currentContext;
+    final ProjectStage shown = _quoteHome(stage);
+    final BuildContext? target = _stageKeys[shown.index].currentContext;
     if (target == null) return;
     Scrollable.ensureVisible(
       target,
@@ -128,7 +134,7 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
     final bool? read = await showAppDialog<bool>(
       context: context,
       title: '모든 내용을 열람하셨나요?',
-      message: '열람하신 내역이 확인되면 계약 단계로 넘어가요.',
+      message: '열람하신 내역이 확인되면 계약요청으로 넘어가요.',
       actions: (BuildContext dialogContext) {
         return [
           AppButton(
@@ -160,7 +166,45 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
             ),
       ),
     );
-    if (signed == true && mounted) setState(() => _contractSigned = true);
+    if (signed != true || !mounted) return;
+    setState(() {
+      _quoteReviewed = true;
+      _contractSigned = true;
+      _stage = ProjectStage.quote;
+      _quoteLook = null;
+    });
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _reveal(ProjectStage.quote),
+    );
+  }
+
+  void _openDocuments() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder:
+            (BuildContext context) => _QuoteArchiveScreen(
+              plan: widget.constructionPlan,
+              quote: widget.workQuote,
+            ),
+      ),
+    );
+  }
+
+  ProjectStage get _position => _quoteHome(widget.stage);
+
+  _QuotePhase get _quotePhase {
+    if (widget.stage.index >= ProjectStage.prep.index) return _QuotePhase.done;
+    if (_contractSigned || widget.stage.index >= ProjectStage.contract.index) {
+      return _QuotePhase.requested;
+    }
+    return _QuotePhase.estimate;
+  }
+
+  /// 개발 중 시공 견적, 계약요청, 계약완료 화면을 눌러 본다.
+  _QuotePhase get _shownQuotePhase => _quoteLook ?? _quotePhase;
+
+  void _selectQuotePhase(_QuotePhase phase) {
+    setState(() => _quoteLook = phase);
   }
 
   @override
@@ -168,18 +212,19 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
     final double fontScale = ResponsiveSize.fontScale(context);
     final EdgeInsets padding = ResponsiveSize.textInset(context);
     final double subGap = ResponsiveSize.subGap(context);
-    final bool preview = _stage != widget.stage;
     final ConstructionProgress? progress =
         _stage == ProjectStage.build ? widget.progress ?? _sampleBuild : null;
 
     final bool quoteBar =
-        _stage == ProjectStage.quote && widget.workQuote != null;
+        _stage == ProjectStage.quote &&
+        widget.workQuote != null &&
+        _shownQuotePhase != _QuotePhase.done;
     final double barGap = (quoteBar ? 88 : 16) + 72;
     final double safeBottom = MediaQuery.paddingOf(context).bottom;
     final double fabLift = quoteBar ? 76 : 0;
     final double chatBottom = safeBottom + 16 + 56 + 12 + fabLift;
 
-    final bool quoteArchive = _stage.index >= ProjectStage.contract.index;
+    final bool quoteArchive = _stage.index >= ProjectStage.build.index;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -187,16 +232,7 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
         actions: [
           if (quoteArchive)
             TextButton(
-              onPressed:
-                  () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder:
-                          (BuildContext context) => _QuoteArchiveScreen(
-                            plan: widget.constructionPlan,
-                            quote: widget.workQuote,
-                          ),
-                    ),
-                  ),
+              onPressed: _openDocuments,
               child: Text(
                 '문서',
                 style: TextStyle(
@@ -255,20 +291,15 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          for (
-                            var i = 0;
-                            i < ProjectStage.timeline.length;
-                            i++
-                          ) ...[
-                            if (i > 0) const SizedBox(width: 6),
+                          for (final ProjectStage stage in _progressStages) ...[
+                            if (stage != _progressStages.first)
+                              const SizedBox(width: 6),
                             _StageChip(
-                              key: _stageKeys[i],
-                              label: ProjectStage.timeline[i].label,
-                              selected: ProjectStage.timeline[i] == _stage,
+                              key: _stageKeys[stage.index],
+                              label: stage.label,
+                              selected: stage == _stage,
                               fontScale: fontScale,
                               onTap: () {
-                                final ProjectStage stage =
-                                    ProjectStage.timeline[i];
                                 setState(() => _stage = stage);
                                 _reveal(stage);
                               },
@@ -278,18 +309,7 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
                       ),
                     ),
                     const SizedBox(height: 10),
-                    _StageTrack(index: widget.stage.index),
-                    if (preview) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        '미리보기 · 이 현장은 지금 ${widget.stage.label}',
-                        style: TextStyle(
-                          fontSize: 12 * fontScale,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
+                    _StageTrack(stage: _position),
                   ],
                 ),
               ),
@@ -336,8 +356,8 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
                                 constructionPlan: widget.constructionPlan,
                                 workQuote: widget.workQuote,
                                 fontScale: fontScale,
-                                quoteReviewed: _quoteReviewed,
-                                contractSigned: _contractSigned,
+                                quotePhase: _shownQuotePhase,
+                                onSelectQuotePhase: _selectQuotePhase,
                                 onOpenContract: _openContract,
                               ),
                           ],
@@ -345,8 +365,10 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
               ),
               if (quoteBar)
                 _QuoteActionBar(
-                  reviewed: _quoteReviewed,
-                  signed: _contractSigned,
+                  reviewed:
+                      _shownQuotePhase != _QuotePhase.estimate ||
+                      _quoteReviewed,
+                  signed: _shownQuotePhase == _QuotePhase.requested,
                   padding: padding,
                   onSlideDone: _confirmQuoteRead,
                   onContract: _openContract,
@@ -392,6 +414,23 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
   }
 }
 
+const List<ProjectStage> _progressStages = <ProjectStage>[
+  ProjectStage.consult,
+  ProjectStage.visit,
+  ProjectStage.quote,
+  ProjectStage.build,
+  ProjectStage.handover,
+  ProjectStage.afterCare,
+];
+
+/// 계약과 착공준비는 시공·견적 화면 안의 상태로 본다.
+ProjectStage _quoteHome(ProjectStage stage) {
+  if (stage == ProjectStage.contract || stage == ProjectStage.prep) {
+    return ProjectStage.quote;
+  }
+  return stage;
+}
+
 class _StageChip extends StatelessWidget {
   const _StageChip({
     super.key,
@@ -416,7 +455,7 @@ class _StageChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(99),
         child: Container(
           alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(99),
             border: Border.all(
@@ -439,15 +478,16 @@ class _StageChip extends StatelessWidget {
 }
 
 class _StageTrack extends StatelessWidget {
-  const _StageTrack({required this.index});
+  const _StageTrack({required this.stage});
 
-  final int index;
+  final ProjectStage stage;
 
   @override
   Widget build(BuildContext context) {
+    final int index = _progressStages.indexOf(_quoteHome(stage));
     return Row(
       children: [
-        for (var i = 0; i < ProjectStage.timeline.length; i++) ...[
+        for (var i = 0; i < _progressStages.length; i++) ...[
           if (i > 0) const SizedBox(width: 4),
           Expanded(
             child: Container(
@@ -493,7 +533,7 @@ class _QuoteActionBar extends StatelessWidget {
         child:
             reviewed
                 ? AppButton(
-                  label: signed ? '계약요청했어요' : '계약 단계로 넘어가기',
+                  label: signed ? '계약 내용 보기' : '계약요청',
                   onPressed: onContract,
                 )
                 : SlideToConfirm(
@@ -548,8 +588,8 @@ class _JourneyStage extends StatelessWidget {
     required this.constructionPlan,
     required this.workQuote,
     required this.fontScale,
-    required this.quoteReviewed,
-    required this.contractSigned,
+    required this.quotePhase,
+    required this.onSelectQuotePhase,
     required this.onOpenContract,
   });
 
@@ -559,8 +599,8 @@ class _JourneyStage extends StatelessWidget {
   final ConstructionPlan? constructionPlan;
   final WorkQuote? workQuote;
   final double fontScale;
-  final bool quoteReviewed;
-  final bool contractSigned;
+  final _QuotePhase quotePhase;
+  final ValueChanged<_QuotePhase> onSelectQuotePhase;
   final VoidCallback onOpenContract;
 
   @override
@@ -571,20 +611,17 @@ class _JourneyStage extends StatelessWidget {
       case ProjectStage.visit:
         return _VisitStage(visit: visitAppointment, fontScale: fontScale);
       case ProjectStage.quote:
+      case ProjectStage.contract:
+      case ProjectStage.prep:
         return _QuoteStage(
           plan: constructionPlan,
           quote: workQuote,
           fontScale: fontScale,
+          phase: quotePhase,
+          showStatus: true,
+          onSelectPhase: onSelectQuotePhase,
+          onOpenContract: onOpenContract,
         );
-      case ProjectStage.contract:
-        return _ContractStage(
-          fontScale: fontScale,
-          reviewed: quoteReviewed,
-          signed: contractSigned,
-          onOpen: onOpenContract,
-        );
-      case ProjectStage.prep:
-        return _PrepStage(fontScale: fontScale);
       case ProjectStage.build:
         return const SizedBox.shrink();
       case ProjectStage.handover:

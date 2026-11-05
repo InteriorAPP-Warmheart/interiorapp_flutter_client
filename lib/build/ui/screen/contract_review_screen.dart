@@ -54,7 +54,7 @@ class _ContractReviewScreenState extends State<ContractReviewScreen> {
                 const SizedBox(height: 8),
                 Text(
                   _signed
-                      ? '담당자가 방문해서 계약을 진행해요.'
+                      ? '통화 후에 찾아뵙겠습니다.'
                       : '시공과 금액을 확인했어요. 계약서와 결제 내용을 보고 계약요청해요.',
                   style: TextStyle(
                     fontSize: 14 * fontScale,
@@ -160,7 +160,7 @@ class _ContractReviewScreenState extends State<ContractReviewScreen> {
       context: context,
       title: '이 내용으로 계약요청할까요?',
       message:
-          '계약서, 결제 요율, 에스크로 안내를 확인하셨나요?\n확인하셨다면 계약요청을 눌러주세요. 담당자가 방문해서 계약해요.',
+          '계약서, 결제 요율, 에스크로 안내를 확인하셨나요?\n확인하셨다면 계약요청을 눌러주세요. 통화 후에 찾아뵙겠습니다.',
       actions: (BuildContext dialogContext) {
         return [
           AppButton(
@@ -396,7 +396,7 @@ class _VisitNotice extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '담당자가 방문해서 계약해요',
+                    '통화 후에 찾아뵙겠습니다',
                     style: TextStyle(
                       fontSize: 18 * fontScale,
                       height: 1.3,
@@ -406,7 +406,7 @@ class _VisitNotice extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '온라인만으로는 계약이 되지 않아요. 계약요청을 하면 담당자가 가서 계약해요.',
+                    '온라인만으로는 계약이 되지 않아요. 요청하면 통화 후에 방문해요.',
                     style: TextStyle(
                       fontSize: 14 * fontScale,
                       height: 1.45,
