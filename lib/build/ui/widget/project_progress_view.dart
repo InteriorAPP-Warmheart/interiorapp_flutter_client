@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/construction_plan.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/construction_progress.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/site_photo_record.dart';
@@ -23,9 +25,13 @@ import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_bottom_sheet.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_dialog.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_reference_pick.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/write_pickers.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/site_person_dialog.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/site_photo_record_tile.dart';
 import 'package:interiorapp_flutter_client/core/widget/calendar/app_calendar_date.dart';
+import 'package:interiorapp_flutter_client/core/widget/calendar/app_calendar_dialog.dart';
 
 part 'progress/progress_shared.dart';
 part 'progress/consult_stage.dart';
@@ -44,15 +50,20 @@ class ProjectProgressView extends StatefulWidget {
     super.key,
     required this.placeName,
     required this.stage,
+    this.projectId = '',
     this.record,
     this.progress,
     this.visitAppointment,
     this.constructionPlan,
     this.workQuote,
+    this.handoverDone = false,
   });
 
   final String placeName;
   final ProjectStage stage;
+
+  /// 쇼룸 글쓰기로 이 공간을 넘길 때 쓴다.
+  final String projectId;
   final PrepRecord? record;
   final ConstructionProgress? progress;
 
@@ -65,6 +76,9 @@ class ProjectProgressView extends StatefulWidget {
   /// 시공 판단과 견적, 받은 자료.
   final WorkQuote? workQuote;
 
+  /// 준공 정산까지 끝난 공간. 사진과 기록 화면으로 연다.
+  final bool handoverDone;
+
   @override
   State<ProjectProgressView> createState() => _ProjectProgressViewState();
 }
@@ -75,6 +89,7 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
   bool _quoteReviewed = false;
   bool _contractSigned = false;
   _QuotePhase? _quoteLook;
+  _HandoverStep _handoverStep = _HandoverStep.inspect;
   late final AnimationController _chat = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 340),
@@ -225,6 +240,9 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
     final double chatBottom = safeBottom + 16 + 56 + 12 + fabLift;
 
     final bool quoteArchive = _stage.index >= ProjectStage.build.index;
+    final bool chatOpen =
+        _chat.status == AnimationStatus.forward ||
+        _chat.status == AnimationStatus.completed;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -255,14 +273,8 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
           label: AnimatedSwitcher(
             duration: const Duration(milliseconds: 180),
             child: Text(
-              _chat.status == AnimationStatus.forward ||
-                      _chat.status == AnimationStatus.completed
-                  ? '닫기'
-                  : '문의',
-              key: ValueKey<bool>(
-                _chat.status == AnimationStatus.forward ||
-                    _chat.status == AnimationStatus.completed,
-              ),
+              chatOpen ? '닫기' : '문의',
+              key: ValueKey<String>(chatOpen ? 'close' : 'ask'),
               style: TextStyle(
                 fontSize: 15 * fontScale,
                 fontWeight: FontWeight.w700,
@@ -359,6 +371,15 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
                                 quotePhase: _shownQuotePhase,
                                 onSelectQuotePhase: _selectQuotePhase,
                                 onOpenContract: _openContract,
+                                handoverPhotos:
+                                    (widget.progress ?? _sampleBuild)
+                                        .recentPhotos,
+                                handoverStep: _handoverStep,
+                                onSelectHandover:
+                                    (_HandoverStep step) =>
+                                        setState(() => _handoverStep = step),
+                                projectId: widget.projectId,
+                                handoverDone: widget.handoverDone,
                               ),
                           ],
                         ),
@@ -420,7 +441,6 @@ const List<ProjectStage> _progressStages = <ProjectStage>[
   ProjectStage.quote,
   ProjectStage.build,
   ProjectStage.handover,
-  ProjectStage.afterCare,
 ];
 
 /// 계약과 착공준비는 시공·견적 화면 안의 상태로 본다.
@@ -428,6 +448,7 @@ ProjectStage _quoteHome(ProjectStage stage) {
   if (stage == ProjectStage.contract || stage == ProjectStage.prep) {
     return ProjectStage.quote;
   }
+  if (stage == ProjectStage.afterCare) return ProjectStage.handover;
   return stage;
 }
 
@@ -591,6 +612,11 @@ class _JourneyStage extends StatelessWidget {
     required this.quotePhase,
     required this.onSelectQuotePhase,
     required this.onOpenContract,
+    required this.handoverPhotos,
+    required this.handoverStep,
+    required this.onSelectHandover,
+    required this.projectId,
+    required this.handoverDone,
   });
 
   final ProjectStage stage;
@@ -602,6 +628,11 @@ class _JourneyStage extends StatelessWidget {
   final _QuotePhase quotePhase;
   final ValueChanged<_QuotePhase> onSelectQuotePhase;
   final VoidCallback onOpenContract;
+  final List<PublicSitePhoto> handoverPhotos;
+  final _HandoverStep handoverStep;
+  final ValueChanged<_HandoverStep> onSelectHandover;
+  final String projectId;
+  final bool handoverDone;
 
   @override
   Widget build(BuildContext context) {
@@ -625,9 +656,16 @@ class _JourneyStage extends StatelessWidget {
       case ProjectStage.build:
         return const SizedBox.shrink();
       case ProjectStage.handover:
-        return _HandoverStage(fontScale: fontScale);
       case ProjectStage.afterCare:
-        return _CareStage(fontScale: fontScale);
+        return _HandoverStage(
+          fontScale: fontScale,
+          photos: handoverPhotos,
+          quote: workQuote,
+          step: handoverStep,
+          onSelectStep: onSelectHandover,
+          projectId: projectId,
+          done: handoverDone || stage == ProjectStage.afterCare,
+        );
     }
   }
 }

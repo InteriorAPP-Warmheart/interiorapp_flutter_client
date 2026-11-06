@@ -6,6 +6,7 @@ import 'package:interiorapp_flutter_client/build/ui/widget/site_photo_record_til
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_segment.dart';
 
 void openSitePhotoLibrary(BuildContext context, List<PublicSitePhoto> photos) {
   Navigator.of(context).push(
@@ -105,8 +106,19 @@ class SitePhotoLibraryScreen extends StatefulWidget {
 
 class _SitePhotoLibraryScreenState extends State<SitePhotoLibraryScreen> {
   String? _trade;
-  SitePhotoStatus? _status;
-  String? _openArea;
+  final ValueNotifier<int> _segment = ValueNotifier<int>(0);
+
+  static const List<SitePhotoStatus?> _statuses = <SitePhotoStatus?>[
+    null,
+    SitePhotoStatus.done,
+    SitePhotoStatus.underway,
+  ];
+
+  @override
+  void dispose() {
+    _segment.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,35 +126,37 @@ class _SitePhotoLibraryScreenState extends State<SitePhotoLibraryScreen> {
     final EdgeInsets inset = ResponsiveSize.textInset(context);
     final List<SitePhotoRecord> records = sitePhotoRecords(widget.photos);
     final List<String> trades = sitePhotoTrades(records);
-    final List<SitePhotoRecord> shown = sitePhotoRecordsForStatus(
-      sitePhotoRecordsForTrade(records, _trade),
-      _status,
+    final List<SitePhotoRecord> traded = sitePhotoRecordsForTrade(
+      records,
+      _trade,
     );
-    final List<SitePhotoZone> zones = sitePhotoZones(shown);
-    final String? openArea =
-        zones.any((SitePhotoZone zone) => zone.area == _openArea)
-            ? _openArea
-            : null;
-    final int donePhotos = sitePhotoDoneCount(shown);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        toolbarHeight: donePhotos > 0 ? 64 : null,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('현장사진'),
-            if (donePhotos > 0)
-              Text(
-                '$donePhotos장',
-                style: TextStyle(
-                  fontSize: 13 * fontScale,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-          ],
+        toolbarHeight: 64,
+        title: ValueListenableBuilder<int>(
+          valueListenable: _segment,
+          builder: (BuildContext context, int index, Widget? child) {
+            final int donePhotos = sitePhotoDoneCount(
+              sitePhotoRecordsForStatus(traded, _statuses[index]),
+            );
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('현장사진'),
+                if (donePhotos > 0)
+                  Text(
+                    '$donePhotos장',
+                    style: TextStyle(
+                      fontSize: 13 * fontScale,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
       ),
       body: Column(
@@ -170,55 +184,50 @@ class _SitePhotoLibraryScreenState extends State<SitePhotoLibraryScreen> {
                 },
               ),
             ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(inset.left, 10, inset.right, 0),
-            child: _StatusSwitch(
-              status: _status,
-              fontScale: fontScale,
-              onChanged: (SitePhotoStatus? status) {
-                setState(() => _status = status);
-              },
-            ),
-          ),
-          const SizedBox(height: 12),
           Expanded(
-            child:
-                zones.isEmpty
-                    ? Center(
-                      child: Text(
-                        _emptyPhotoLabel(_trade, _status),
-                        style: TextStyle(
-                          fontSize: 14 * fontScale,
-                          color: AppColors.textSecondary,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(inset.left, 10, inset.right, 0),
+              child: AppSegmentHost(
+                length: _statuses.length,
+                onChanged: (int index) => _segment.value = index,
+                builder: (BuildContext context, AppSegmentController segment) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AppSegmentBar(
+                        controller: segment,
+                        labels: const <String>['모두', '완료', '작업 중'],
+                        height: 40,
+                        fontSize: 13 * fontScale,
+                        trackColor: AppColors.surface,
+                        thumbColor: AppColors.primary,
+                        selectedColor: AppColors.white,
+                        unselectedColor: AppColors.textSecondary,
+                        borderColor: AppColors.border,
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: AppSegmentPages(
+                          controller: segment,
+                          children: [
+                            for (final SitePhotoStatus? status in _statuses)
+                              _StatusPhotoPage(
+                                records: sitePhotoRecordsForStatus(
+                                  traded,
+                                  status,
+                                ),
+                                trade: _trade,
+                                status: status,
+                                fontScale: fontScale,
+                              ),
+                          ],
                         ),
                       ),
-                    )
-                    : ListView.separated(
-                      padding: EdgeInsets.fromLTRB(
-                        inset.left,
-                        0,
-                        inset.right,
-                        24 + MediaQuery.paddingOf(context).bottom,
-                      ),
-                      itemCount: zones.length,
-                      separatorBuilder:
-                          (BuildContext context, int index) =>
-                              const SizedBox(height: 10),
-                      itemBuilder: (BuildContext context, int index) {
-                        final SitePhotoZone zone = zones[index];
-                        return _ZoneBand(
-                          zone: zone,
-                          expanded: openArea == zone.area,
-                          fontScale: fontScale,
-                          onToggle: () {
-                            setState(() {
-                              _openArea =
-                                  openArea == zone.area ? null : zone.area;
-                            });
-                          },
-                        );
-                      },
-                    ),
+                    ],
+                  );
+                },
+              ),
+            ),
           ),
         ],
       ),
@@ -226,90 +235,64 @@ class _SitePhotoLibraryScreenState extends State<SitePhotoLibraryScreen> {
   }
 }
 
-class _StatusSwitch extends StatelessWidget {
-  const _StatusSwitch({
+class _StatusPhotoPage extends StatefulWidget {
+  const _StatusPhotoPage({
+    required this.records,
+    required this.trade,
     required this.status,
     required this.fontScale,
-    required this.onChanged,
   });
 
+  final List<SitePhotoRecord> records;
+  final String? trade;
   final SitePhotoStatus? status;
   final double fontScale;
-  final ValueChanged<SitePhotoStatus?> onChanged;
 
   @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(2),
-        child: Row(
-          children: [
-            _StatusSegment(
-              label: '모두',
-              selected: status == null,
-              fontScale: fontScale,
-              onTap: () => onChanged(null),
-            ),
-            _StatusSegment(
-              label: '완료',
-              selected: status == SitePhotoStatus.done,
-              fontScale: fontScale,
-              onTap: () => onChanged(SitePhotoStatus.done),
-            ),
-            _StatusSegment(
-              label: '작업 중',
-              selected: status == SitePhotoStatus.underway,
-              fontScale: fontScale,
-              onTap: () => onChanged(SitePhotoStatus.underway),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  State<_StatusPhotoPage> createState() => _StatusPhotoPageState();
 }
 
-class _StatusSegment extends StatelessWidget {
-  const _StatusSegment({
-    required this.label,
-    required this.selected,
-    required this.fontScale,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final double fontScale;
-  final VoidCallback onTap;
+class _StatusPhotoPageState extends State<_StatusPhotoPage> {
+  String? _openArea;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Material(
-        color: selected ? AppColors.primary : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13 * fontScale,
-                fontWeight: FontWeight.w700,
-                color: selected ? AppColors.white : AppColors.textSecondary,
-              ),
-            ),
+    final List<SitePhotoZone> zones = sitePhotoZones(widget.records);
+    final String? openArea =
+        zones.any((SitePhotoZone zone) => zone.area == _openArea)
+            ? _openArea
+            : null;
+    if (zones.isEmpty) {
+      return Center(
+        child: Text(
+          _emptyPhotoLabel(widget.trade, widget.status),
+          style: TextStyle(
+            fontSize: 14 * widget.fontScale,
+            color: AppColors.textSecondary,
           ),
         ),
+      );
+    }
+    return ListView.separated(
+      padding: EdgeInsets.only(
+        bottom: 24 + MediaQuery.paddingOf(context).bottom,
       ),
+      itemCount: zones.length,
+      separatorBuilder:
+          (BuildContext context, int index) => const SizedBox(height: 10),
+      itemBuilder: (BuildContext context, int index) {
+        final SitePhotoZone zone = zones[index];
+        return _ZoneBand(
+          zone: zone,
+          expanded: openArea == zone.area,
+          fontScale: widget.fontScale,
+          onToggle: () {
+            setState(() {
+              _openArea = openArea == zone.area ? null : zone.area;
+            });
+          },
+        );
+      },
     );
   }
 }

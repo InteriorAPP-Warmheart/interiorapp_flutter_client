@@ -9,6 +9,7 @@ import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_sh
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/showroom_feed_browse_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_board_screen.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_city_sheet.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_segment.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_sort_toggle.dart';
 
 enum _FeedType { all, neighborhood }
@@ -27,21 +28,54 @@ class _ShowroomFeedSegmentState extends ConsumerState<ShowroomFeedSegment> {
 
   @override
   Widget build(BuildContext context) {
-    final String? place = ref.watch(showroomFeedBrowseProvider).place;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SegmentControl(
-          selected: _selected,
-          neighborhoodLabel: place ?? '동네',
-          onAll: () => setState(() => _selected = _FeedType.all),
-          onNeighborhood: () => _openNeighborhood(place),
-        ),
-        const SizedBox(height: 12),
-        const ShowroomSortToggle(),
-        const SizedBox(height: 14),
-        _ShowroomMasonryGrid(type: _selected, place: place),
-      ],
+    final String? place = ref.watch(
+      showroomFeedBrowseProvider.select(
+        (ShowroomFeedBrowse browse) => browse.place,
+      ),
+    );
+    final ShowroomFeedSort initialSort =
+        ref.read(showroomFeedBrowseProvider).sort;
+    return AppSegmentHost(
+      length: 2,
+      initialIndex: initialSort == ShowroomFeedSort.popular ? 1 : 0,
+      onChanged: (int index) {
+        ref
+            .read(showroomFeedBrowseProvider.notifier)
+            .setSort(
+              index == 0 ? ShowroomFeedSort.latest : ShowroomFeedSort.popular,
+            );
+      },
+      builder: (BuildContext context, AppSegmentController segment) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _SegmentControl(
+              selected: _selected,
+              neighborhoodLabel: place ?? '동네',
+              onAll: () => setState(() => _selected = _FeedType.all),
+              onNeighborhood: () => _openNeighborhood(place),
+            ),
+            const SizedBox(height: 12),
+            ShowroomSortToggle(controller: segment),
+            const SizedBox(height: 14),
+            AppSegmentPages(
+              controller: segment,
+              children: [
+                _ShowroomMasonryGrid(
+                  type: _selected,
+                  place: place,
+                  sort: ShowroomFeedSort.latest,
+                ),
+                _ShowroomMasonryGrid(
+                  type: _selected,
+                  place: place,
+                  sort: ShowroomFeedSort.popular,
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -185,14 +219,23 @@ class _FeedTab extends StatelessWidget {
 // ─── 마소니리 그리드 ────────────────────────────────────────────────────────
 
 class _ShowroomMasonryGrid extends ConsumerWidget {
-  const _ShowroomMasonryGrid({required this.type, required this.place});
+  const _ShowroomMasonryGrid({
+    required this.type,
+    required this.place,
+    required this.sort,
+  });
 
   final _FeedType type;
   final String? place;
+  final ShowroomFeedSort sort;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ShowroomFeedBrowse browse = ref.watch(showroomFeedBrowseProvider);
+    final bool pinFavorites = ref.watch(
+      showroomFeedBrowseProvider.select(
+        (ShowroomFeedBrowse browse) => browse.pinFavorites,
+      ),
+    );
     final List<HotShowroomModel> source = ref.watch(hotShowroomSliderVm);
     final String? place = this.place;
     final List<HotShowroomModel> scoped =
@@ -205,10 +248,10 @@ class _ShowroomMasonryGrid extends ConsumerWidget {
             ];
     final List<HotShowroomModel> items = sortedShowroomFeed(
       scoped,
-      browse.sort,
+      sort,
       likes: (HotShowroomModel item) => item.likeCount,
       publishedAt: (HotShowroomModel item) => item.publishedAt,
-      pinFavorites: browse.pinFavorites,
+      pinFavorites: pinFavorites,
       favorite: (HotShowroomModel item) => item.favoriteStatus,
     );
 

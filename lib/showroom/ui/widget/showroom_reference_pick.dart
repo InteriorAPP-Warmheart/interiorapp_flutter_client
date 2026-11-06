@@ -8,12 +8,17 @@ import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 
-const List<String> showroomReferenceAspects = <String>['동일한 스타일', '동일한 예산', '같은 업종'];
+const List<String> showroomReferenceAspects = <String>[
+  '동일한 스타일',
+  '동일한 예산',
+  '같은 업종',
+];
 
 ImageProvider<Object> _referenceImageProvider(String url) {
   if (url.startsWith('assets/')) return AssetImage(url);
   if (url.startsWith('/') || url.startsWith('file://')) {
-    final String path = url.startsWith('file://') ? Uri.parse(url).toFilePath() : url;
+    final String path =
+        url.startsWith('file://') ? Uri.parse(url).toFilePath() : url;
     return FileImage(File(path));
   }
   return CachedNetworkImageProvider(url);
@@ -74,7 +79,9 @@ class ShowroomReferablePhoto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ShowroomReferenceScope? scope = ShowroomReferenceScope.maybeOf(context);
+    final ShowroomReferenceScope? scope = ShowroomReferenceScope.maybeOf(
+      context,
+    );
     if (scope == null || !scope.picking) return child;
     final ShowroomReferenceRegion? region = scope.regions[id];
     final bool selected = region != null;
@@ -114,7 +121,9 @@ class ShowroomReferenceTargets extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ShowroomReferenceScope? scope = ShowroomReferenceScope.maybeOf(context);
+    final ShowroomReferenceScope? scope = ShowroomReferenceScope.maybeOf(
+      context,
+    );
     if (scope == null || !scope.picking || targets.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -138,7 +147,8 @@ class ShowroomReferenceTargets extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (scope.regions[target.id] case final ShowroomReferenceRegion region)
+                  if (scope.regions[target.id]
+                      case final ShowroomReferenceRegion region)
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: _PickPill(
@@ -152,7 +162,12 @@ class ShowroomReferenceTargets extends StatelessWidget {
                     label: scope.regions.containsKey(target.id) ? '참고 중' : '참고',
                     selected: scope.regions.containsKey(target.id),
                     onDark: false,
-                    onTap: () => scope.onToggle(target.id, target.label, target.imageUrl),
+                    onTap:
+                        () => scope.onToggle(
+                          target.id,
+                          target.label,
+                          target.imageUrl,
+                        ),
                   ),
                 ],
               ),
@@ -251,14 +266,22 @@ class ShowroomReferenceSubmitBar extends StatelessWidget {
                       labelStyle: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: aspects.contains(aspect) ? AppColors.white : AppColors.textPrimary,
+                        color:
+                            aspects.contains(aspect)
+                                ? AppColors.white
+                                : AppColors.textPrimary,
                       ),
                       selectedColor: AppColors.primary,
                       backgroundColor: AppColors.surface,
                       side: BorderSide(
-                        color: aspects.contains(aspect) ? AppColors.primary : AppColors.border,
+                        color:
+                            aspects.contains(aspect)
+                                ? AppColors.primary
+                                : AppColors.border,
                       ),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(99),
+                      ),
                     ),
                 ],
               ),
@@ -316,16 +339,19 @@ Future<ShowroomReferenceRegion?> showShowroomReferenceEditor(
   ShowroomReferenceRegion region, {
   String? title,
   String saveLabel = '이 메모를 담기',
+  String noteHint = '이 부분에서 참고하고 싶은 점',
 }) {
   return showModalBottomSheet<ShowroomReferenceRegion>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (BuildContext sheetContext) => _RegionEditor(
-      region: region,
-      title: title,
-      saveLabel: saveLabel,
-    ),
+    builder:
+        (BuildContext sheetContext) => _RegionEditor(
+          region: region,
+          title: title,
+          saveLabel: saveLabel,
+          noteHint: noteHint,
+        ),
   );
 }
 
@@ -334,7 +360,10 @@ Future<void> _editRegion(
   ShowroomReferenceScope scope,
   ShowroomReferenceRegion region,
 ) async {
-  final ShowroomReferenceRegion? saved = await showShowroomReferenceEditor(context, region);
+  final ShowroomReferenceRegion? saved = await showShowroomReferenceEditor(
+    context,
+    region,
+  );
   if (saved == null) return;
   scope.onSave(saved);
 }
@@ -355,7 +384,9 @@ class _PickPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color background =
-        selected ? AppColors.primary : (onDark ? const Color(0xF2FFFFFF) : AppColors.surface);
+        selected
+            ? AppColors.primary
+            : (onDark ? const Color(0xF2FFFFFF) : AppColors.surface);
     final Color foreground = selected ? AppColors.white : AppColors.primary;
     return GestureDetector(
       onTap: onTap,
@@ -363,13 +394,19 @@ class _PickPill extends StatelessWidget {
         decoration: BoxDecoration(
           color: background,
           borderRadius: BorderRadius.circular(99),
-          border: Border.all(color: selected ? AppColors.primary : AppColors.border),
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.border,
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           child: Text(
             label,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: foreground),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: foreground,
+            ),
           ),
         ),
       ),
@@ -399,11 +436,17 @@ const List<int> _markColors = <int>[
 ];
 
 class _RegionEditor extends StatefulWidget {
-  const _RegionEditor({required this.region, this.title, this.saveLabel = '이 메모를 담기'});
+  const _RegionEditor({
+    required this.region,
+    this.title,
+    this.saveLabel = '이 메모를 담기',
+    this.noteHint = '이 부분에서 참고하고 싶은 점',
+  });
 
   final ShowroomReferenceRegion region;
   final String? title;
   final String saveLabel;
+  final String noteHint;
 
   @override
   State<_RegionEditor> createState() => _RegionEditorState();
@@ -421,7 +464,9 @@ class _RegionEditorState extends State<_RegionEditor> {
         height: widget.region.crop!.height,
       ),
   ];
-  late final TextEditingController _note = TextEditingController(text: widget.region.note);
+  late final TextEditingController _note = TextEditingController(
+    text: widget.region.note,
+  );
   _MarkTool _tool = _MarkTool.draw;
   int _color = 0xFFFFFFFF;
   ShowroomReferenceMark? _draft;
@@ -441,9 +486,14 @@ class _RegionEditorState extends State<_RegionEditor> {
   @override
   void initState() {
     super.initState();
-    final ImageProvider provider = _referenceImageProvider(widget.region.imageUrl);
+    final ImageProvider provider = _referenceImageProvider(
+      widget.region.imageUrl,
+    );
     final ImageStream stream = provider.resolve(const ImageConfiguration());
-    final ImageStreamListener listener = ImageStreamListener((ImageInfo info, bool _) {
+    final ImageStreamListener listener = ImageStreamListener((
+      ImageInfo info,
+      bool _,
+    ) {
       if (!mounted) return;
       setState(() => _aspect = info.image.width / info.image.height);
     });
@@ -490,7 +540,12 @@ class _RegionEditorState extends State<_RegionEditor> {
     });
   }
 
-  void _armEdit(int index, Offset position, _MarkEdit edit, _ResizeCorner? corner) {
+  void _armEdit(
+    int index,
+    Offset position,
+    _MarkEdit edit,
+    _ResizeCorner? corner,
+  ) {
     setState(() {
       _selected = index;
       _edit = edit;
@@ -568,12 +623,25 @@ class _RegionEditorState extends State<_RegionEditor> {
     final int? selected = _selected;
     final ShowroomReferenceMark? originMark = _editOrigin;
     final Offset? pointer = _editPointer;
-    if (_edit != null && selected != null && originMark != null && pointer != null) {
+    if (_edit != null &&
+        selected != null &&
+        originMark != null &&
+        pointer != null) {
       final Offset delta = position - pointer;
       setState(() {
-        _marks[selected] = _edit == _MarkEdit.resize
-            ? _resize(originMark, _corner ?? _ResizeCorner.bottomRight, position, size)
-            : _translate(originMark, delta.dx / size.width, delta.dy / size.height);
+        _marks[selected] =
+            _edit == _MarkEdit.resize
+                ? _resize(
+                  originMark,
+                  _corner ?? _ResizeCorner.bottomRight,
+                  position,
+                  size,
+                )
+                : _translate(
+                  originMark,
+                  delta.dx / size.width,
+                  delta.dy / size.height,
+                );
       });
       return;
     }
@@ -607,10 +675,15 @@ class _RegionEditorState extends State<_RegionEditor> {
       });
       return;
     }
-    final bool strokeKept = _tool == _MarkTool.draw && _stroke.length >= 2 && _strokePixels >= 24;
-    final ShowroomReferenceMark? drawn = strokeKept
-        ? ShowroomReferenceMark.stroke(List<ShowroomReferencePoint>.from(_stroke), color: _color)
-        : (_tool == _MarkTool.draw ? null : _draft);
+    final bool strokeKept =
+        _tool == _MarkTool.draw && _stroke.length >= 2 && _strokePixels >= 24;
+    final ShowroomReferenceMark? drawn =
+        strokeKept
+            ? ShowroomReferenceMark.stroke(
+              List<ShowroomReferencePoint>.from(_stroke),
+              color: _color,
+            )
+            : (_tool == _MarkTool.draw ? null : _draft);
     setState(() {
       if (drawn != null) {
         _marks.add(drawn);
@@ -625,25 +698,27 @@ class _RegionEditorState extends State<_RegionEditor> {
 
   int? _hitTest(Offset position, Size size) {
     for (int index = _marks.length - 1; index >= 0; index--) {
-      if (_selectionRect(_marks[index], size).inflate(8).contains(position)) return index;
+      if (_selectionRect(_marks[index], size).inflate(8).contains(position))
+        return index;
     }
     return null;
   }
 
-  ShowroomReferenceMark _translate(ShowroomReferenceMark mark, double dx, double dy) {
+  ShowroomReferenceMark _translate(
+    ShowroomReferenceMark mark,
+    double dx,
+    double dy,
+  ) {
     final Rect bounds = _normBounds(mark);
     if (bounds.left + dx < 0) dx = -bounds.left;
     if (bounds.right + dx > 1) dx = 1 - bounds.right;
     if (bounds.top + dy < 0) dy = -bounds.top;
     if (bounds.bottom + dy > 1) dy = 1 - bounds.bottom;
     if (mark.kind == ShowroomReferenceMarkKind.stroke) {
-      return ShowroomReferenceMark.stroke(
-        <ShowroomReferencePoint>[
-          for (final ShowroomReferencePoint point in mark.points)
-            ShowroomReferencePoint(point.x + dx, point.y + dy),
-        ],
-        color: mark.color,
-      );
+      return ShowroomReferenceMark.stroke(<ShowroomReferencePoint>[
+        for (final ShowroomReferencePoint point in mark.points)
+          ShowroomReferencePoint(point.x + dx, point.y + dy),
+      ], color: mark.color);
     }
     return ShowroomReferenceMark.shape(
       kind: mark.kind,
@@ -679,7 +754,8 @@ class _RegionEditorState extends State<_RegionEditor> {
   bool _inSelectionBody(int index, Offset position, Size size) {
     final Rect rect = _selectionRect(_marks[index], size);
     final Rect inner = rect.deflate(_handleReach);
-    if (inner.width >= 12 && inner.height >= 12) return inner.contains(position);
+    if (inner.width >= 12 && inner.height >= 12)
+      return inner.contains(position);
     return (position - rect.center).distance <= 18;
   }
 
@@ -745,13 +821,10 @@ class _RegionEditorState extends State<_RegionEditor> {
         return next.top + (value - bounds.top) / bounds.height * next.height;
       }
 
-      return ShowroomReferenceMark.stroke(
-        <ShowroomReferencePoint>[
-          for (final ShowroomReferencePoint point in mark.points)
-            ShowroomReferencePoint(mapX(point.x), mapY(point.y)),
-        ],
-        color: mark.color,
-      );
+      return ShowroomReferenceMark.stroke(<ShowroomReferencePoint>[
+        for (final ShowroomReferencePoint point in mark.points)
+          ShowroomReferencePoint(mapX(point.x), mapY(point.y)),
+      ], color: mark.color);
     }
     return ShowroomReferenceMark.shape(
       kind: mark.kind,
@@ -777,9 +850,10 @@ class _RegionEditorState extends State<_RegionEditor> {
     );
     if (rect.width < 36 || rect.height < 36) return null;
     return ShowroomReferenceMark.shape(
-      kind: _tool == _MarkTool.ellipse
-          ? ShowroomReferenceMarkKind.ellipse
-          : ShowroomReferenceMarkKind.rect,
+      kind:
+          _tool == _MarkTool.ellipse
+              ? ShowroomReferenceMarkKind.ellipse
+              : ShowroomReferenceMarkKind.rect,
       left: rect.left / size.width,
       top: rect.top / size.height,
       width: rect.width / size.width,
@@ -837,10 +911,16 @@ class _RegionEditorState extends State<_RegionEditor> {
                             onPressed: () => Navigator.of(context).pop(),
                             style: TextButton.styleFrom(
                               foregroundColor: AppColors.textPrimary,
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 8,
+                              ),
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                              textStyle: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             child: const Text('닫기'),
                           ),
@@ -901,13 +981,17 @@ class _RegionEditorState extends State<_RegionEditor> {
                         tooltip: '되돌리기',
                         visualDensity: VisualDensity.compact,
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                        onPressed: _marks.isEmpty
-                            ? null
-                            : () => setState(() {
-                                _marks.removeLast();
-                                _selected = null;
-                              }),
+                        constraints: const BoxConstraints(
+                          minWidth: 36,
+                          minHeight: 36,
+                        ),
+                        onPressed:
+                            _marks.isEmpty
+                                ? null
+                                : () => setState(() {
+                                  _marks.removeLast();
+                                  _selected = null;
+                                }),
                         icon: const Icon(Icons.undo),
                         color: AppColors.primary,
                         disabledColor: AppColors.border,
@@ -930,16 +1014,24 @@ class _RegionEditorState extends State<_RegionEditor> {
                   const SizedBox(height: 8),
                   Expanded(
                     child: LayoutBuilder(
-                      builder: (BuildContext context, BoxConstraints constraints) {
+                      builder: (
+                        BuildContext context,
+                        BoxConstraints constraints,
+                      ) {
                         const double gutter = 32;
                         final double? aspect = _aspect;
                         final double slotW = constraints.maxWidth;
                         final double slotH = constraints.maxHeight;
                         if (aspect == null || aspect <= 0) {
-                          return const ColoredBox(color: AppColors.imagePlaceholder);
+                          return const ColoredBox(
+                            color: AppColors.imagePlaceholder,
+                          );
                         }
                         final double availW = math.max(1, slotW - gutter * 2);
-                        final double availH = math.max(1, (slotH - gutter * 2) * 0.96);
+                        final double availH = math.max(
+                          1,
+                          (slotH - gutter * 2) * 0.96,
+                        );
                         double imageW = availW;
                         double imageH = imageW / aspect;
                         if (imageH > availH) {
@@ -947,56 +1039,71 @@ class _RegionEditorState extends State<_RegionEditor> {
                           imageW = imageH * aspect;
                         }
                         final Size size = Size(imageW, imageH);
-                        final Offset origin = Offset((slotW - imageW) / 2, gutter);
+                        final Offset origin = Offset(
+                          (slotW - imageW) / 2,
+                          gutter,
+                        );
                         return SizedBox(
                           width: slotW,
                           height: slotH,
                           child: Listener(
-                              onPointerDown: (PointerDownEvent event) =>
-                                  _pointerDown(event.localPosition - origin, size),
-                              onPointerMove: (PointerMoveEvent event) =>
-                                  _pointerMove(event.localPosition - origin, size),
-                              onPointerUp: (PointerUpEvent event) => _pointerUp(),
-                              onPointerCancel: (PointerCancelEvent event) => _pointerUp(),
-                              child: GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onVerticalDragStart: (DragStartDetails details) {},
-                                onVerticalDragUpdate: (DragUpdateDetails details) {},
-                                onVerticalDragEnd: (DragEndDetails details) {},
-                                onHorizontalDragStart: (DragStartDetails details) {},
-                                onHorizontalDragUpdate: (DragUpdateDetails details) {},
-                                onHorizontalDragEnd: (DragEndDetails details) {},
-                                child: Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    Positioned(
-                                      left: origin.dx,
-                                      top: origin.dy,
-                                      width: size.width,
-                                      height: size.height,
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(14),
-                                        child: AppNetworkImage(
-                                          url: widget.region.imageUrl,
-                                          fit: BoxFit.contain,
-                                        ),
-                                      ),
-                                    ),
-                                    Positioned.fill(
-                                      child: CustomPaint(
-                                        painter: _MarkPainter(
-                                          origin: origin,
-                                          imageSize: size,
-                                          marks: _marks,
-                                          draft: _draft,
-                                          selected: _draft == null ? _selected : null,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                            onPointerDown:
+                                (PointerDownEvent event) => _pointerDown(
+                                  event.localPosition - origin,
+                                  size,
                                 ),
+                            onPointerMove:
+                                (PointerMoveEvent event) => _pointerMove(
+                                  event.localPosition - origin,
+                                  size,
+                                ),
+                            onPointerUp: (PointerUpEvent event) => _pointerUp(),
+                            onPointerCancel:
+                                (PointerCancelEvent event) => _pointerUp(),
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onVerticalDragStart:
+                                  (DragStartDetails details) {},
+                              onVerticalDragUpdate:
+                                  (DragUpdateDetails details) {},
+                              onVerticalDragEnd: (DragEndDetails details) {},
+                              onHorizontalDragStart:
+                                  (DragStartDetails details) {},
+                              onHorizontalDragUpdate:
+                                  (DragUpdateDetails details) {},
+                              onHorizontalDragEnd: (DragEndDetails details) {},
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  Positioned(
+                                    left: origin.dx,
+                                    top: origin.dy,
+                                    width: size.width,
+                                    height: size.height,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(14),
+                                      child: AppNetworkImage(
+                                        url: widget.region.imageUrl,
+                                        fit: BoxFit.contain,
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned.fill(
+                                    child: CustomPaint(
+                                      painter: _MarkPainter(
+                                        origin: origin,
+                                        imageSize: size,
+                                        marks: _marks,
+                                        draft: _draft,
+                                        selected:
+                                            _draft == null ? _selected : null,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
+                          ),
                         );
                       },
                     ),
@@ -1007,11 +1114,17 @@ class _RegionEditorState extends State<_RegionEditor> {
                     maxLines: 2,
                     style: const TextStyle(fontSize: 15, height: 1.4),
                     decoration: InputDecoration(
-                      hintText: '이 부분에서 참고하고 싶은 점',
-                      hintStyle: const TextStyle(fontSize: 15, color: AppColors.textSecondary),
+                      hintText: widget.noteHint,
+                      hintStyle: const TextStyle(
+                        fontSize: 15,
+                        color: AppColors.textSecondary,
+                      ),
                       filled: true,
                       fillColor: AppColors.background,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(color: AppColors.border),
@@ -1039,7 +1152,11 @@ class _RegionEditorState extends State<_RegionEditor> {
 }
 
 class _ColorDot extends StatelessWidget {
-  const _ColorDot({required this.color, required this.selected, required this.onTap});
+  const _ColorDot({
+    required this.color,
+    required this.selected,
+    required this.onTap,
+  });
 
   final int color;
   final bool selected;
@@ -1060,7 +1177,10 @@ class _ColorDot extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(2),
           child: DecoratedBox(
-            decoration: BoxDecoration(color: Color(color), shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: Color(color),
+              shape: BoxShape.circle,
+            ),
             child: const SizedBox(width: 16, height: 16),
           ),
         ),
@@ -1090,13 +1210,19 @@ class _ToolButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? AppColors.primary : AppColors.surface,
           borderRadius: BorderRadius.circular(99),
-          border: Border.all(color: selected ? AppColors.primary : AppColors.border),
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.border,
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           child: Row(
             children: [
-              Icon(icon, size: 16, color: selected ? AppColors.white : AppColors.primary),
+              Icon(
+                icon,
+                size: 16,
+                color: selected ? AppColors.white : AppColors.primary,
+              ),
               const SizedBox(width: 4),
               Text(
                 label,
@@ -1139,15 +1265,17 @@ class _MarkPainter extends CustomPainter {
       if (draft != null) draft!,
     ]) {
       final Color color = Color(mark.color);
-      final Paint stroke = Paint()
-        ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round;
-      final Paint fill = Paint()
-        ..color = color.withValues(alpha: 0.22)
-        ..style = PaintingStyle.fill;
+      final Paint stroke =
+          Paint()
+            ..color = color
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3
+            ..strokeCap = StrokeCap.round
+            ..strokeJoin = StrokeJoin.round;
+      final Paint fill =
+          Paint()
+            ..color = color.withValues(alpha: 0.22)
+            ..style = PaintingStyle.fill;
       _paintMark(canvas, image, mark, stroke, fill);
     }
     final int? index = selected;
@@ -1170,12 +1298,21 @@ class _MarkPainter extends CustomPainter {
       }
       final Offset remove = _deleteAnchor(rect);
       _paintKnob(canvas, remove, _deleteRadius);
-      final Paint icon = Paint()
-        ..color = const Color(0xFF0B1F38)
-        ..strokeWidth = 2
-        ..strokeCap = StrokeCap.round;
-      canvas.drawLine(remove + const Offset(-4, -4), remove + const Offset(4, 4), icon);
-      canvas.drawLine(remove + const Offset(-4, 4), remove + const Offset(4, -4), icon);
+      final Paint icon =
+          Paint()
+            ..color = const Color(0xFF0B1F38)
+            ..strokeWidth = 2
+            ..strokeCap = StrokeCap.round;
+      canvas.drawLine(
+        remove + const Offset(-4, -4),
+        remove + const Offset(4, 4),
+        icon,
+      );
+      canvas.drawLine(
+        remove + const Offset(-4, 4),
+        remove + const Offset(4, -4),
+        icon,
+      );
     }
     canvas.restore();
   }
@@ -1206,8 +1343,11 @@ void _paintMark(
   switch (mark.kind) {
     case ShowroomReferenceMarkKind.stroke:
       if (mark.points.length < 2) return;
-      final Path path = Path()
-        ..moveTo(mark.points.first.x * size.width, mark.points.first.y * size.height);
+      final Path path =
+          Path()..moveTo(
+            mark.points.first.x * size.width,
+            mark.points.first.y * size.height,
+          );
       for (final ShowroomReferencePoint point in mark.points.skip(1)) {
         path.lineTo(point.x * size.width, point.y * size.height);
       }
@@ -1238,18 +1378,33 @@ Rect _selectionRect(ShowroomReferenceMark mark, Size size) {
   const double minSpan = 36;
   if (rect.width < minSpan) {
     final double extra = (minSpan - rect.width) / 2;
-    rect = Rect.fromLTRB(rect.left - extra, rect.top, rect.right + extra, rect.bottom);
+    rect = Rect.fromLTRB(
+      rect.left - extra,
+      rect.top,
+      rect.right + extra,
+      rect.bottom,
+    );
   }
   if (rect.height < minSpan) {
     final double extra = (minSpan - rect.height) / 2;
-    rect = Rect.fromLTRB(rect.left, rect.top - extra, rect.right, rect.bottom + extra);
+    rect = Rect.fromLTRB(
+      rect.left,
+      rect.top - extra,
+      rect.right,
+      rect.bottom + extra,
+    );
   }
   return rect;
 }
 
 Rect _normBounds(ShowroomReferenceMark mark) {
   if (mark.kind != ShowroomReferenceMarkKind.stroke) {
-    return Rect.fromLTWH(mark.left ?? 0, mark.top ?? 0, mark.width ?? 0, mark.height ?? 0);
+    return Rect.fromLTWH(
+      mark.left ?? 0,
+      mark.top ?? 0,
+      mark.width ?? 0,
+      mark.height ?? 0,
+    );
   }
   if (mark.points.isEmpty) return Rect.zero;
   double minX = mark.points.first.x;

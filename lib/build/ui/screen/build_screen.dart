@@ -31,10 +31,10 @@ class _BuildScreenState extends ConsumerState<BuildScreen> {
     final AppWindow window = AppWindow.of(context);
     final double finishedHeight =
         window.isExpanded
-            ? 156
+            ? 176
             : window.isMedium
-            ? 132
-            : 112;
+            ? 152
+            : 136;
     final SpaceBoard board = ref.watch(spaceBoardProvider);
     final List<SpaceProject> ongoing = [...board.received, ...board.ongoing];
     final List<SpaceProject> finished = board.finished;
@@ -78,6 +78,7 @@ class _BuildScreenState extends ConsumerState<BuildScreen> {
                         hasOngoing
                             ? OngoingSpacePager(
                               projects: ongoing,
+                              progressOf: board.constructionFor,
                               onTap: (SpaceProject project) {
                                 context.push(SpaceRoutes.detail(project.id));
                               },

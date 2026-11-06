@@ -388,7 +388,7 @@ class _ShowroomWriteDetailScreenState
                       '견적서에서 불러오기',
                       style: TextStyle(fontWeight: FontWeight.w700),
                     ),
-                    subtitle: const Text('공종 금액을 채워요. 경비는 기타로 묶여요.'),
+                    subtitle: const Text('자재비, 인력비, 경비로 나눠 채워요.'),
                     onTap: () => Navigator.of(context).pop('quote'),
                   ),
                 ListTile(
@@ -397,7 +397,7 @@ class _ShowroomWriteDetailScreenState
                     '직접 추가',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
-                  subtitle: const Text('항목을 빈 칸부터 적어요.'),
+                  subtitle: const Text('자재비, 인력비, 경비를 적어요.'),
                   onTap: () => Navigator.of(context).pop('manual'),
                 ),
               ],
@@ -576,8 +576,8 @@ class _ShowroomWriteDetailScreenState
                   const SizedBox(height: 4),
                   Text(
                     draft.costFromQuote
-                        ? '견적서의 공종 금액으로 채웠어요. 경비처럼 공정이 아닌 항목은 기타로 묶여 있어요.'
-                        : '항목은 직접 적어도 돼요. 빼려면 오른쪽 X를 누르세요.',
+                        ? '견적서 금액을 자재비, 인력비, 경비로 나눴어요.'
+                        : '세 칸의 금액만 적으면 돼요. 빼려면 오른쪽 X를 누르세요.',
                     style: const TextStyle(
                       fontSize: 13,
                       height: 1.4,
@@ -587,9 +587,7 @@ class _ShowroomWriteDetailScreenState
                   const SizedBox(height: 10),
                   _CostEditor(
                     lines: draft.costLines,
-                    onAdd: _composer.addCostLine,
                     onLine: _composer.updateCostLine,
-                    onRemove: _composer.removeCostLine,
                   ),
                 ],
                 const SizedBox(height: 28),
@@ -1083,7 +1081,7 @@ class _AddCostDetail extends StatelessWidget {
                       ),
                       SizedBox(height: 2),
                       Text(
-                        '없어도 돼요.',
+                        '없어도 돼요. 자재비, 인력비, 경비로 나뉘어요.',
                         style: TextStyle(
                           fontSize: 12,
                           height: 1.35,
@@ -1173,40 +1171,21 @@ class _ChoiceRow extends StatelessWidget {
 }
 
 class _CostEditor extends StatefulWidget {
-  const _CostEditor({
-    required this.lines,
-    required this.onAdd,
-    required this.onLine,
-    required this.onRemove,
-  });
+  const _CostEditor({required this.lines, required this.onLine});
 
   final List<ShowroomCostLine> lines;
-  final VoidCallback onAdd;
-  final void Function(int index, {String? name, String? amount}) onLine;
-  final ValueChanged<int> onRemove;
+  final void Function(int index, {String? amount}) onLine;
 
   @override
   State<_CostEditor> createState() => _CostEditorState();
 }
 
 class _CostEditorState extends State<_CostEditor> {
-  static const List<String> _itemHints = <String>[
-    '예: 철거 · 설비',
-    '예: 목공',
-    '예: 도배',
-    '예: 조명',
-  ];
-
-  late final List<TextEditingController> _names;
   late final List<TextEditingController> _amounts;
 
   @override
   void initState() {
     super.initState();
-    _names = <TextEditingController>[
-      for (final ShowroomCostLine line in widget.lines)
-        TextEditingController(text: line.name),
-    ];
     _amounts = <TextEditingController>[
       for (final ShowroomCostLine line in widget.lines)
         TextEditingController(text: groupedDigits(line.amount)),
@@ -1226,33 +1205,8 @@ class _CostEditorState extends State<_CostEditor> {
   String _storedMoney(String formatted) =>
       formatted.isEmpty ? '' : '$formatted원';
 
-  String _readingOf(String formatted) =>
-      CostFormattingViewModel.wonReading(formatted);
-
-  void _add() {
-    setState(() {
-      _names.add(TextEditingController());
-      _amounts.add(TextEditingController());
-    });
-    widget.onAdd();
-  }
-
-  void _remove(int index) {
-    final TextEditingController name = _names.removeAt(index);
-    final TextEditingController amount = _amounts.removeAt(index);
-    setState(() {});
-    widget.onRemove(index);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      name.dispose();
-      amount.dispose();
-    });
-  }
-
   @override
   void dispose() {
-    for (final TextEditingController controller in _names) {
-      controller.dispose();
-    }
     for (final TextEditingController controller in _amounts) {
       controller.dispose();
     }
@@ -1263,22 +1217,31 @@ class _CostEditorState extends State<_CostEditor> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        for (var i = 0; i < _names.length; i++) ...[
+        for (
+          var i = 0;
+          i < widget.lines.length && i < _amounts.length;
+          i++
+        ) ...[
           const SizedBox(height: 8),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                flex: 3,
-                child: _LineField(
-                  controller: _names[i],
-                  hint: _itemHints[i % _itemHints.length],
-                  onChanged: (String value) => widget.onLine(i, name: value),
+              Padding(
+                padding: const EdgeInsets.only(top: 14),
+                child: SizedBox(
+                  width: 72,
+                  child: Text(
+                    widget.lines[i].name,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -1295,29 +1258,17 @@ class _CostEditorState extends State<_CostEditor> {
                         );
                       },
                     ),
-                    _WonReading(text: _readingOf(_amounts[i].text)),
+                    _WonReading(
+                      text: CostFormattingViewModel.wonReading(
+                        _amounts[i].text,
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              IconButton(
-                onPressed: () => _remove(i),
-                icon: const Icon(Icons.close, size: 18),
-                color: AppColors.textSecondary,
               ),
             ],
           ),
         ],
-        const SizedBox(height: 4),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton(
-            onPressed: _add,
-            child: const Text(
-              '항목 추가',
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
-          ),
-        ),
       ],
     );
   }

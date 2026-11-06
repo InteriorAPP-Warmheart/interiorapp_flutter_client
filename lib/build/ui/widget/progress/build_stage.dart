@@ -380,6 +380,16 @@ class _SupervisorBand extends StatelessWidget {
                       color: AppColors.textSecondary,
                     ),
                   ),
+                if (supervisor.phone.isNotEmpty)
+                  Text(
+                    supervisor.phone,
+                    style: TextStyle(
+                      fontSize: 14 * fontScale,
+                      height: 1.35,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -419,15 +429,20 @@ class _SurfaceBand extends StatelessWidget {
 }
 
 class _WorkerCard extends StatelessWidget {
-  const _WorkerCard({required this.worker, required this.fontScale});
+  const _WorkerCard({
+    required this.worker,
+    required this.fontScale,
+    this.showPhone = false,
+  });
 
   final SiteWorker worker;
   final double fontScale;
+  final bool showPhone;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => showSiteWorkerDialog(context, worker),
+      onTap: () => showSiteWorkerDialog(context, worker, showPhone: showPhone),
       behavior: HitTestBehavior.opaque,
       child: Row(
         children: [
@@ -469,6 +484,16 @@ class _WorkerCard extends StatelessWidget {
                       color: AppColors.textSecondary,
                     ),
                   ),
+                if (showPhone && worker.phone.isNotEmpty)
+                  Text(
+                    worker.phone,
+                    style: TextStyle(
+                      fontSize: 14 * fontScale,
+                      height: 1.35,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -496,6 +521,7 @@ const ConstructionProgress _sampleBuild = ConstructionProgress(
     duty: '현장 진행, 일정, 오늘 작업',
     organization: '바론 인테리어',
     bio: '현장 일정과 마감 품질을 함께 보고 있습니다',
+    phone: '010-6201-8842',
     imageUrl:
         'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&crop=faces&w=800&h=1000&q=80',
   ),

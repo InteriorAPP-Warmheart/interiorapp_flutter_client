@@ -377,7 +377,7 @@ class _DateHead extends StatelessWidget {
             ),
           ),
           Text(
-            '(${appCalendarWeekdays[day.weekday - 1]})',
+            '(${appCalendarWeekdays[appCalendarWeekIndex(day)]})',
             style: TextStyle(
               fontSize: 10 * fontScale,
               height: 1.1,

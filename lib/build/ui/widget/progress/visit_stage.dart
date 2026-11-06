@@ -75,8 +75,7 @@ class _VisitStage extends StatelessWidget {
               ),
               SizedBox(height: gap),
               _VisitProfile(
-                name: appointment.visitorName,
-                role: appointment.visitorRole,
+                appointment: appointment,
                 fontScale: fontScale,
                 avatar: roomy ? 80 : 68,
               ),
@@ -267,81 +266,76 @@ class _VisitInfo extends StatelessWidget {
 
 class _VisitProfile extends StatelessWidget {
   const _VisitProfile({
-    required this.name,
-    required this.role,
+    required this.appointment,
     required this.fontScale,
     required this.avatar,
   });
 
-  final String name;
-  final String role;
+  final VisitAppointment appointment;
   final double fontScale;
   final double avatar;
 
   @override
   Widget build(BuildContext context) {
-    final String mark =
-        name.runes.isEmpty ? '방' : String.fromCharCode(name.runes.first);
-    return DecoratedBox(
-      decoration: _card,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        child: Row(
-          children: [
-            DecoratedBox(
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
+    return Material(
+      color: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: AppColors.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => showVisitPersonDialog(context, appointment),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Row(
+            children: [
+              SitePersonAvatar(
+                name: appointment.visitorName,
+                imageUrl: appointment.visitorImageUrl,
+                size: avatar,
+                fontScale: fontScale,
               ),
-              child: SizedBox(
-                width: avatar,
-                height: avatar,
-                child: Center(
-                  child: Text(
-                    mark,
-                    style: TextStyle(
-                      fontSize: avatar * 0.38,
-                      height: 1,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.white,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '방문하는 분',
+                      style: _kicker(fontScale).copyWith(height: 1.15),
                     ),
-                  ),
+                    const SizedBox(height: 6),
+                    Text(
+                      appointment.visitorName,
+                      style: TextStyle(
+                        fontSize: 24 * fontScale,
+                        height: 1.15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      appointment.visitorRole,
+                      style: TextStyle(
+                        fontSize: 16 * fontScale,
+                        height: 1.2,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '방문하는 분',
-                    style: _kicker(fontScale).copyWith(height: 1.15),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    name,
-                    style: TextStyle(
-                      fontSize: 24 * fontScale,
-                      height: 1.15,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    role,
-                    style: TextStyle(
-                      fontSize: 16 * fontScale,
-                      height: 1.2,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
+              const SizedBox(width: 8),
+              const Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: AppColors.textSecondary,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

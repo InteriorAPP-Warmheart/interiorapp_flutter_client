@@ -98,6 +98,10 @@ class SpaceApi {
         place: '서울 성동구 성수이로 00 1층',
         visitorName: '정하늘',
         visitorRole: '실사 담당',
+        visitorOrganization: '바론 인테리어',
+        visitorBio: '벽과 바닥 치수, 전기와 급배수를 현장에서 확인합니다',
+        visitorImageUrl:
+            'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&crop=faces&w=800&h=1000&q=80',
       ),
       constructionPlan: ConstructionPlan(
         scope: [
@@ -142,6 +146,10 @@ class SpaceApi {
         place: '서울 마포구 망원로 00 1층',
         visitorName: '윤재원',
         visitorRole: '실사 담당',
+        visitorOrganization: '바론 인테리어',
+        visitorBio: '철거할 곳과 남길 곳을 현장에서 나눠 봅니다',
+        visitorImageUrl:
+            'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&crop=faces&w=800&h=1000&q=80',
       ),
       constructionPlan: ConstructionPlan(
         scope: [
@@ -652,6 +660,7 @@ class SpaceApi {
         duty: '현장 진행, 일정, 오늘 작업',
         organization: '바론 인테리어',
         bio: '현장 일정과 마감 품질을 함께 보고 있습니다',
+        phone: '010-6201-8842',
         imageUrl:
             'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&crop=faces&w=800&h=1000&q=80',
       ),

@@ -24,7 +24,7 @@ class ProcessWeekStrip extends ConsumerStatefulWidget {
 }
 
 class _ProcessWeekStripState extends ConsumerState<ProcessWeekStrip> {
-  static final DateTime _origin = DateTime(2016, 1, 4);
+  static final DateTime _origin = DateTime(2016, 1, 3);
   static const int _weekCount = 52 * 20;
 
   late final PageController _pages;
@@ -33,7 +33,7 @@ class _ProcessWeekStripState extends ConsumerState<ProcessWeekStrip> {
   @override
   void initState() {
     super.initState();
-    _index = _indexOf(_mondayOf(DateTime.now()));
+    _index = _indexOf(appCalendarWeekStart(DateTime.now()));
     _pages = PageController(initialPage: _index);
   }
 
@@ -43,13 +43,8 @@ class _ProcessWeekStripState extends ConsumerState<ProcessWeekStrip> {
     super.dispose();
   }
 
-  DateTime _mondayOf(DateTime day) {
-    final DateTime date = appCalendarDate(day);
-    return date.subtract(Duration(days: date.weekday - DateTime.monday));
-  }
-
-  int _indexOf(DateTime monday) {
-    final int index = monday.difference(_origin).inDays ~/ 7;
+  int _indexOf(DateTime weekStart) {
+    final int index = weekStart.difference(_origin).inDays ~/ 7;
     if (index < 0) return 0;
     if (index >= _weekCount) return _weekCount - 1;
     return index;
@@ -190,19 +185,19 @@ class _WeekDay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool today = appCalendarSameDay(day, DateTime.now());
-    final int weekday = day.weekday - DateTime.monday;
+    final int weekday = appCalendarWeekIndex(day);
     final Color labelColor =
-        weekday == 6
+        day.weekday == DateTime.sunday
             ? AppColors.error
-            : weekday == 5
+            : day.weekday == DateTime.saturday
             ? AppColors.primary
             : AppColors.textSecondary;
     final Color numberColor =
         today
             ? AppColors.white
-            : weekday == 6
+            : day.weekday == DateTime.sunday
             ? AppColors.error
-            : weekday == 5
+            : day.weekday == DateTime.saturday
             ? AppColors.primary
             : AppColors.textPrimary;
     return GestureDetector(

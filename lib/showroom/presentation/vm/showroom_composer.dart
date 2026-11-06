@@ -60,8 +60,13 @@ class ShowroomDraft {
 
   bool get canPreview => title.trim().isNotEmpty && hasBody;
 
-  ShowroomCost get cost =>
-      ShowroomCost(total: costTotal.trim(), lines: costLines);
+  ShowroomCost get cost => ShowroomCost(
+    total: costTotal.trim(),
+    lines: <ShowroomCostLine>[
+      for (final ShowroomCostLine line in costLines)
+        if (line.amount.trim().isNotEmpty) line,
+    ],
+  );
 
   bool uses(String url) {
     if (url.isEmpty) return false;
@@ -200,7 +205,7 @@ class ShowroomComposer extends Notifier<ShowroomDraft> {
   void setBudget(String value) => state = state.copyWith(budget: value);
   void setCostTotal(String value) => state = state.copyWith(costTotal: value);
 
-  /// 견적 공종으로 세부 공사비를 채운다.
+  /// 견적 금액을 자재비, 인력비, 경비로 채운다.
   void loadCostFromQuote(WorkQuote quote) {
     final ShowroomCost filled = showroomCostFromQuote(quote);
     state = state.copyWith(
@@ -211,15 +216,13 @@ class ShowroomComposer extends Notifier<ShowroomDraft> {
     );
   }
 
-  /// 빈 항목 하나로 세부 공사비를 직접 적기 시작한다.
+  /// 자재비, 인력비, 경비 칸으로 세부 공사비를 직접 적기 시작한다.
   void startCostDetail() {
     state = state.copyWith(
       showCostDetail: true,
       costFromQuote: false,
       costTotal: '',
-      costLines: const <ShowroomCostLine>[
-        ShowroomCostLine(name: '', amount: ''),
-      ],
+      costLines: showroomCostBuckets,
     );
   }
 
@@ -233,31 +236,15 @@ class ShowroomComposer extends Notifier<ShowroomDraft> {
     );
   }
 
-  void addCostLine() {
-    state = state.copyWith(
-      costLines: <ShowroomCostLine>[
-        ...state.costLines,
-        const ShowroomCostLine(name: '', amount: ''),
-      ],
-    );
-  }
-
-  void updateCostLine(int index, {String? name, String? amount}) {
+  void updateCostLine(int index, {String? amount}) {
     if (index < 0 || index >= state.costLines.length) return;
     final List<ShowroomCostLine> lines = <ShowroomCostLine>[...state.costLines];
     final ShowroomCostLine current = lines[index];
     lines[index] = ShowroomCostLine(
-      name: name ?? current.name,
+      name: current.name,
       amount: amount ?? current.amount,
     );
-    state = state.copyWith(costLines: lines);
-  }
-
-  void removeCostLine(int index) {
-    if (index < 0 || index >= state.costLines.length) return;
-    final List<ShowroomCostLine> lines = <ShowroomCostLine>[...state.costLines]
-      ..removeAt(index);
-    state = state.copyWith(costLines: lines);
+    state = state.copyWith(costLines: lines, costTotal: _costSum(lines));
   }
 
   /// 현장 공정 순서대로 공정 이름, 기록된 내용, 그 공정의 사진을 채운다.
@@ -606,75 +593,61 @@ String showroomSpanLabel(int days) {
   return '$weeks주';
 }
 
-/// 견적 공종을 세부 공사비로 옮긴다. 경비와 기타 시공은 기타 한 줄로 묶는다.
-ShowroomCost showroomCostFromQuote(WorkQuote quote) {
-  final List<ShowroomCostLine> lines = <ShowroomCostLine>[];
-  final Map<String, int> indexOf = <String, int>{};
-  int misc = 0;
+/// 쇼룸에 올리는 세부 공사비 칸. 공종 대신 이 세 줄만 쓴다.
+const List<ShowroomCostLine> showroomCostBuckets = <ShowroomCostLine>[
+  ShowroomCostLine(name: '자재비', amount: ''),
+  ShowroomCostLine(name: '인력비', amount: ''),
+  ShowroomCostLine(name: '경비', amount: ''),
+];
 
-  void add(String name, int amount) {
-    if (amount <= 0 || name.isEmpty) return;
-    final int? index = indexOf[name];
-    if (index == null) {
-      indexOf[name] = lines.length;
-      lines.add(ShowroomCostLine(name: name, amount: '${formatWon(amount)}원'));
-      return;
-    }
-    final int current =
-        int.tryParse(lines[index].amount.replaceAll(RegExp(r'[^\d]'), '')) ?? 0;
-    lines[index] = ShowroomCostLine(
-      name: name,
-      amount: '${formatWon(current + amount)}원',
-    );
-  }
+/// 견적 금액을 자재비, 인력비, 경비로 묶는다.
+/// 경비 공종과 잡비는 경비로 두고, 나머지 재료와 노무는 각각 모은다.
+ShowroomCost showroomCostFromQuote(WorkQuote quote) {
+  int material = 0;
+  int labor = 0;
+  int expense = 0;
 
   for (final EstimateTrade trade in quote.sheet.trades) {
-    if (trade.total <= 0) continue;
-    if (_overheadTrade(trade.name)) {
-      misc += trade.total;
-      continue;
-    }
-    final String tradeName = _tradeLabel(trade.name);
+    final bool expenseTrade = _expenseTrade(trade.name);
     for (final EstimateLine line in trade.lines) {
       if (line.total <= 0) continue;
-      if (_overheadLine(line.name)) {
-        misc += line.total;
-      } else if (tradeName != '조명' && line.name.contains('조명')) {
-        add('조명', line.total);
-      } else {
-        add(tradeName, line.total);
+      if (expenseTrade || _expenseLine(line.name)) {
+        expense += line.total;
+        continue;
       }
+      material += line.materialTotal ?? 0;
+      labor += line.labor ?? 0;
     }
   }
-  add('기타', misc);
-  final int sum = lines.fold<int>(0, (int total, ShowroomCostLine line) {
-    return total +
-        (int.tryParse(line.amount.replaceAll(RegExp(r'[^\d]'), '')) ?? 0);
-  });
+
+  final int sum = material + labor + expense;
   return ShowroomCost(
     total: sum <= 0 ? '' : '${formatWon(sum)}원',
-    lines: lines,
+    lines: <ShowroomCostLine>[
+      ShowroomCostLine(name: '자재비', amount: _won(material)),
+      ShowroomCostLine(name: '인력비', amount: _won(labor)),
+      ShowroomCostLine(name: '경비', amount: _won(expense)),
+    ],
   );
 }
 
-bool _overheadTrade(String name) {
-  final String compact = name.replaceAll(RegExp(r'\s'), '');
-  return compact.contains('경비') || compact.startsWith('기타');
+String _won(int amount) => amount <= 0 ? '' : '${formatWon(amount)}원';
+
+String _costSum(List<ShowroomCostLine> lines) {
+  var sum = 0;
+  for (final ShowroomCostLine line in lines) {
+    sum += int.tryParse(line.amount.replaceAll(RegExp(r'[^\d]'), '')) ?? 0;
+  }
+  return sum <= 0 ? '' : '${formatWon(sum)}원';
 }
 
-bool _overheadLine(String name) {
+bool _expenseTrade(String name) {
+  return name.replaceAll(RegExp(r'\s'), '').contains('경비');
+}
+
+bool _expenseLine(String name) {
   final String compact = name.replaceAll(RegExp(r'\s'), '');
   return compact.contains('잡비') || compact.contains('경비');
-}
-
-String _tradeLabel(String name) {
-  var text = name.trim();
-  if (text.endsWith('공사')) {
-    text = text.substring(0, text.length - 2);
-  } else if (text.endsWith('시공')) {
-    text = text.substring(0, text.length - 2);
-  }
-  return text.trim();
 }
 
 final showroomComposerProvider =

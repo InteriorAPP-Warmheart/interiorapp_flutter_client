@@ -42,10 +42,9 @@ class ShowroomStoryApi {
           cost: ShowroomCost(
             total: '8,400만원',
             lines: <ShowroomCostLine>[
-              ShowroomCostLine(name: '철거 · 설비', amount: '1,800만원'),
-              ShowroomCostLine(name: '홀 가구', amount: '2,400만원'),
-              ShowroomCostLine(name: '조명', amount: '960만원'),
-              ShowroomCostLine(name: '주방 마감', amount: '3,240만원'),
+              ShowroomCostLine(name: '자재비', amount: '4,800만원'),
+              ShowroomCostLine(name: '인력비', amount: '2,800만원'),
+              ShowroomCostLine(name: '경비', amount: '800만원'),
             ],
           ),
           process: <ShowroomProcessFrame>[
@@ -94,10 +93,9 @@ class ShowroomStoryApi {
           cost: ShowroomCost(
             total: '5,200만원',
             lines: <ShowroomCostLine>[
-              ShowroomCostLine(name: '철거', amount: '900만원'),
-              ShowroomCostLine(name: '우드 가구', amount: '1,600만원'),
-              ShowroomCostLine(name: '진열대', amount: '1,400만원'),
-              ShowroomCostLine(name: '오븐실 마감', amount: '1,300만원'),
+              ShowroomCostLine(name: '자재비', amount: '2,900만원'),
+              ShowroomCostLine(name: '인력비', amount: '1,800만원'),
+              ShowroomCostLine(name: '경비', amount: '500만원'),
             ],
           ),
           process: <ShowroomProcessFrame>[
@@ -145,10 +143,9 @@ class ShowroomStoryApi {
           cost: ShowroomCost(
             total: '1억 2,000만원',
             lines: <ShowroomCostLine>[
-              ShowroomCostLine(name: '흡음 · 칸막이', amount: '2,800만원'),
-              ShowroomCostLine(name: '좌석', amount: '4,200만원'),
-              ShowroomCostLine(name: '조명', amount: '2,100만원'),
-              ShowroomCostLine(name: '전기 · 네트워크', amount: '2,900만원'),
+              ShowroomCostLine(name: '자재비', amount: '6,600만원'),
+              ShowroomCostLine(name: '인력비', amount: '4,200만원'),
+              ShowroomCostLine(name: '경비', amount: '1,200만원'),
             ],
           ),
           process: <ShowroomProcessFrame>[
@@ -196,10 +193,9 @@ class ShowroomStoryApi {
           cost: ShowroomCost(
             total: '7,600만원',
             lines: <ShowroomCostLine>[
-              ShowroomCostLine(name: '배기 · 덕트', amount: '2,100만원'),
-              ShowroomCostLine(name: '테이블', amount: '1,800만원'),
-              ShowroomCostLine(name: '바닥 · 벽', amount: '2,200만원'),
-              ShowroomCostLine(name: '주방 설비', amount: '1,500만원'),
+              ShowroomCostLine(name: '자재비', amount: '4,200만원'),
+              ShowroomCostLine(name: '인력비', amount: '2,600만원'),
+              ShowroomCostLine(name: '경비', amount: '800만원'),
             ],
           ),
           process: <ShowroomProcessFrame>[

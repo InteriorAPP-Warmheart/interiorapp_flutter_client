@@ -66,44 +66,6 @@ class _IconLine extends StatelessWidget {
   }
 }
 
-class _LookTile extends StatelessWidget {
-  const _LookTile({
-    required this.icon,
-    required this.label,
-    required this.fontScale,
-  });
-
-  final IconData icon;
-  final String label;
-  final double fontScale;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: _card,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: AppColors.accent),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 15 * fontScale,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 enum _SignalTone { strong, quiet }
 
 class _SignalBar extends StatelessWidget {
@@ -218,15 +180,4 @@ String _briefBudget(PrepRecord record) {
   final String amount = record.budget.trim();
   if (amount.isNotEmpty) return amount;
   return _shown(record.budgetRange);
-}
-
-IconData _careIcon(String label) {
-  switch (label) {
-    case '위치':
-      return Icons.place_outlined;
-    case '사진':
-      return Icons.photo_outlined;
-    default:
-      return Icons.notes_outlined;
-  }
 }

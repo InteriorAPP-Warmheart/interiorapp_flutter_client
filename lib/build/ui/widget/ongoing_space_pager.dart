@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:interiorapp_flutter_client/build/domain/entity/construction_progress.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/space_project_card.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
@@ -12,10 +13,12 @@ class OngoingSpacePager extends StatefulWidget {
     super.key,
     required this.projects,
     required this.onTap,
+    this.progressOf,
   });
 
   final List<SpaceProject> projects;
   final ValueChanged<SpaceProject> onTap;
+  final ConstructionProgress? Function(String projectId)? progressOf;
 
   @override
   State<OngoingSpacePager> createState() => _OngoingSpacePagerState();
@@ -54,6 +57,7 @@ class _OngoingSpacePagerState extends State<OngoingSpacePager> {
           Expanded(
             child: SpaceProjectCard(
               project: project,
+              progress: widget.progressOf?.call(project.id),
               onTap: () => widget.onTap(project),
             ),
           ),
@@ -79,6 +83,7 @@ class _OngoingSpacePagerState extends State<OngoingSpacePager> {
                 ),
                 child: SpaceProjectCard(
                   project: project,
+                  progress: widget.progressOf?.call(project.id),
                   onTap: () => widget.onTap(project),
                 ),
               );
@@ -89,22 +94,22 @@ class _OngoingSpacePagerState extends State<OngoingSpacePager> {
         SizedBox(
           height: kOngoingPageIndicatorHeight,
           child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            for (var i = 0; i < widget.projects.length; i++) ...[
-              if (i > 0) const SizedBox(width: 6),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: i == _index ? 16 : 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: i == _index ? AppColors.primary : AppColors.border,
-                  borderRadius: BorderRadius.circular(99),
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (var i = 0; i < widget.projects.length; i++) ...[
+                if (i > 0) const SizedBox(width: 6),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: i == _index ? 16 : 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: i == _index ? AppColors.primary : AppColors.border,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
                 ),
-              ),
+              ],
             ],
-          ],
-        ),
+          ),
         ),
       ],
     );

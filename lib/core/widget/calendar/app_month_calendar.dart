@@ -10,6 +10,7 @@ class AppMonthCalendar extends StatelessWidget {
     super.key,
     required this.month,
     this.selected,
+    this.selectedDays = const <DateTime>{},
     this.rangeStart,
     this.rangeEnd,
     this.spans = const <AppCalendarSpan>[],
@@ -24,6 +25,7 @@ class AppMonthCalendar extends StatelessWidget {
 
   final DateTime month;
   final DateTime? selected;
+  final Set<DateTime> selectedDays;
   final DateTime? rangeStart;
   final DateTime? rangeEnd;
   final List<AppCalendarSpan> spans;
@@ -56,6 +58,7 @@ class AppMonthCalendar extends StatelessWidget {
               weekStart: weekStart,
               month: month,
               selected: selected,
+              selectedDays: selectedDays,
               rangeStart: rangeStart,
               rangeEnd: rangeEnd,
               spans: spans,
@@ -103,9 +106,9 @@ class _WeekdayHeader extends StatelessWidget {
                 height: 1,
                 letterSpacing: showDayGrid ? 0.4 : 0,
                 color:
-                    i == 6
+                    i == 0
                         ? AppColors.error
-                        : i == 5
+                        : i == 6
                         ? AppColors.primary
                         : AppColors.textSecondary,
               ),
@@ -134,6 +137,7 @@ class _WeekRow extends StatelessWidget {
     required this.weekStart,
     required this.month,
     required this.selected,
+    required this.selectedDays,
     required this.rangeStart,
     required this.rangeEnd,
     required this.spans,
@@ -150,6 +154,7 @@ class _WeekRow extends StatelessWidget {
   final DateTime weekStart;
   final DateTime month;
   final DateTime? selected;
+  final Set<DateTime> selectedDays;
   final DateTime? rangeStart;
   final DateTime? rangeEnd;
   final List<AppCalendarSpan> spans;
@@ -205,6 +210,7 @@ class _WeekRow extends StatelessWidget {
                   day: weekStart.add(Duration(days: col)),
                   month: month,
                   selected: selected,
+                  selectedDays: selectedDays,
                   rangeStart: rangeStart,
                   rangeEnd: rangeEnd,
                   onDayTap: onDayTap,
@@ -568,6 +574,7 @@ class _DayCell extends StatelessWidget {
     required this.day,
     required this.month,
     required this.selected,
+    required this.selectedDays,
     required this.rangeStart,
     required this.rangeEnd,
     required this.onDayTap,
@@ -580,6 +587,7 @@ class _DayCell extends StatelessWidget {
   final DateTime day;
   final DateTime month;
   final DateTime? selected;
+  final Set<DateTime> selectedDays;
   final DateTime? rangeStart;
   final DateTime? rangeEnd;
   final ValueChanged<DateTime>? onDayTap;
@@ -596,7 +604,8 @@ class _DayCell extends StatelessWidget {
     final bool enabled =
         onDayTap != null && appCalendarWithin(day, firstDate, lastDate);
     final bool isSelected =
-        selected != null && appCalendarSameDay(day, selected!);
+        (selected != null && appCalendarSameDay(day, selected!)) ||
+        selectedDays.any((DateTime item) => appCalendarSameDay(day, item));
     final bool isStart =
         rangeStart != null && appCalendarSameDay(day, rangeStart!);
     final bool isEnd = rangeEnd != null && appCalendarSameDay(day, rangeEnd!);

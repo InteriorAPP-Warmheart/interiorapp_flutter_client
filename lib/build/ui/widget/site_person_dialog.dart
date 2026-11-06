@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/construction_progress.dart';
+import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
@@ -15,12 +16,33 @@ void showSiteSupervisorDialog(BuildContext context, SiteSupervisor person) {
           facts: <_PersonFact>[
             _PersonFact('소속', person.organization),
             _PersonFact('직책', person.role),
+            _PersonFact('전화', person.phone),
           ],
         ),
   );
 }
 
-void showSiteWorkerDialog(BuildContext context, SiteWorker person) {
+void showVisitPersonDialog(BuildContext context, VisitAppointment person) {
+  showDialog<void>(
+    context: context,
+    builder:
+        (BuildContext context) => _PersonDialog(
+          name: person.visitorName,
+          imageUrl: person.visitorImageUrl,
+          bio: person.visitorBio,
+          facts: <_PersonFact>[
+            _PersonFact('소속', person.visitorOrganization),
+            _PersonFact('직책', person.visitorRole),
+          ],
+        ),
+  );
+}
+
+void showSiteWorkerDialog(
+  BuildContext context,
+  SiteWorker person, {
+  bool showPhone = false,
+}) {
   showDialog<void>(
     context: context,
     builder:
@@ -32,6 +54,7 @@ void showSiteWorkerDialog(BuildContext context, SiteWorker person) {
             _PersonFact('소속', person.organization),
             _PersonFact('주특기', person.role),
             _PersonFact('경력', person.career),
+            if (showPhone) _PersonFact('전화', person.phone),
           ],
         ),
   );

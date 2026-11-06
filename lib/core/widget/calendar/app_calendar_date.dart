@@ -1,12 +1,21 @@
 const List<String> appCalendarWeekdays = <String>[
+  '일',
   '월',
   '화',
   '수',
   '목',
   '금',
   '토',
-  '일',
 ];
+
+/// 일요일을 0으로 두는 요일 칸.
+int appCalendarWeekIndex(DateTime day) => day.weekday % 7;
+
+/// 그 날이 속한 주의 일요일.
+DateTime appCalendarWeekStart(DateTime day) {
+  final DateTime date = appCalendarDate(day);
+  return date.subtract(Duration(days: appCalendarWeekIndex(date)));
+}
 
 DateTime appCalendarDate(DateTime value) {
   return DateTime(value.year, value.month, value.day);
@@ -28,10 +37,9 @@ DateTime appCalendarAddMonths(DateTime month, int count) {
   return DateTime(month.year, month.month + count);
 }
 
-/// 그 달 1일이 속한 주의 월요일.
+/// 그 달 1일이 속한 주의 일요일.
 DateTime appCalendarGridStart(DateTime month) {
-  final DateTime first = DateTime(month.year, month.month, 1);
-  return first.subtract(Duration(days: first.weekday - DateTime.monday));
+  return appCalendarWeekStart(DateTime(month.year, month.month, 1));
 }
 
 bool appCalendarWithin(DateTime day, DateTime? first, DateTime? last) {

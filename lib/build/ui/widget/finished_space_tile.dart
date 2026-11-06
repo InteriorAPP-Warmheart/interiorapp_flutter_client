@@ -22,38 +22,49 @@ class FinishedSpaceTile extends StatelessWidget {
     return Material(
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.border, width: 0.7),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: AppNetworkImage(url: project.imageUrl),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              AppNetworkImage(url: project.imageUrl),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0x000B1F38),
+                      Color(0x000B1F38),
+                      Color(0xCC0B1F38),
+                    ],
+                    stops: [0.45, 0.62, 1],
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  project.placeName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13 * fontScale,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+              ),
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 20, 12, 10),
+                  child: Text(
+                    project.placeName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14 * fontScale,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.white,
+                    ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

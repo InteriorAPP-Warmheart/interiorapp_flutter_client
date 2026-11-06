@@ -58,12 +58,18 @@ class VisitAppointment {
     required this.place,
     required this.visitorName,
     required this.visitorRole,
+    this.visitorOrganization = '',
+    this.visitorBio = '',
+    this.visitorImageUrl = '',
   });
 
   final DateTime when;
   final String place;
   final String visitorName;
   final String visitorRole;
+  final String visitorOrganization;
+  final String visitorBio;
+  final String visitorImageUrl;
 }
 
 enum ShowroomReferenceMarkKind { stroke, rect, ellipse }

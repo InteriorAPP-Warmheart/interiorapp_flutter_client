@@ -54,6 +54,7 @@ class SiteSupervisor {
     this.duty = '',
     this.organization = '',
     this.bio = '',
+    this.phone = '',
     this.imageUrl = '',
   });
 
@@ -71,6 +72,9 @@ class SiteSupervisor {
   /// 한 줄 소개. 없으면 비운다.
   final String bio;
 
+  /// 직통 전화. 공사 진행의 감리에게만 보여 준다.
+  final String phone;
+
   final String imageUrl;
 }
 
@@ -83,6 +87,7 @@ class SiteWorker {
     this.organization = '',
     this.career = '',
     this.bio = '',
+    this.phone = '',
     this.imageUrl = '',
   });
 
@@ -102,6 +107,9 @@ class SiteWorker {
 
   /// 한 줄 소개. 없으면 비운다.
   final String bio;
+
+  /// 직통 전화. A/S 단계에서만 보여 준다.
+  final String phone;
 
   final String imageUrl;
 }

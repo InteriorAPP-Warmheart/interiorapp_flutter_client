@@ -15,6 +15,7 @@ import 'package:interiorapp_flutter_client/showroom/ui/widget/post_section.dart'
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_feed_segment.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_sort_toggle.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_segment.dart';
 
 class ShowroomScreen extends ConsumerStatefulWidget {
   const ShowroomScreen({super.key});
@@ -134,25 +135,37 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
     return filteredShowrooms.when(
       skipLoadingOnReload: true,
       data: (List<FilteredShowroomModel> showrooms) {
-        final ShowroomFeedBrowse browse = ref.watch(showroomFeedBrowseProvider);
-        final List<FilteredShowroomModel> ordered = sortedShowroomFeed(
-          showrooms,
-          browse.sort,
-          likes: (FilteredShowroomModel item) => item.likeCount,
-          publishedAt: (FilteredShowroomModel item) => item.publishedAt,
-          pinFavorites: browse.pinFavorites,
-          favorite: (FilteredShowroomModel item) => item.favoriteStatus,
+        final bool pinFavorites = ref.watch(
+          showroomFeedBrowseProvider.select(
+            (ShowroomFeedBrowse browse) => browse.pinFavorites,
+          ),
         );
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const ShowroomSortToggle(),
-            const SizedBox(height: 14),
-            if (ordered.isEmpty)
-              _filterEmptyPostsSection()
-            else
-              ShowroomMasonryGrid(
+        final ShowroomFeedSort initialSort =
+            ref.read(showroomFeedBrowseProvider).sort;
+        return AppSegmentHost(
+          length: 2,
+          initialIndex: initialSort == ShowroomFeedSort.popular ? 1 : 0,
+          onChanged: (int index) {
+            ref
+                .read(showroomFeedBrowseProvider.notifier)
+                .setSort(
+                  index == 0
+                      ? ShowroomFeedSort.latest
+                      : ShowroomFeedSort.popular,
+                );
+          },
+          builder: (BuildContext context, AppSegmentController segment) {
+            Widget page(ShowroomFeedSort sort) {
+              final List<FilteredShowroomModel> ordered = sortedShowroomFeed(
+                showrooms,
+                sort,
+                likes: (FilteredShowroomModel item) => item.likeCount,
+                publishedAt: (FilteredShowroomModel item) => item.publishedAt,
+                pinFavorites: pinFavorites,
+                favorite: (FilteredShowroomModel item) => item.favoriteStatus,
+              );
+              if (ordered.isEmpty) return _filterEmptyPostsSection();
+              return ShowroomMasonryGrid(
                 items: [
                   for (final FilteredShowroomModel item in ordered)
                     ShowroomMasonryEntry(
@@ -164,8 +177,24 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
                       favoriteStatus: item.favoriteStatus,
                     ),
                 ],
-              ),
-          ],
+              );
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ShowroomSortToggle(controller: segment),
+                const SizedBox(height: 14),
+                AppSegmentPages(
+                  controller: segment,
+                  children: [
+                    page(ShowroomFeedSort.latest),
+                    page(ShowroomFeedSort.popular),
+                  ],
+                ),
+              ],
+            );
+          },
         );
       },
       loading:
