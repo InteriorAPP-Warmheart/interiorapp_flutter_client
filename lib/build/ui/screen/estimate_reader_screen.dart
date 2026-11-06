@@ -56,7 +56,7 @@ void showEstimateTradeSheet(BuildContext context, EstimateTrade trade) {
   );
 }
 
-/// 견적서를 공종 단위로 나눠 보는 화면. 세부 항목은 아래 목록에서 스크롤한다.
+/// 견적가이드를 공종 단위로 나눠 보는 화면. 세부 항목은 아래 목록에서 스크롤한다.
 class EstimateReaderScreen extends StatefulWidget {
   const EstimateReaderScreen({
     super.key,
@@ -127,7 +127,7 @@ class _EstimateReaderScreenState extends State<EstimateReaderScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('견적서'),
+        title: const Text('견적가이드'),
         actions: [
           if (file != null && file.fileName.isNotEmpty)
             TextButton(
@@ -234,7 +234,6 @@ class _EstimateCover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final EstimateSheet sheet = quote.sheet;
-    final int percent = (sheet.vatRate * 100).round();
     return DecoratedBox(
       decoration: const BoxDecoration(
         color: AppColors.primary,
@@ -276,8 +275,7 @@ class _EstimateCover extends StatelessWidget {
               labor: sheet.labor,
               fontScale: fontScale,
               onDark: true,
-              vatPercent: percent,
-              vatIncluded: sheet.grandTotal,
+              vatSeparate: true,
             ),
             if (quote.company.isNotEmpty) ...[
               const SizedBox(height: 10),

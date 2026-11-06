@@ -29,8 +29,7 @@ class _ContractReviewScreenState extends State<ContractReviewScreen> {
     final double fontScale = ResponsiveSize.fontScale(context);
     final EdgeInsets padding = ResponsiveSize.textInset(context);
     final EstimateSheet sheet = widget.quote.sheet;
-    final int percent = (sheet.vatRate * 100).round();
-    final List<_PayRound> rounds = _payRounds(sheet.grandTotal);
+    final List<_PayRound> rounds = _payRounds(sheet.subtotal);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -94,12 +93,16 @@ class _ContractReviewScreenState extends State<ContractReviewScreen> {
                         label: '공사비',
                         value: '${formatWon(sheet.subtotal)}원',
                         fontScale: fontScale,
-                      ),
-                      _MoneyLine(
-                        label: '부가세 $percent% 포함',
-                        value: '${formatWon(sheet.grandTotal)}원',
-                        fontScale: fontScale,
                         strong: true,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '부가세 별도',
+                        style: TextStyle(
+                          fontSize: 13 * fontScale,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -125,7 +128,7 @@ class _ContractReviewScreenState extends State<ContractReviewScreen> {
                     onPressed: () => _openEscrow(context),
                   ),
                   child: _EscrowDiagram(
-                    total: sheet.grandTotal,
+                    total: sheet.subtotal,
                     fontScale: fontScale,
                   ),
                 ),
@@ -234,7 +237,18 @@ class _PayRound {
 List<_PayRound> _payRounds(int total) {
   const List<String> names = ['선납금', '중도금', '잔금'];
   const List<String> whens = ['계약할 때', '공사 중간에', '준공 확인할 때'];
-  const List<int> percents = [40, 30, 30];
+  const List<int> percents = [50, 40, 10];
+  final List<int> amounts = <int>[];
+  var used = 0;
+  for (var i = 0; i < percents.length; i++) {
+    if (i == percents.length - 1) {
+      amounts.add(total - used);
+      break;
+    }
+    final int amount = (total * percents[i] / 100).round();
+    used += amount;
+    amounts.add(amount);
+  }
   return [
     for (var i = 0; i < names.length; i++)
       _PayRound(
@@ -242,7 +256,7 @@ List<_PayRound> _payRounds(int total) {
         name: names[i],
         when: whens[i],
         percent: percents[i],
-        amount: (total * percents[i] / 100).round(),
+        amount: amounts[i],
       ),
   ];
 }

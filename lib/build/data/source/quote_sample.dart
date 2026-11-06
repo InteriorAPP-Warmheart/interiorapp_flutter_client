@@ -400,7 +400,7 @@ const WorkQuote sampleWorkQuote = WorkQuote(
   documents: [
     ProjectDocument(
       kind: ProjectDocumentKind.estimate,
-      title: '견적서',
+      title: '견적가이드',
       note: '공사항목과 금액',
       fileName: '화성 중식당 견적서 최종.xlsx',
       ready: true,
