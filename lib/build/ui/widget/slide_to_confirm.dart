@@ -20,8 +20,8 @@ class SlideToConfirm extends StatefulWidget {
 
 class _SlideToConfirmState extends State<SlideToConfirm>
     with SingleTickerProviderStateMixin {
-  static const double _thumb = 48;
-  static const double _inset = 4;
+  static const double _thumb = 52;
+  static const double _inset = 6;
 
   double _offset = 0;
   bool _waiting = false;
@@ -75,28 +75,32 @@ class _SlideToConfirmState extends State<SlideToConfirm>
         );
         final double left = _inset + _offset.clamp(0, max);
         return SizedBox(
-          height: 56,
+          height: _thumb + _inset * 2,
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: AppColors.primary,
               borderRadius: BorderRadius.circular(99),
-              border: Border.all(color: AppColors.border),
             ),
             child: Stack(
               alignment: Alignment.center,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(left: _thumb),
-                  child: Opacity(
-                    opacity: (1 - (_offset / (max == 0 ? 1 : max))).clamp(0, 1),
-                    child: Text(
-                      widget.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 14 * fontScale,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textSecondary,
+                  padding: const EdgeInsets.only(left: _thumb + _inset),
+                  child: Center(
+                    child: Opacity(
+                      opacity: (1 - (_offset / (max == 0 ? 1 : max))).clamp(
+                        0,
+                        1,
+                      ),
+                      child: Text(
+                        widget.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 15 * fontScale,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -113,16 +117,23 @@ class _SlideToConfirmState extends State<SlideToConfirm>
                     },
                     onHorizontalDragEnd: (_) => _finish(max),
                     child: DecoratedBox(
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary,
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
                         shape: BoxShape.circle,
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x330B1F38),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: SizedBox(
                         width: _thumb,
                         height: _thumb,
                         child: Icon(
                           Icons.keyboard_double_arrow_right,
-                          color: AppColors.white,
+                          color: AppColors.primary,
                           size: 22 * fontScale,
                         ),
                       ),

@@ -92,7 +92,7 @@ class _QuoteStage extends StatelessWidget {
             const SizedBox(height: 8),
             _ContractEntry(
               title: '결제 요율',
-              note: '선납금, 중도금, 잔금',
+              note: '선납금 50, 중도금 40, 잔금 10',
               fontScale: fontScale,
               onTap: openContract,
             ),
@@ -473,7 +473,6 @@ class _ReadyAmount extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final int percent = (sheet.vatRate * 100).round();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -513,8 +512,7 @@ class _ReadyAmount extends StatelessWidget {
           labor: sheet.labor,
           fontScale: fontScale,
           onDark: true,
-          vatPercent: percent,
-          vatIncluded: sheet.grandTotal,
+          vatSeparate: true,
         ),
         const SizedBox(height: 14),
         const Divider(height: 1, color: Color(0x33FFFFFF)),
@@ -522,7 +520,7 @@ class _ReadyAmount extends StatelessWidget {
         Row(
           children: [
             Text(
-              '견적서 보기',
+              '견적가이드 보기',
               style: TextStyle(
                 fontSize: 14 * fontScale,
                 fontWeight: FontWeight.w700,
@@ -561,7 +559,7 @@ class _WaitingAmount extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          '견적서가 오면 여기에 나와요',
+          '견적가이드가 오면 여기에 나와요',
           style: TextStyle(
             fontSize: 18 * fontScale,
             height: 1.3,

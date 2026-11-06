@@ -16,7 +16,6 @@ import 'package:interiorapp_flutter_client/build/ui/screen/proposal_reader_scree
 import 'package:interiorapp_flutter_client/build/ui/screen/site_photo_library_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/site_photo_viewer_screen.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/industry_cover.dart';
-import 'package:interiorapp_flutter_client/build/ui/widget/slide_to_confirm.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/schedule/process_week_strip.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
@@ -133,12 +132,12 @@ class _ProjectProgressViewState extends State<ProjectProgressView>
   Future<bool> _confirmQuoteRead() async {
     final bool? read = await showAppDialog<bool>(
       context: context,
-      title: '모든 내용을 열람하셨나요?',
-      message: '열람하신 내역이 확인되면 계약요청으로 넘어가요.',
+      title: '제안 내용을 확인했나요?',
+      message: '확인하면 견적 요청으로 넘어가요.',
       actions: (BuildContext dialogContext) {
         return [
           AppButton(
-            label: '네, 모두 열람했어요',
+            label: '견적 요청',
             onPressed: () => Navigator.of(dialogContext).pop(true),
           ),
           AppButton(
@@ -536,9 +535,11 @@ class _QuoteActionBar extends StatelessWidget {
                   label: signed ? '계약 내용 보기' : '계약요청',
                   onPressed: onContract,
                 )
-                : SlideToConfirm(
-                  label: '모든 내용 열람완료시 밀어주세요',
-                  onCompleted: onSlideDone,
+                : AppButton(
+                  label: '제안내용 확인하고 견적 요청',
+                  onPressed: () {
+                    onSlideDone();
+                  },
                 ),
       ),
     );

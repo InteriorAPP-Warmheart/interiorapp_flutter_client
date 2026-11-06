@@ -22,12 +22,15 @@ class ContractReaderScreen extends StatelessWidget {
         file != null && file.fileName.isNotEmpty
             ? file.fileName
             : '${quote.documentTitle} 계약서.pdf';
-    final int percent = (sheet.vatRate * 100).round();
+    final int base = sheet.subtotal;
     const List<(String, String, int)> rounds = [
-      ('선납금', '계약할 때', 40),
-      ('중도금', '공사 중간에', 30),
-      ('잔금', '준공 확인할 때', 30),
+      ('선납금', '계약할 때', 50),
+      ('중도금', '공사 중간에', 40),
+      ('잔금', '준공 확인할 때', 10),
     ];
+    final List<int> amounts = _splitByPercent(base, <int>[
+      for (final round in rounds) round.$3,
+    ]);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -91,19 +94,21 @@ class ContractReaderScreen extends StatelessWidget {
               children: [
                 _MoneyRow(
                   label: '공사비',
-                  value: '${formatWon(sheet.subtotal)}원',
-                  fontScale: fontScale,
-                ),
-                _MoneyRow(
-                  label: '부가세 $percent%',
-                  value: '${formatWon(sheet.vat)}원',
-                  fontScale: fontScale,
-                ),
-                _MoneyRow(
-                  label: '총액',
-                  value: '${formatWon(sheet.grandTotal)}원',
+                  value: '${formatWon(base)}원',
                   fontScale: fontScale,
                   strong: true,
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '부가세 별도',
+                    style: TextStyle(
+                      fontSize: 13 * fontScale,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -117,9 +122,8 @@ class ContractReaderScreen extends StatelessWidget {
                 for (var i = 0; i < rounds.length; i++) ...[
                   if (i > 0) const SizedBox(height: 10),
                   _MoneyRow(
-                    label: '${rounds[i].$1} · ${rounds[i].$2}',
-                    value:
-                        '${rounds[i].$3}%  ${formatWon((sheet.grandTotal * rounds[i].$3 / 100).round())}원',
+                    label: '${rounds[i].$1}, ${rounds[i].$2}',
+                    value: '${rounds[i].$3}%  ${formatWon(amounts[i])}원',
                     fontScale: fontScale,
                   ),
                 ],
@@ -232,4 +236,19 @@ class _MoneyRow extends StatelessWidget {
       ],
     );
   }
+}
+
+List<int> _splitByPercent(int total, List<int> percents) {
+  final List<int> amounts = <int>[];
+  var used = 0;
+  for (var i = 0; i < percents.length; i++) {
+    if (i == percents.length - 1) {
+      amounts.add(total - used);
+      break;
+    }
+    final int amount = (total * percents[i] / 100).round();
+    used += amount;
+    amounts.add(amount);
+  }
+  return amounts;
 }

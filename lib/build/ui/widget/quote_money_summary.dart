@@ -11,8 +11,7 @@ class QuoteMoneySummary extends StatelessWidget {
     required this.fontScale,
     this.onDark = false,
     this.compact = false,
-    this.vatPercent,
-    this.vatIncluded,
+    this.vatSeparate = false,
   });
 
   /// 비어 있는 칸은 null이다. 0은 금액이 0원인 칸이다.
@@ -22,11 +21,8 @@ class QuoteMoneySummary extends StatelessWidget {
   final bool onDark;
   final bool compact;
 
-  /// 부가세 퍼센트. [vatIncluded]와 함께 있을 때만 보여 준다.
-  final int? vatPercent;
-
-  /// 부가세를 더한 금액.
-  final int? vatIncluded;
+  /// 금액 아래에 부가세 별도만 붙인다. 부가세 금액은 적지 않는다.
+  final bool vatSeparate;
 
   int? get total {
     if (material == null && labor == null) return null;
@@ -36,12 +32,8 @@ class QuoteMoneySummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final int? whole = total;
-    final int? included = vatIncluded;
-    final int? percent = vatPercent;
-    final Color line = onDark ? const Color(0x33FFFFFF) : AppColors.border;
     final Color labelColor =
         onDark ? const Color(0xD9FFFFFF) : AppColors.textSecondary;
-    final Color valueColor = onDark ? AppColors.white : AppColors.textPrimary;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -81,31 +73,15 @@ class QuoteMoneySummary extends StatelessWidget {
             ),
           ],
         ),
-        if (included != null && percent != null) ...[
-          const SizedBox(height: 12),
-          Container(height: 1, color: line),
+        if (vatSeparate) ...[
           const SizedBox(height: 10),
-          Row(
-            children: [
-              Text(
-                '부가세 $percent% 포함',
-                style: TextStyle(
-                  fontSize: 13 * fontScale,
-                  fontWeight: FontWeight.w700,
-                  color: labelColor,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '${formatWon(included)}원',
-                style: TextStyle(
-                  fontSize: 16 * fontScale,
-                  height: 1.1,
-                  fontWeight: FontWeight.w700,
-                  color: valueColor,
-                ),
-              ),
-            ],
+          Text(
+            '부가세 별도',
+            style: TextStyle(
+              fontSize: 13 * fontScale,
+              fontWeight: FontWeight.w700,
+              color: labelColor,
+            ),
           ),
         ],
       ],
