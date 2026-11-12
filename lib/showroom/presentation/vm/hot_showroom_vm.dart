@@ -1,4 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:interiorapp_flutter_client/mypage/data/model/saved_content_model.dart';
+import 'package:interiorapp_flutter_client/mypage/presentation/provider/mypage_provider.dart';
+import 'package:interiorapp_flutter_client/mypage/presentation/vm/mypage_vm.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/hot_showroom_model.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
 
@@ -7,9 +10,21 @@ class HotShowroomVmClass extends Notifier<List<HotShowroomModel>> {
   List<HotShowroomModel> build() {
     // 자동 초기 로드 (한 번만). build에서는 초기값을 직접 반환해야 합니다.
     Future.microtask(() async {
-      if (state.isEmpty) {
-        state = await ref.read(hotShowroomUseCaseProvider).getHotShowroom();
-      }
+      if (state.isNotEmpty) return;
+      final List<HotShowroomModel> list =
+          await ref.read(hotShowroomUseCaseProvider).getHotShowroom();
+      if (state.isNotEmpty) return;
+      final List<SavedContentModel> saved =
+          await ref.read(savedContentUseCaseProvider).getSavedContents();
+      if (state.isNotEmpty) return;
+      final Set<String> savedIds =
+          saved.map((SavedContentModel e) => e.id).toSet();
+      state = <HotShowroomModel>[
+        for (final HotShowroomModel item in list)
+          savedIds.contains(item.id)
+              ? item.copyWith(favoriteStatus: true)
+              : item,
+      ];
     });
     return <HotShowroomModel>[];
   }
@@ -33,6 +48,20 @@ class HotShowroomVmClass extends Notifier<List<HotShowroomModel>> {
           .updateFavoriteStatus(id);
       // 서버 결과를 기존 스냅샷(prevList)을 기준으로 반영하여 중간 리프레시로 인한 되돌림 방지
       state = [for (final it in prevList) it.id == id ? data : it];
+      if (data.id != id) return;
+      final SavedContentVm saved = ref.read(savedContentVmProvider.notifier);
+      if (data.favoriteStatus) {
+        await saved.saveShowroom(
+          id: data.id,
+          thumbnailUrl: data.thumbnailUrl,
+          title: data.title,
+          category: data.themeName,
+          authorName: data.userName,
+          place: data.city,
+        );
+      } else {
+        await saved.remove(data.id);
+      }
     } catch (_) {
       state = prevList;
     }

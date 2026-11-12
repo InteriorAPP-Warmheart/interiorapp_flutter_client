@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/hot_showroom_model.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
+import 'package:interiorapp_flutter_client/mypage/presentation/provider/mypage_provider.dart';
+import 'package:interiorapp_flutter_client/mypage/presentation/record_showroom_view.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/showroom_story_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/story/showroom_story_scenes.dart';
@@ -20,9 +22,24 @@ class ShowroomStoryScreen extends ConsumerWidget {
     );
     ref.listen(showroomStoryProvider(showroomId), (previous, next) {
       final ShowroomStoryModel? story = next.asData?.value;
-      if (story != null) {
-        ref.read(recentShowroomProvider.notifier).remember(story.id);
-      }
+      if (story == null) return;
+      final String place =
+          ref
+              .read(hotShowroomSliderVm)
+              .where((HotShowroomModel item) => item.id == story.id)
+              .map((HotShowroomModel item) => item.city)
+              .firstOrNull ??
+          '';
+      recordShowroomView(
+        recent: ref.read(recentContentVmProvider.notifier),
+        memory: ref.read(recentShowroomProvider.notifier),
+        id: story.id,
+        thumbnailUrl: story.thumbnailUrl,
+        title: story.title,
+        category: story.themeName,
+        authorName: story.userName,
+        place: place,
+      );
     });
 
     return Scaffold(

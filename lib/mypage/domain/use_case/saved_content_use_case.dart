@@ -8,6 +8,9 @@ class SavedContentUseCase {
   Future<List<SavedContentModel>> getSavedContents() =>
       _repository.getSavedContents();
 
-  Future<void> removeSavedContent(String id) =>
+  Future<List<SavedContentModel>> save(SavedContentModel item) =>
+      _repository.save(item);
+
+  Future<List<SavedContentModel>> removeSavedContent(String id) =>
       _repository.removeSavedContent(id);
 }

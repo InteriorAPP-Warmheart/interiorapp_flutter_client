@@ -39,9 +39,8 @@ class NotificationSettingVm extends Notifier<NotificationSettingModel> {
   @override
   NotificationSettingModel build() {
     Future.microtask(() async {
-      state = await ref
-          .read(myPageUserUseCaseProvider)
-          .getNotificationSetting();
+      state =
+          await ref.read(myPageUserUseCaseProvider).getNotificationSetting();
     });
     return const NotificationSettingModel(
       pushEnabled: true,
@@ -58,16 +57,16 @@ class NotificationSettingVm extends Notifier<NotificationSettingModel> {
   }
 
   Future<void> toggleMarketing() async {
-    final updated =
-        state.copyWith(marketingEnabled: !state.marketingEnabled);
+    final updated = state.copyWith(marketingEnabled: !state.marketingEnabled);
     state = await ref
         .read(myPageUserUseCaseProvider)
         .updateNotificationSetting(updated);
   }
 
   Future<void> toggleProjectUpdate() async {
-    final updated =
-        state.copyWith(projectUpdateEnabled: !state.projectUpdateEnabled);
+    final updated = state.copyWith(
+      projectUpdateEnabled: !state.projectUpdateEnabled,
+    );
     state = await ref
         .read(myPageUserUseCaseProvider)
         .updateNotificationSetting(updated);
@@ -79,24 +78,64 @@ class NotificationSettingVm extends Notifier<NotificationSettingModel> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class SavedContentVm extends Notifier<List<SavedContentModel>> {
+  bool isReady = false;
+  int _ticket = 0;
+
   @override
   List<SavedContentModel> build() {
+    final int ticket = _ticket;
     Future.microtask(() async {
-      if (state.isEmpty) {
-        state =
-            await ref.read(savedContentUseCaseProvider).getSavedContents();
-      }
+      final List<SavedContentModel> items =
+          await ref.read(savedContentUseCaseProvider).getSavedContents();
+      if (ticket != _ticket) return;
+      isReady = true;
+      state = List<SavedContentModel>.of(items);
     });
     return const <SavedContentModel>[];
   }
 
   Future<void> load() async {
-    state = await ref.read(savedContentUseCaseProvider).getSavedContents();
+    _ticket++;
+    final List<SavedContentModel> items =
+        await ref.read(savedContentUseCaseProvider).getSavedContents();
+    isReady = true;
+    state = List<SavedContentModel>.of(items);
+  }
+
+  Future<void> saveShowroom({
+    required String id,
+    required String thumbnailUrl,
+    required String title,
+    required String category,
+    String authorName = '',
+    String place = '',
+  }) async {
+    if (id.isEmpty) return;
+    _ticket++;
+    final List<SavedContentModel> items = await ref
+        .read(savedContentUseCaseProvider)
+        .save(
+          SavedContentModel(
+            id: id,
+            thumbnailUrl: thumbnailUrl,
+            title: title,
+            category: category,
+            authorName: authorName,
+            place: place,
+            savedAt: DateTime.now(),
+          ),
+        );
+    isReady = true;
+    state = items;
   }
 
   Future<void> remove(String id) async {
-    await ref.read(savedContentUseCaseProvider).removeSavedContent(id);
-    state = state.where((e) => e.id != id).toList();
+    _ticket++;
+    final List<SavedContentModel> items = await ref
+        .read(savedContentUseCaseProvider)
+        .removeSavedContent(id);
+    isReady = true;
+    state = items;
   }
 }
 
@@ -105,26 +144,72 @@ class SavedContentVm extends Notifier<List<SavedContentModel>> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class RecentContentVm extends Notifier<List<RecentContentModel>> {
+  bool isReady = false;
+  int _ticket = 0;
+
   @override
   List<RecentContentModel> build() {
+    final int ticket = _ticket;
     Future.microtask(() async {
-      if (state.isEmpty) {
-        state = await ref
-            .read(recentContentUseCaseProvider)
-            .getRecentContents();
-      }
+      final List<RecentContentModel> items =
+          await ref.read(recentContentUseCaseProvider).getRecentContents();
+      if (ticket != _ticket) return;
+      isReady = true;
+      state = List<RecentContentModel>.of(items);
     });
     return const <RecentContentModel>[];
   }
 
   Future<void> load() async {
-    state =
+    _ticket++;
+    final List<RecentContentModel> items =
         await ref.read(recentContentUseCaseProvider).getRecentContents();
+    isReady = true;
+    state = List<RecentContentModel>.of(items);
+  }
+
+  Future<void> record({
+    required String id,
+    required String thumbnailUrl,
+    required String title,
+    required String category,
+    String authorName = '',
+    String place = '',
+  }) async {
+    if (id.isEmpty) return;
+    _ticket++;
+    final List<RecentContentModel> items = await ref
+        .read(recentContentUseCaseProvider)
+        .record(
+          RecentContentModel(
+            id: id,
+            thumbnailUrl: thumbnailUrl,
+            title: title,
+            category: category,
+            authorName: authorName,
+            place: place,
+            viewedAt: DateTime.now(),
+          ),
+        );
+    isReady = true;
+    state = items;
+  }
+
+  Future<void> remove(String id) async {
+    _ticket++;
+    final List<RecentContentModel> items = await ref
+        .read(recentContentUseCaseProvider)
+        .removeRecentContent(id);
+    isReady = true;
+    state = items;
   }
 
   Future<void> clearAll() async {
-    await ref.read(recentContentUseCaseProvider).clearAllRecentContents();
-    state = const <RecentContentModel>[];
+    _ticket++;
+    final List<RecentContentModel> items =
+        await ref.read(recentContentUseCaseProvider).clearAllRecentContents();
+    isReady = true;
+    state = items;
   }
 }
 
@@ -137,17 +222,17 @@ class CompletedProjectVm extends Notifier<List<CompletedProjectModel>> {
   List<CompletedProjectModel> build() {
     Future.microtask(() async {
       if (state.isEmpty) {
-        state = await ref
-            .read(completedProjectUseCaseProvider)
-            .getCompletedProjects();
+        state =
+            await ref
+                .read(completedProjectUseCaseProvider)
+                .getCompletedProjects();
       }
     });
     return const <CompletedProjectModel>[];
   }
 
   Future<void> load() async {
-    state = await ref
-        .read(completedProjectUseCaseProvider)
-        .getCompletedProjects();
+    state =
+        await ref.read(completedProjectUseCaseProvider).getCompletedProjects();
   }
 }

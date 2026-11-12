@@ -2,5 +2,6 @@ import 'package:interiorapp_flutter_client/mypage/data/model/saved_content_model
 
 abstract class SavedContentRepository {
   Future<List<SavedContentModel>> getSavedContents();
-  Future<void> removeSavedContent(String id);
+  Future<List<SavedContentModel>> save(SavedContentModel item);
+  Future<List<SavedContentModel>> removeSavedContent(String id);
 }

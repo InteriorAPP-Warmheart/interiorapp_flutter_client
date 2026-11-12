@@ -8,6 +8,12 @@ class RecentContentUseCase {
   Future<List<RecentContentModel>> getRecentContents() =>
       _repository.getRecentContents();
 
-  Future<void> clearAllRecentContents() =>
+  Future<List<RecentContentModel>> record(RecentContentModel item) =>
+      _repository.record(item);
+
+  Future<List<RecentContentModel>> removeRecentContent(String id) =>
+      _repository.removeRecentContent(id);
+
+  Future<List<RecentContentModel>> clearAllRecentContents() =>
       _repository.clearAllRecentContents();
 }

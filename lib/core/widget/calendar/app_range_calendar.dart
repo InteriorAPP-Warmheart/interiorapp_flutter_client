@@ -8,6 +8,7 @@ import 'package:interiorapp_flutter_client/core/widget/calendar/app_month_calend
 ///
 /// 처음 누른 날이 시작이고, 다음 날이 끝이다. 기간이 잡힌 뒤 다시 누르면 새로 시작한다.
 /// 연월을 달력 위에 같이 적고, 옆 달 날짜는 비워 둔다.
+/// 화면에 보이는 달만 만들고, 그 이전 달은 위로 스크롤할 때 만든다.
 class AppRangeCalendar extends StatefulWidget {
   const AppRangeCalendar({
     super.key,
@@ -35,14 +36,16 @@ class AppRangeCalendar extends StatefulWidget {
 }
 
 class _AppRangeCalendarState extends State<AppRangeCalendar> {
-  final ScrollController _scroll = ScrollController();
-  final GlobalKey _anchorKey = GlobalKey();
-  bool _anchored = false;
+  static const Key _centerKey = ValueKey<String>('range-calendar-anchor');
+
+  late final List<DateTime> _months;
+  late final int _anchorMonthIndex;
 
   @override
-  void dispose() {
-    _scroll.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _months = _monthList();
+    _anchorMonthIndex = _resolveAnchor();
   }
 
   void _tap(DateTime day) {
@@ -54,7 +57,7 @@ class _AppRangeCalendarState extends State<AppRangeCalendar> {
     widget.onChanged?.call(start, end);
   }
 
-  List<DateTime> _months() {
+  List<DateTime> _monthList() {
     final DateTime start = appCalendarMonth(
       widget.firstDate ?? widget.firstMonth ?? DateTime.now(),
     );
@@ -74,88 +77,78 @@ class _AppRangeCalendarState extends State<AppRangeCalendar> {
     return months;
   }
 
+  /// 고른 달이 있으면 그 달, 없으면 오늘에 가장 가까운 달에서 스크롤이 시작한다.
+  int _resolveAnchor() {
+    if (_months.isEmpty) return 0;
+    final DateTime focus = appCalendarMonth(
+      widget.start ?? widget.end ?? DateTime.now(),
+    );
+    final int index = _months.indexWhere(
+      (DateTime month) => appCalendarSameMonth(month, focus),
+    );
+    if (index >= 0) return index;
+    if (focus.isBefore(_months.first)) return 0;
+    return _months.length - 1;
+  }
+
   @override
   Widget build(BuildContext context) {
     final double fontScale = ResponsiveSize.fontScale(context);
-    final List<DateTime> months = _months();
-    final DateTime? focus = widget.start ?? widget.end;
     final bool wide = MediaQuery.sizeOf(context).width >= 720;
-    if (!_anchored) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_anchored || !mounted) return;
-        _anchored = true;
-        final BuildContext? anchor = _anchorKey.currentContext;
-        if (anchor == null) return;
-        Scrollable.ensureVisible(anchor, alignment: 0.02);
-      });
-    }
-
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        final Widget content = Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: _sections(
-            months: months,
-            wide: wide,
-            fontScale: fontScale,
-            focus: focus,
+    final int rowSize = wide ? 2 : 1;
+    final int rowCount = (_months.length / rowSize).ceil();
+    final int anchorRow = _anchorMonthIndex ~/ rowSize;
+    final int olderCount = anchorRow;
+    final int newerCount = rowCount - anchorRow;
+    return CustomScrollView(
+      center: _centerKey,
+      slivers: [
+        if (olderCount > 0)
+          SliverList.builder(
+            itemCount: olderCount,
+            itemBuilder: (BuildContext context, int index) {
+              return _row(anchorRow - 1 - index, fontScale, wide);
+            },
           ),
-        );
-        if (!constraints.maxHeight.isFinite) return content;
-        return SingleChildScrollView(
-          controller: _scroll,
+        SliverPadding(
+          key: _centerKey,
           padding: const EdgeInsets.only(bottom: 12),
-          child: content,
-        );
-      },
+          sliver: SliverList.builder(
+            itemCount: newerCount,
+            itemBuilder: (BuildContext context, int index) {
+              return _row(anchorRow + index, fontScale, wide);
+            },
+          ),
+        ),
+      ],
     );
   }
 
-  List<Widget> _sections({
-    required List<DateTime> months,
-    required bool wide,
-    required double fontScale,
-    required DateTime? focus,
-  }) {
-    final List<Widget> children = <Widget>[];
-    if (!wide) {
-      children.addAll(
-        months.map((DateTime month) => _month(month, fontScale, focus)),
-      );
-      return children;
-    }
-    for (int slot = 0; slot < months.length; slot += 2) {
-      final DateTime left = months[slot];
-      final DateTime? right =
-          slot + 1 < months.length ? months[slot + 1] : null;
-      children.add(
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: _month(left, fontScale, focus)),
-              const SizedBox(width: 20),
-              Expanded(
-                child:
-                    right == null
-                        ? const SizedBox()
-                        : _month(right, fontScale, focus),
-              ),
-            ],
+  Widget _row(int row, double fontScale, bool wide) {
+    if (!wide) return _month(_months[row], fontScale);
+    final int left = row * 2;
+    final int right = left + 1;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: _month(_months[left], fontScale)),
+          const SizedBox(width: 20),
+          Expanded(
+            child:
+                right < _months.length
+                    ? _month(_months[right], fontScale)
+                    : const SizedBox(),
           ),
-        ),
-      );
-    }
-    return children;
+        ],
+      ),
+    );
   }
 
-  Widget _month(DateTime month, double fontScale, DateTime? focus) {
+  Widget _month(DateTime month, double fontScale) {
     return _MonthBlock(
-      key:
-          focus != null && appCalendarSameMonth(month, focus)
-              ? _anchorKey
-              : ValueKey<DateTime>(month),
+      key: ValueKey<DateTime>(month),
       month: month,
       fontScale: fontScale,
       start: widget.start,
@@ -192,6 +185,7 @@ class _MonthBlock extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
@@ -200,6 +194,7 @@ class _MonthBlock extends StatelessWidget {
               '${month.year}년 ${month.month}월',
               style: TextStyle(
                 fontSize: 17 * fontScale,
+                height: 1,
                 fontWeight: FontWeight.w700,
                 letterSpacing: -0.3,
                 color: AppColors.textPrimary,

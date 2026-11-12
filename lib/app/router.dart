@@ -17,7 +17,9 @@ import 'package:interiorapp_flutter_client/core/widget/adaptive_frame.dart';
 import 'package:interiorapp_flutter_client/notification/ui/notification_center_screen.dart';
 import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_result_screen.dart';
 import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_screen.dart';
+import 'package:interiorapp_flutter_client/mypage/ui/screen/content_history_screen.dart';
 import 'package:interiorapp_flutter_client/mypage/ui/screen/mypage_screen.dart';
+import 'package:interiorapp_flutter_client/mypage/ui/screen/profile_screen.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_board_screen.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_story_screen.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_write_detail_screen.dart';
@@ -151,6 +153,24 @@ class AppRouter {
       GoRoute(
         path: '/my',
         builder: (context, state) => const AdaptiveFrame(child: MyPageScreen()),
+        routes: [
+          GoRoute(
+            path: 'profile',
+            builder:
+                (context, state) => const AdaptiveFrame(child: ProfileScreen()),
+          ),
+          GoRoute(
+            path: 'history',
+            builder: (context, state) {
+              final String? tab = state.uri.queryParameters['tab'];
+              return AdaptiveFrame(
+                child: ContentHistoryScreen(
+                  initialTab: tab == 'recent' ? 1 : 0,
+                ),
+              );
+            },
+          ),
+        ],
       ),
       GoRoute(
         path: '/notifications',

@@ -1,10 +1,12 @@
-/// 최근 본 콘텐츠 모델
+/// 이 기기에서 최근에 연 쇼룸.
 class RecentContentModel {
   final String id;
   final String thumbnailUrl;
   final String title;
   final String category;
-  final String contentType; // 'showroom' | 'store' | 'article'
+  final String contentType;
+  final String authorName;
+  final String place;
   final DateTime viewedAt;
 
   const RecentContentModel({
@@ -12,7 +14,9 @@ class RecentContentModel {
     required this.thumbnailUrl,
     required this.title,
     required this.category,
-    required this.contentType,
+    this.contentType = 'showroom',
+    this.authorName = '',
+    this.place = '',
     required this.viewedAt,
   });
 
@@ -26,20 +30,25 @@ class RecentContentModel {
       title: json['title']?.toString() ?? '',
       category: json['category']?.toString() ?? '',
       contentType: json['contentType']?.toString() ?? 'showroom',
-      viewedAt: json['viewedAt'] is String
-          ? DateTime.tryParse(json['viewedAt'] as String) ?? DateTime.now()
-          : DateTime.now(),
+      authorName: json['authorName']?.toString() ?? '',
+      place: json['place']?.toString() ?? '',
+      viewedAt:
+          json['viewedAt'] is String
+              ? DateTime.tryParse(json['viewedAt'] as String) ?? DateTime.now()
+              : DateTime.now(),
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'thumbnailUrl': thumbnailUrl,
-        'title': title,
-        'category': category,
-        'contentType': contentType,
-        'viewedAt': viewedAt.toIso8601String(),
-      };
+    'id': id,
+    'thumbnailUrl': thumbnailUrl,
+    'title': title,
+    'category': category,
+    'contentType': contentType,
+    'authorName': authorName,
+    'place': place,
+    'viewedAt': viewedAt.toIso8601String(),
+  };
 
   RecentContentModel copyWith({
     String? id,
@@ -47,16 +56,19 @@ class RecentContentModel {
     String? title,
     String? category,
     String? contentType,
+    String? authorName,
+    String? place,
     DateTime? viewedAt,
-  }) =>
-      RecentContentModel(
-        id: id ?? this.id,
-        thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
-        title: title ?? this.title,
-        category: category ?? this.category,
-        contentType: contentType ?? this.contentType,
-        viewedAt: viewedAt ?? this.viewedAt,
-      );
+  }) => RecentContentModel(
+    id: id ?? this.id,
+    thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+    title: title ?? this.title,
+    category: category ?? this.category,
+    contentType: contentType ?? this.contentType,
+    authorName: authorName ?? this.authorName,
+    place: place ?? this.place,
+    viewedAt: viewedAt ?? this.viewedAt,
+  );
 
   static List<RecentContentModel> listFromJson(List<dynamic> data) => data
       .whereType<Map<String, dynamic>>()

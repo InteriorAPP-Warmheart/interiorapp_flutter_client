@@ -9,6 +9,8 @@ import 'package:interiorapp_flutter_client/showroom/domain/entity/quick_filter_c
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_reference_pick.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/hot_showroom_model.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
+import 'package:interiorapp_flutter_client/mypage/presentation/provider/mypage_provider.dart';
+import 'package:interiorapp_flutter_client/mypage/presentation/record_showroom_view.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/showroom_story_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_comment_section.dart';
@@ -30,6 +32,48 @@ class ShowroomBoardScreen extends ConsumerStatefulWidget {
 
 class _ShowroomBoardScreenState extends ConsumerState<ShowroomBoardScreen> {
   bool _picking = false;
+  String? _recorded;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _rememberCurrent();
+    });
+  }
+
+  void _rememberCurrent() {
+    final AsyncValue<ShowroomStoryModel?> story = ref.read(
+      showroomStoryProvider(widget.showroomId),
+    );
+    if (story.isLoading) return;
+    final ShowroomStoryModel? overview =
+        story.asData?.value ??
+        _overviewFromList(ref.read(hotShowroomSliderVm), widget.showroomId);
+    if (overview == null) return;
+    final String place =
+        ref
+            .read(hotShowroomSliderVm)
+            .where((HotShowroomModel item) => item.id == overview.id)
+            .map((HotShowroomModel item) => item.city)
+            .firstOrNull ??
+        '';
+    final String signature =
+        '${overview.id}|${overview.title}|${overview.thumbnailUrl}|$place';
+    if (_recorded == signature) return;
+    _recorded = signature;
+    recordShowroomView(
+      recent: ref.read(recentContentVmProvider.notifier),
+      memory: ref.read(recentShowroomProvider.notifier),
+      id: overview.id,
+      thumbnailUrl: overview.thumbnailUrl,
+      title: overview.title,
+      category: overview.themeName,
+      authorName: overview.userName,
+      place: place,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +82,17 @@ class _ShowroomBoardScreenState extends ConsumerState<ShowroomBoardScreen> {
       showroomStoryProvider(showroomId),
     );
     final List<HotShowroomModel> listed = ref.watch(hotShowroomSliderVm);
+    ref.listen(showroomStoryProvider(showroomId), (previous, next) {
+      if (next.isLoading) return;
+      _rememberCurrent();
+    });
+    ref.listen(hotShowroomSliderVm, (previous, next) {
+      final AsyncValue<ShowroomStoryModel?> story = ref.read(
+        showroomStoryProvider(showroomId),
+      );
+      if (story.isLoading) return;
+      _rememberCurrent();
+    });
 
     return PopScope(
       canPop: !_picking,

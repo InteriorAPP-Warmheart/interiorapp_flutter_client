@@ -1,10 +1,12 @@
-/// 저장한 콘텐츠(북마크) 모델
+/// 이 기기에 저장한 쇼룸.
 class SavedContentModel {
   final String id;
   final String thumbnailUrl;
   final String title;
   final String category;
-  final String contentType; // 'showroom' | 'store' | 'article'
+  final String contentType;
+  final String authorName;
+  final String place;
   final DateTime savedAt;
 
   const SavedContentModel({
@@ -12,7 +14,9 @@ class SavedContentModel {
     required this.thumbnailUrl,
     required this.title,
     required this.category,
-    required this.contentType,
+    this.contentType = 'showroom',
+    this.authorName = '',
+    this.place = '',
     required this.savedAt,
   });
 
@@ -26,20 +30,25 @@ class SavedContentModel {
       title: json['title']?.toString() ?? '',
       category: json['category']?.toString() ?? '',
       contentType: json['contentType']?.toString() ?? 'showroom',
-      savedAt: json['savedAt'] is String
-          ? DateTime.tryParse(json['savedAt'] as String) ?? DateTime.now()
-          : DateTime.now(),
+      authorName: json['authorName']?.toString() ?? '',
+      place: json['place']?.toString() ?? '',
+      savedAt:
+          json['savedAt'] is String
+              ? DateTime.tryParse(json['savedAt'] as String) ?? DateTime.now()
+              : DateTime.now(),
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'thumbnailUrl': thumbnailUrl,
-        'title': title,
-        'category': category,
-        'contentType': contentType,
-        'savedAt': savedAt.toIso8601String(),
-      };
+    'id': id,
+    'thumbnailUrl': thumbnailUrl,
+    'title': title,
+    'category': category,
+    'contentType': contentType,
+    'authorName': authorName,
+    'place': place,
+    'savedAt': savedAt.toIso8601String(),
+  };
 
   SavedContentModel copyWith({
     String? id,
@@ -47,16 +56,19 @@ class SavedContentModel {
     String? title,
     String? category,
     String? contentType,
+    String? authorName,
+    String? place,
     DateTime? savedAt,
-  }) =>
-      SavedContentModel(
-        id: id ?? this.id,
-        thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
-        title: title ?? this.title,
-        category: category ?? this.category,
-        contentType: contentType ?? this.contentType,
-        savedAt: savedAt ?? this.savedAt,
-      );
+  }) => SavedContentModel(
+    id: id ?? this.id,
+    thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+    title: title ?? this.title,
+    category: category ?? this.category,
+    contentType: contentType ?? this.contentType,
+    authorName: authorName ?? this.authorName,
+    place: place ?? this.place,
+    savedAt: savedAt ?? this.savedAt,
+  );
 
   static List<SavedContentModel> listFromJson(List<dynamic> data) => data
       .whereType<Map<String, dynamic>>()

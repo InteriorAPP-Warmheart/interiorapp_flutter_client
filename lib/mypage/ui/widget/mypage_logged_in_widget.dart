@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+// 내공간 현황 칸을 다시 쓸 때 연다.
+// import 'package:interiorapp_flutter_client/app/shell/shell_tab.dart';
+// import 'package:interiorapp_flutter_client/app/shell/tab_provider.dart';
+// import 'package:interiorapp_flutter_client/build/presentation/provider/build_provider.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/mypage/data/model/mypage_user_model.dart';
 import 'package:interiorapp_flutter_client/mypage/presentation/provider/mypage_provider.dart';
+import 'package:interiorapp_flutter_client/mypage/ui/widget/profile_photo_cover.dart';
 
 class MyPageLoggedInWidget extends ConsumerWidget {
   const MyPageLoggedInWidget({super.key});
@@ -18,61 +24,39 @@ class MyPageLoggedInWidget extends ConsumerWidget {
     final notification = ref.watch(notificationSettingVmProvider);
     final savedContents = ref.watch(savedContentVmProvider);
     final recentContents = ref.watch(recentContentVmProvider);
-    final completedProjects = ref.watch(completedProjectVmProvider);
-    // ignore: unused_local_variable – savedContents·recentContents는 콘텐츠 기록 배지에서 사용
+    // final board = ref.watch(spaceBoardProvider);
+    // final int ongoingCount = board.received.length + board.ongoing.length;
+    // final int finishedCount = board.finished.length;
 
     final double tabSlot = MediaQuery.paddingOf(context).bottom;
 
     return ListView(
-      padding: EdgeInsets.fromLTRB(
-        padding.left,
-        subGap,
-        padding.right,
-        tabSlot + subGap,
-      ),
+      padding: EdgeInsets.only(top: subGap, bottom: tabSlot + subGap),
       children: [
-        // ── 프로필 카드 ───────────────────────────────────
-        _ProfileCard(user: user),
-        SizedBox(height: sectionGap),
-
-        // ── 요약 통계 ─────────────────────────────────────
-        _SummaryRow(
-          ongoingCount: 1,                          // TODO: 진행 중 프로젝트 provider 연동
-          completedCount: completedProjects.length,
-          asCount: 0,                               // TODO: A/S 요청 provider 연동
+        // ── 프로필. 위는 사진, 아래는 계정 정보 ──
+        _ProfileCard(
+          user: user,
+          horizontal: padding.left,
+          onEdit: () => context.push('/my/profile'),
         ),
-        SizedBox(height: sectionGap),
-
-        // ── 계정 섹션 ─────────────────────────────────────
-        _SectionHeader(title: '계정'),
-        SizedBox(height: subGap),
-        _MenuGroup(
-          items: [
-            _MenuItem(
-              icon: Icons.person_outline_rounded,
-              label: '계정 정보',
-              subtitle: '이름·이메일·비밀번호',
-              onTap: () {},
-            ),
-            _MenuItem(
-              icon: Icons.phone_outlined,
-              label: '연락처',
-              subtitle: user?.phone.isNotEmpty == true
-                  ? user!.phone
-                  : '전화번호 미등록',
-              onTap: () {},
-            ),
-            _MenuItem(
-              icon: Icons.business_outlined,
-              label: '사업자 정보',
-              subtitle: user?.isBusinessUser == true
-                  ? (user?.businessName ?? '사업자명 미등록')
-                  : '미등록',
-              onTap: () {},
-            ),
-          ],
-        ),
-        SizedBox(height: sectionGap),
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            padding.left,
+            sectionGap,
+            padding.right,
+            0,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+        // 내공간 현황 칸. 탭 이동만으로는 마이페이지에 둘 이유가 없어서 잠시 빼 둠.
+        // _SummaryRow(
+        //   ongoingCount: ongoingCount,
+        //   completedCount: finishedCount,
+        //   asCount: 0,
+        //   onTap: () => _openMySpace(context, ref),
+        // ),
+        // SizedBox(height: sectionGap),
 
         // ── 콘텐츠 기록 ───────────────────────────────────
         _SectionHeader(title: '콘텐츠 기록'),
@@ -82,36 +66,20 @@ class MyPageLoggedInWidget extends ConsumerWidget {
             _MenuItem(
               icon: Icons.bookmark_outline_rounded,
               label: '저장한 콘텐츠',
-              badge: savedContents.isNotEmpty
-                  ? savedContents.length.toString()
-                  : null,
-              onTap: () {},
+              badge:
+                  savedContents.isNotEmpty
+                      ? savedContents.length.toString()
+                      : null,
+              onTap: () => context.push('/my/history?tab=saved'),
             ),
             _MenuItem(
               icon: Icons.history_rounded,
               label: '최근 본 콘텐츠',
-              badge: recentContents.isNotEmpty
-                  ? recentContents.length.toString()
-                  : null,
-              onTap: () {},
-            ),
-          ],
-        ),
-        SizedBox(height: sectionGap),
-
-        // ── 프로젝트 이력 ─────────────────────────────────
-        _SectionHeader(title: '프로젝트 이력'),
-        SizedBox(height: subGap),
-        _MenuGroup(
-          items: [
-            _MenuItem(
-              icon: Icons.home_work_outlined,
-              label: '완료된 프로젝트',
-              subtitle: '지난 인테리어 시공 내역 확인',
-              badge: completedProjects.isNotEmpty
-                  ? completedProjects.length.toString()
-                  : null,
-              onTap: () {},
+              badge:
+                  recentContents.isNotEmpty
+                      ? recentContents.length.toString()
+                      : null,
+              onTap: () => context.push('/my/history?tab=recent'),
             ),
           ],
         ),
@@ -127,37 +95,51 @@ class MyPageLoggedInWidget extends ConsumerWidget {
               label: '푸시 알림',
               trailingWidget: _AppSwitch(
                 value: notification.pushEnabled,
-                onChanged: (_) =>
-                    ref.read(notificationSettingVmProvider.notifier).togglePush(),
+                onChanged:
+                    (_) =>
+                        ref
+                            .read(notificationSettingVmProvider.notifier)
+                            .togglePush(),
               ),
-              onTap: () =>
-                  ref.read(notificationSettingVmProvider.notifier).togglePush(),
+              onTap:
+                  () =>
+                      ref
+                          .read(notificationSettingVmProvider.notifier)
+                          .togglePush(),
             ),
             _MenuItem(
               icon: Icons.campaign_outlined,
               label: '마케팅·이벤트 알림',
               trailingWidget: _AppSwitch(
                 value: notification.marketingEnabled,
-                onChanged: (_) => ref
-                    .read(notificationSettingVmProvider.notifier)
-                    .toggleMarketing(),
+                onChanged:
+                    (_) =>
+                        ref
+                            .read(notificationSettingVmProvider.notifier)
+                            .toggleMarketing(),
               ),
-              onTap: () => ref
-                  .read(notificationSettingVmProvider.notifier)
-                  .toggleMarketing(),
+              onTap:
+                  () =>
+                      ref
+                          .read(notificationSettingVmProvider.notifier)
+                          .toggleMarketing(),
             ),
             _MenuItem(
               icon: Icons.construction_outlined,
-              label: '프로젝트 업데이트 알림',
+              label: '시공 진행사항 알림',
               trailingWidget: _AppSwitch(
                 value: notification.projectUpdateEnabled,
-                onChanged: (_) => ref
-                    .read(notificationSettingVmProvider.notifier)
-                    .toggleProjectUpdate(),
+                onChanged:
+                    (_) =>
+                        ref
+                            .read(notificationSettingVmProvider.notifier)
+                            .toggleProjectUpdate(),
               ),
-              onTap: () => ref
-                  .read(notificationSettingVmProvider.notifier)
-                  .toggleProjectUpdate(),
+              onTap:
+                  () =>
+                      ref
+                          .read(notificationSettingVmProvider.notifier)
+                          .toggleProjectUpdate(),
             ),
           ],
         ),
@@ -196,24 +178,29 @@ class MyPageLoggedInWidget extends ConsumerWidget {
               onPressed: () {},
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.textSecondary,
-                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                textStyle: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               child: const Text('로그아웃'),
             ),
-            Container(
-              width: 1,
-              height: 12,
-              color: AppColors.border,
-            ),
+            Container(width: 1, height: 12, color: AppColors.border),
             TextButton(
               onPressed: () {},
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.error,
-                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                textStyle: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               child: const Text('회원 탈퇴'),
             ),
           ],
+        ),
+            ],
+          ),
         ),
       ],
     );
@@ -221,107 +208,198 @@ class MyPageLoggedInWidget extends ConsumerWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 프로필 카드
+// 프로필. 위는 사진, 아래 카드에 계정 정보를 모은다.
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ProfileCard extends StatelessWidget {
+  const _ProfileCard({
+    required this.user,
+    required this.horizontal,
+    required this.onEdit,
+  });
+
   final MyPageUserModel? user;
-  const _ProfileCard({required this.user});
+  final double horizontal;
+  final VoidCallback onEdit;
+
+  static const double _overlap = 28;
+
+  @override
+  Widget build(BuildContext context) {
+    final String? photo = user?.profileImageUrl;
+    final bool hasPhoto = photo != null && photo.isNotEmpty;
+
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double coverHeight = ProfilePhotoCover.heightFor(
+          constraints.maxWidth,
+        );
+        return Stack(
+          children: [
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: coverHeight,
+              child: ProfilePhotoCover(photoUrl: hasPhoto ? photo : null),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                horizontal,
+                coverHeight - _overlap,
+                horizontal,
+                0,
+              ),
+              child: _ProfileSheet(user: user, onEdit: onEdit),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ProfileSheet extends StatelessWidget {
+  const _ProfileSheet({required this.user, required this.onEdit});
+
+  final MyPageUserModel? user;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
     final double fontScale = ResponsiveSize.fontScale(context);
+    final MyPageUserModel? current = user;
+    final bool showBusiness =
+        current != null &&
+        current.isBusinessUser &&
+        ((current.businessName ?? '').isNotEmpty ||
+            (current.businessNumber ?? '').isNotEmpty);
 
     return Material(
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: () {}, // 프로필 편집
-        borderRadius: BorderRadius.circular(16),
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border, width: 0.7),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                // 아바타
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    shape: BoxShape.circle,
-                  ),
-                  child: user?.profileImageUrl != null
-                      ? ClipOval(
-                          child: Image.network(
-                            user!.profileImageUrl!,
-                            fit: BoxFit.cover,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border, width: 0.7),
+        ),
+        padding: const EdgeInsets.fromLTRB(16, 12, 8, 16),
+        child:
+            current == null
+                ? const _SkeletonText()
+                : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            current.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 18 * fontScale,
+                              height: 1.2,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.3,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
-                        )
-                      : const Icon(
-                          Icons.person_rounded,
-                          size: 30,
-                          color: AppColors.primary,
                         ),
-                ),
-                const SizedBox(width: 14),
-                // 이름·이메일
-                Expanded(
-                  child: user == null
-                      ? _SkeletonText()
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              user!.name,
-                              style: TextStyle(
-                                fontSize: 16 * fontScale,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -0.2,
-                                color: AppColors.textPrimary,
-                              ),
+                        TextButton(
+                          onPressed: onEdit,
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
                             ),
-                            const SizedBox(height: 3),
-                            Text(
-                              user!.email,
-                              style: TextStyle(
-                                fontSize: 13 * fontScale,
-                                color: AppColors.textSecondary,
-                              ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                            textStyle: TextStyle(
+                              fontSize: 13 * fontScale,
+                              fontWeight: FontWeight.w600,
                             ),
-                            if (user!.isBusinessUser &&
-                                user!.businessName != null) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                user!.businessName!,
-                                style: TextStyle(
-                                  fontSize: 12 * fontScale,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ],
+                          ),
+                          child: const Text('정보 수정'),
                         ),
+                      ],
+                    ),
+                    if (current.email.isNotEmpty)
+                      _ProfileLine(
+                        icon: Icons.mail_outline_rounded,
+                        text: current.email,
+                        fontScale: fontScale,
+                      ),
+                    if (current.phone.isNotEmpty)
+                      _ProfileLine(
+                        icon: Icons.phone_outlined,
+                        text: current.phone,
+                        fontScale: fontScale,
+                      ),
+                    if (showBusiness) ...[
+                      const SizedBox(height: 12),
+                      const Divider(height: 1, color: AppColors.border),
+                      if ((current.businessName ?? '').isNotEmpty)
+                        _ProfileLine(
+                          icon: Icons.storefront_outlined,
+                          text: current.businessName!,
+                          fontScale: fontScale,
+                        ),
+                      if ((current.businessNumber ?? '').isNotEmpty)
+                        _ProfileLine(
+                          icon: Icons.badge_outlined,
+                          text: current.businessNumber!,
+                          fontScale: fontScale,
+                        ),
+                    ],
+                  ],
                 ),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  size: 20,
-                  color: AppColors.textSecondary,
-                ),
-              ],
+      ),
+    );
+  }
+}
+
+class _ProfileLine extends StatelessWidget {
+  const _ProfileLine({
+    required this.icon,
+    required this.text,
+    required this.fontScale,
+  });
+
+  final IconData icon;
+  final String text;
+  final double fontScale;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: AppColors.textSecondary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 13 * fontScale,
+                height: 1.2,
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
 class _SkeletonText extends StatelessWidget {
+  const _SkeletonText();
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -350,18 +428,28 @@ class _SkeletonText extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 요약 통계 3열
+// 요약 통계 3열. 내공간 탭으로만 보내서 잠시 빼 둠.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// void _openMySpace(BuildContext context, WidgetRef ref) {
+//   ref.read(tabProvider.notifier).open(ShellTab.mySpace);
+//   if (GoRouterState.of(context).uri.path != '/') {
+//     context.go('/');
+//   }
+// }
+//
+/*
 class _SummaryRow extends StatelessWidget {
   final int ongoingCount;
   final int completedCount;
   final int asCount;
+  final VoidCallback onTap;
 
   const _SummaryRow({
     required this.ongoingCount,
     required this.completedCount,
     required this.asCount,
+    required this.onTap,
   });
 
   @override
@@ -370,54 +458,74 @@ class _SummaryRow extends StatelessWidget {
 
     final items = [
       (label: '진행중인 공간', value: ongoingCount, icon: Icons.construction_rounded),
-      (label: '완료된 공간', value: completedCount, icon: Icons.check_circle_rounded),
+      (
+        label: '완료된 공간',
+        value: completedCount,
+        icon: Icons.check_circle_rounded,
+      ),
       (label: 'A/S', value: asCount, icon: Icons.handyman_outlined),
     ];
 
     return Row(
-      children: items.asMap().entries.map((entry) {
-        final i = entry.key;
-        final item = entry.value;
-        return Expanded(
-          child: Container(
-            margin: EdgeInsets.only(right: i < items.length - 1 ? 8 : 0),
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border, width: 0.7),
-            ),
-            child: Column(
-              children: [
-                Icon(item.icon, size: 20, color: AppColors.primary),
-                const SizedBox(height: 5),
-                Text(
-                  item.value.toString(),
-                  style: TextStyle(
-                    fontSize: 18 * fontScale,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.3,
-                    color: AppColors.textPrimary,
+      children:
+          items.asMap().entries.map((entry) {
+            final i = entry.key;
+            final item = entry.value;
+            return Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: i < items.length - 1 ? 8 : 0),
+                child: Material(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  child: InkWell(
+                    onTap: onTap,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Ink(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.border, width: 0.7),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                          horizontal: 8,
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(item.icon, size: 20, color: AppColors.primary),
+                            const SizedBox(height: 5),
+                            Text(
+                              item.value.toString(),
+                              style: TextStyle(
+                                fontSize: 18 * fontScale,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.3,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              item.label,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 11 * fontScale,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  item.label,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 11 * fontScale,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
+              ),
+            );
+          }).toList(),
     );
   }
 }
+*/
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 섹션 헤더 (Section 위젯 스타일 통일)
@@ -465,7 +573,9 @@ class _MenuGroup extends StatelessWidget {
               borderRadius: BorderRadius.vertical(
                 top: i == 0 ? const Radius.circular(16) : Radius.zero,
                 bottom:
-                    i == items.length - 1 ? const Radius.circular(16) : Radius.zero,
+                    i == items.length - 1
+                        ? const Radius.circular(16)
+                        : Radius.zero,
               ),
               child: items[i],
             ),
@@ -524,11 +634,7 @@ class _MenuItem extends StatelessWidget {
                   color: AppColors.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
-                  icon,
-                  size: 18,
-                  color: AppColors.primary,
-                ),
+                child: Icon(icon, size: 18, color: AppColors.primary),
               ),
               const SizedBox(width: 12),
               // 텍스트
@@ -560,7 +666,10 @@ class _MenuItem extends StatelessWidget {
               // 배지
               if (badge != null) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(99),

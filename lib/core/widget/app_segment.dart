@@ -190,6 +190,7 @@ class AppSegmentBar extends StatelessWidget {
               final double slot = constraints.maxWidth / labels.length;
               final double thumbLeft = page * slot;
               return Stack(
+                alignment: Alignment.center,
                 children: [
                   Positioned(
                     left: thumbLeft + inset,
@@ -203,33 +204,38 @@ class AppSegmentBar extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Row(
-                    children: [
-                      for (var i = 0; i < labels.length; i++)
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => controller.animateTo(i),
-                            behavior: HitTestBehavior.opaque,
-                            child: Center(
-                              child: Text(
-                                labels[i],
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: fontSize,
-                                  height: 1.1,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color.lerp(
-                                    unselectedColor,
-                                    selectedColor,
-                                    (1 - (page - i).abs()).clamp(0, 1),
+                  Positioned.fill(
+                    child: Row(
+                      children: [
+                        for (var i = 0; i < labels.length; i++)
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => controller.animateTo(i),
+                              behavior: HitTestBehavior.opaque,
+                              child: Center(
+                                child: Text(
+                                  labels[i],
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: fontSize,
+                                    height: 1,
+                                    leadingDistribution:
+                                        TextLeadingDistribution.even,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color.lerp(
+                                      unselectedColor,
+                                      selectedColor,
+                                      (1 - (page - i).abs()).clamp(0, 1),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               );
