@@ -78,8 +78,8 @@ GoogleService-Info.plist
 doc/api/
 .metadata
 .dart_tool
+# 큰 이미지 폴더만 제외한다. assets 전체를 무시하면 폰트가 머지 때 저장소에서 빠진다.
 assets/logo
 assets/images/showroom
-assets
 develop_data
 docs
