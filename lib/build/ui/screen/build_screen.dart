@@ -40,13 +40,15 @@ class _BuildScreenState extends ConsumerState<BuildScreen> {
     final List<SpaceProject> finished = board.finished;
     final bool hasOngoing = ongoing.isNotEmpty;
     final bool inTab = GoRouterState.of(context).uri.path == '/';
+    final double tabBarHeight =
+        AppTabBarTheme.height(context) +
+        AppTabBarTheme.floatGap +
+        AppTabBarTheme.bottomInset(context);
+    final double reported = MediaQuery.paddingOf(context).bottom;
     final double bottomGap =
         inTab
-            ? AppTabBarTheme.height(context) +
-                AppTabBarTheme.floatGap +
-                AppTabBarTheme.bottomInset(context) +
-                subGap
-            : subGap + MediaQuery.paddingOf(context).bottom;
+            ? (reported > tabBarHeight ? reported : tabBarHeight) + subGap + 8
+            : subGap + reported;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -57,100 +59,157 @@ class _BuildScreenState extends ConsumerState<BuildScreen> {
           padding.right,
           bottomGap,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ConsultLaunchBand(
-              consultCount: board.consults.length,
-              tradeCount: board.trades.length,
-              onPrep: () => context.push(SpaceRoutes.prep),
-              onConsult: () => context.push(SpaceRoutes.prepCreate),
-              onTrade: () => _openTradeCreate(context),
-            ),
-            SizedBox(height: sectionGap),
-            Text('진행 중인 공간', style: _sectionTitle(fontScale)),
-            SizedBox(height: subGap),
-            Expanded(
-              child: Column(
-                children: [
-                  Expanded(
-                    child:
-                        hasOngoing
-                            ? OngoingSpacePager(
-                              projects: ongoing,
-                              progressOf: board.constructionFor,
-                              onTap: (SpaceProject project) {
-                                context.push(SpaceRoutes.detail(project.id));
-                              },
-                            )
-                            : Column(
-                              children: [
-                                Expanded(
-                                  child: _EmptyRegion(
-                                    label: '진행 중인 공간이 없어요',
-                                    fontScale: fontScale,
-                                  ),
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            final _SpaceFit fit = _SpaceFit.resolve(
+              maxHeight: constraints.maxHeight,
+              fontScale: fontScale,
+              sectionGap: sectionGap,
+              subGap: subGap,
+              band: ConsultLaunchBand.height(context),
+              finished: finishedHeight,
+            );
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ConsultLaunchBand(
+                  bandHeight: fit.band,
+                  consultCount: board.consults.length,
+                  tradeCount: board.trades.length,
+                  onPrep: () => context.push(SpaceRoutes.prep),
+                  onConsult: () => context.push(SpaceRoutes.prepCreate),
+                  onTrade: () => _openTradeCreate(context),
+                ),
+                SizedBox(height: fit.sectionGap),
+                Text('진행 중인 공간', style: _sectionTitle(fontScale)),
+                SizedBox(height: fit.subGap),
+                Expanded(
+                  child:
+                      hasOngoing
+                          ? OngoingSpacePager(
+                            projects: ongoing,
+                            progressOf: board.constructionFor,
+                            onTap: (SpaceProject project) {
+                              context.push(SpaceRoutes.detail(project.id));
+                            },
+                          )
+                          : Column(
+                            children: [
+                              Expanded(
+                                child: _EmptyRegion(
+                                  label: '진행 중인 공간이 없어요',
+                                  fontScale: fontScale,
                                 ),
-                                SizedBox(height: subGap),
-                                const SizedBox(
-                                  height: kOngoingPageIndicatorHeight,
-                                ),
-                              ],
-                            ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: sectionGap),
-            Text('마친 공간', style: _sectionTitle(fontScale)),
-            SizedBox(height: subGap),
-            SizedBox(
-              height: finishedHeight,
-              child:
-                  finished.isEmpty
-                      ? _EmptyRegion(label: '마친 공간이 없어요', fontScale: fontScale)
-                      : LayoutBuilder(
-                        builder: (
-                          BuildContext context,
-                          BoxConstraints constraints,
-                        ) {
-                          const double gap = 10;
-                          final int count = finished.length;
-                          final double width =
-                              count <= 2
-                                  ? (constraints.maxWidth - gap * (count - 1)) /
-                                      count
-                                  : (constraints.maxWidth - gap) / 2.2;
+                              ),
+                              SizedBox(height: fit.subGap),
+                              const SizedBox(
+                                height: kOngoingPageIndicatorHeight,
+                              ),
+                            ],
+                          ),
+                ),
+                SizedBox(height: fit.sectionGap),
+                Text('마친 공간', style: _sectionTitle(fontScale)),
+                SizedBox(height: fit.subGap),
+                SizedBox(
+                  height: fit.finished,
+                  child:
+                      finished.isEmpty
+                          ? _EmptyRegion(
+                            label: '마친 공간이 없어요',
+                            fontScale: fontScale,
+                          )
+                          : LayoutBuilder(
+                            builder: (
+                              BuildContext context,
+                              BoxConstraints tileConstraints,
+                            ) {
+                              const double gap = 10;
+                              final int count = finished.length;
+                              final double width =
+                                  count <= 2
+                                      ? (tileConstraints.maxWidth -
+                                              gap * (count - 1)) /
+                                          count
+                                      : (tileConstraints.maxWidth - gap) / 2.2;
 
-                          return ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            physics:
-                                count <= 2
-                                    ? const NeverScrollableScrollPhysics()
-                                    : const BouncingScrollPhysics(),
-                            itemCount: count,
-                            separatorBuilder:
-                                (context, index) => const SizedBox(width: gap),
-                            itemBuilder: (BuildContext context, int index) {
-                              final SpaceProject project = finished[index];
-                              return SizedBox(
-                                width: width,
-                                child: FinishedSpaceTile(
-                                  project: project,
-                                  onTap:
-                                      () => context.push(
-                                        SpaceRoutes.detail(project.id),
-                                      ),
-                                ),
+                              return ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                physics:
+                                    count <= 2
+                                        ? const NeverScrollableScrollPhysics()
+                                        : const BouncingScrollPhysics(),
+                                itemCount: count,
+                                separatorBuilder:
+                                    (context, index) =>
+                                        const SizedBox(width: gap),
+                                itemBuilder: (BuildContext context, int index) {
+                                  final SpaceProject project = finished[index];
+                                  return SizedBox(
+                                    width: width,
+                                    child: FinishedSpaceTile(
+                                      project: project,
+                                      onTap:
+                                          () => context.push(
+                                            SpaceRoutes.detail(project.id),
+                                          ),
+                                    ),
+                                  );
+                                },
                               );
                             },
-                          );
-                        },
-                      ),
-            ),
-          ],
+                          ),
+                ),
+              ],
+            );
+          },
         ),
       ),
+    );
+  }
+}
+
+/// 탭바 위 높이에 상담 영역, 진행 중, 마친 공간이 함께 들어가게 간격을 줄인다.
+class _SpaceFit {
+  const _SpaceFit({
+    required this.band,
+    required this.finished,
+    required this.sectionGap,
+    required this.subGap,
+  });
+
+  final double band;
+  final double finished;
+  final double sectionGap;
+  final double subGap;
+
+  static _SpaceFit resolve({
+    required double maxHeight,
+    required double fontScale,
+    required double sectionGap,
+    required double subGap,
+    required double band,
+    required double finished,
+  }) {
+    const double minOngoing = 72;
+    final double titles = 24 * fontScale * 2;
+    final double reserved = titles + minOngoing;
+    final double limit = maxHeight - reserved;
+    final double flex = band + finished + sectionGap * 2 + subGap * 2;
+    if (limit <= 0 || flex <= limit) {
+      return _SpaceFit(
+        band: band,
+        finished: finished,
+        sectionGap: sectionGap,
+        subGap: subGap,
+      );
+    }
+    final double scale = limit / flex;
+    return _SpaceFit(
+      band: band * scale,
+      finished: finished * scale,
+      sectionGap: sectionGap * scale,
+      subGap: subGap * scale,
     );
   }
 }

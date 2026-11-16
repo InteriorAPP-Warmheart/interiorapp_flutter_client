@@ -11,6 +11,7 @@ class ConsultLaunchBand extends StatelessWidget {
     required this.onPrep,
     required this.onConsult,
     required this.onTrade,
+    this.bandHeight,
   });
 
   final int consultCount;
@@ -18,6 +19,9 @@ class ConsultLaunchBand extends StatelessWidget {
   final VoidCallback onPrep;
   final VoidCallback onConsult;
   final VoidCallback onTrade;
+
+  /// 화면이 짧을 때 부모가 넘기는 높이. 비우면 창 크기 기본값을 쓴다.
+  final double? bandHeight;
 
   static double height(BuildContext context) {
     final AppWindow window = AppWindow.of(context);
@@ -35,7 +39,7 @@ class ConsultLaunchBand extends StatelessWidget {
             : '상담준비 $consultCount · 후보지 $tradeCount';
 
     return SizedBox(
-      height: height(context),
+      height: bandHeight ?? ConsultLaunchBand.height(context),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -129,7 +133,7 @@ class _LaunchArea extends StatelessWidget {
                     : null,
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             child:
                 caption == null
                     ? Row(
@@ -152,36 +156,40 @@ class _LaunchArea extends StatelessWidget {
                         ),
                       ],
                     )
-                    : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(icon, color: iconColor, size: 22),
-                        const SizedBox(height: 8),
-                        Text(
-                          label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 15 * fontScale,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.2,
-                            color: foreground,
+                    : FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(icon, color: iconColor, size: 22),
+                          const SizedBox(height: 8),
+                          Text(
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 15 * fontScale,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
+                              color: foreground,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          caption!,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12 * fontScale,
-                            fontWeight: FontWeight.w500,
-                            height: 1.3,
-                            color: AppColors.textSecondary,
+                          const SizedBox(height: 2),
+                          Text(
+                            caption!,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12 * fontScale,
+                              fontWeight: FontWeight.w500,
+                              height: 1.3,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
           ),
         ),

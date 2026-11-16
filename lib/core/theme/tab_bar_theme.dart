@@ -37,11 +37,7 @@ class AppTabBarTheme {
     color: AppColors.surface.withValues(alpha: 0.96),
     borderRadius: BorderRadius.circular(height / 2),
     boxShadow: const [
-      BoxShadow(
-        color: Color(0x1F000000),
-        blurRadius: 16,
-        offset: Offset(0, 6),
-      ),
+      BoxShadow(color: Color(0x1F000000), blurRadius: 16, offset: Offset(0, 6)),
     ],
   );
 
@@ -66,8 +62,13 @@ class _SelectedTabPillPainter extends BoxPainter {
   @override
   void paint(Canvas canvas, Offset offset, ImageConfiguration configuration) {
     final Size size = configuration.size ?? Size.zero;
-    final double pillWidth = (size.width - 22).clamp(52.0, 68.0);
-    final double pillHeight = (size.height - 12).clamp(50.0, 56.0);
+    // 칸이 좁으면 글자 너비에 맞춰 알약을 넓힌다. 넓은 칸은 작은 알약을 유지한다.
+    final bool narrow = size.width < 92;
+    final double pillWidth =
+        narrow
+            ? (size.width - 8).clamp(48.0, size.width)
+            : (size.width - 22).clamp(52.0, 68.0);
+    final double pillHeight = (size.height - 10).clamp(44.0, size.height - 6);
     final Rect rect = Rect.fromCenter(
       center: offset + Offset(size.width / 2, size.height / 2),
       width: pillWidth,

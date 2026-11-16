@@ -1,4 +1,3 @@
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
@@ -39,30 +38,12 @@ class PopularShowroomCardList extends ConsumerWidget {
           final HotShowroomModel item = items[index];
           return SizedBox(
             width: cardWidth,
-            child: OpenContainer(
-              useRootNavigator: true,
-              tappable: false,
-              closedElevation: 0,
-              openElevation: 0,
-              closedColor: storyInk,
-              openColor: storyInk,
-              closedShape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              openShape: const RoundedRectangleBorder(),
-              closedBuilder: (BuildContext context, VoidCallback open) {
-                return _LookbookCard(
-                  item: item,
-                  onOpen: open,
-                  onFavorite: () {
-                    ref
-                        .read(hotShowroomSliderVm.notifier)
-                        .toggleFavoriteByIndex(item.id);
-                  },
-                );
-              },
-              openBuilder: (BuildContext context, VoidCallback close) {
-                return ShowroomStoryScreen(showroomId: item.id);
+            child: _LookbookCard(
+              item: item,
+              onFavorite: () {
+                ref
+                    .read(hotShowroomSliderVm.notifier)
+                    .toggleFavoriteByIndex(item.id);
               },
             ),
           );
@@ -73,14 +54,9 @@ class PopularShowroomCardList extends ConsumerWidget {
 }
 
 class _LookbookCard extends StatelessWidget {
-  const _LookbookCard({
-    required this.item,
-    required this.onOpen,
-    required this.onFavorite,
-  });
+  const _LookbookCard({required this.item, required this.onFavorite});
 
   final HotShowroomModel item;
-  final VoidCallback onOpen;
   final VoidCallback onFavorite;
 
   @override
@@ -90,7 +66,13 @@ class _LookbookCard extends StatelessWidget {
     final String viewLabel = showroomCompactCount(item.viewCount);
 
     return GestureDetector(
-      onTap: onOpen,
+      onTap:
+          () => openShowroomPage(
+            context,
+            (_) => ShowroomStoryScreen(showroomId: item.id),
+            coverUrl: item.thumbnailUrl,
+            background: storyInk,
+          ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: Stack(

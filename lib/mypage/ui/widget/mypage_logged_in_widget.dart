@@ -31,7 +31,7 @@ class MyPageLoggedInWidget extends ConsumerWidget {
     final double tabSlot = MediaQuery.paddingOf(context).bottom;
 
     return ListView(
-      padding: EdgeInsets.only(top: subGap, bottom: tabSlot + subGap),
+      padding: EdgeInsets.only(top: subGap, bottom: tabSlot + subGap + 12),
       children: [
         // ── 프로필. 위는 사진, 아래는 계정 정보 ──
         _ProfileCard(
@@ -49,156 +49,156 @@ class MyPageLoggedInWidget extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-        // 내공간 현황 칸. 탭 이동만으로는 마이페이지에 둘 이유가 없어서 잠시 빼 둠.
-        // _SummaryRow(
-        //   ongoingCount: ongoingCount,
-        //   completedCount: finishedCount,
-        //   asCount: 0,
-        //   onTap: () => _openMySpace(context, ref),
-        // ),
-        // SizedBox(height: sectionGap),
+              // 내공간 현황 칸. 탭 이동만으로는 마이페이지에 둘 이유가 없어서 잠시 빼 둠.
+              // _SummaryRow(
+              //   ongoingCount: ongoingCount,
+              //   completedCount: finishedCount,
+              //   asCount: 0,
+              //   onTap: () => _openMySpace(context, ref),
+              // ),
+              // SizedBox(height: sectionGap),
 
-        // ── 콘텐츠 기록 ───────────────────────────────────
-        _SectionHeader(title: '콘텐츠 기록'),
-        SizedBox(height: subGap),
-        _MenuGroup(
-          items: [
-            _MenuItem(
-              icon: Icons.bookmark_outline_rounded,
-              label: '저장한 콘텐츠',
-              badge:
-                  savedContents.isNotEmpty
-                      ? savedContents.length.toString()
-                      : null,
-              onTap: () => context.push('/my/history?tab=saved'),
-            ),
-            _MenuItem(
-              icon: Icons.history_rounded,
-              label: '최근 본 콘텐츠',
-              badge:
-                  recentContents.isNotEmpty
-                      ? recentContents.length.toString()
-                      : null,
-              onTap: () => context.push('/my/history?tab=recent'),
-            ),
-          ],
-        ),
-        SizedBox(height: sectionGap),
+              // ── 콘텐츠 기록 ───────────────────────────────────
+              _SectionHeader(title: '콘텐츠 기록'),
+              SizedBox(height: subGap),
+              _MenuGroup(
+                items: [
+                  _MenuItem(
+                    icon: Icons.bookmark_outline_rounded,
+                    label: '저장한 콘텐츠',
+                    badge:
+                        savedContents.isNotEmpty
+                            ? savedContents.length.toString()
+                            : null,
+                    onTap: () => context.push('/my/history?tab=saved'),
+                  ),
+                  _MenuItem(
+                    icon: Icons.history_rounded,
+                    label: '최근 본 콘텐츠',
+                    badge:
+                        recentContents.isNotEmpty
+                            ? recentContents.length.toString()
+                            : null,
+                    onTap: () => context.push('/my/history?tab=recent'),
+                  ),
+                ],
+              ),
+              SizedBox(height: sectionGap),
 
-        // ── 알림 ──────────────────────────────────────────
-        _SectionHeader(title: '알림'),
-        SizedBox(height: subGap),
-        _MenuGroup(
-          items: [
-            _MenuItem(
-              icon: Icons.notifications_none_rounded,
-              label: '푸시 알림',
-              trailingWidget: _AppSwitch(
-                value: notification.pushEnabled,
-                onChanged:
-                    (_) =>
-                        ref
-                            .read(notificationSettingVmProvider.notifier)
-                            .togglePush(),
+              // ── 알림 ──────────────────────────────────────────
+              _SectionHeader(title: '알림'),
+              SizedBox(height: subGap),
+              _MenuGroup(
+                items: [
+                  _MenuItem(
+                    icon: Icons.notifications_none_rounded,
+                    label: '푸시 알림',
+                    trailingWidget: _AppSwitch(
+                      value: notification.pushEnabled,
+                      onChanged:
+                          (_) =>
+                              ref
+                                  .read(notificationSettingVmProvider.notifier)
+                                  .togglePush(),
+                    ),
+                    onTap:
+                        () =>
+                            ref
+                                .read(notificationSettingVmProvider.notifier)
+                                .togglePush(),
+                  ),
+                  _MenuItem(
+                    icon: Icons.campaign_outlined,
+                    label: '마케팅·이벤트 알림',
+                    trailingWidget: _AppSwitch(
+                      value: notification.marketingEnabled,
+                      onChanged:
+                          (_) =>
+                              ref
+                                  .read(notificationSettingVmProvider.notifier)
+                                  .toggleMarketing(),
+                    ),
+                    onTap:
+                        () =>
+                            ref
+                                .read(notificationSettingVmProvider.notifier)
+                                .toggleMarketing(),
+                  ),
+                  _MenuItem(
+                    icon: Icons.construction_outlined,
+                    label: '시공 진행사항 알림',
+                    trailingWidget: _AppSwitch(
+                      value: notification.projectUpdateEnabled,
+                      onChanged:
+                          (_) =>
+                              ref
+                                  .read(notificationSettingVmProvider.notifier)
+                                  .toggleProjectUpdate(),
+                    ),
+                    onTap:
+                        () =>
+                            ref
+                                .read(notificationSettingVmProvider.notifier)
+                                .toggleProjectUpdate(),
+                  ),
+                ],
               ),
-              onTap:
-                  () =>
-                      ref
-                          .read(notificationSettingVmProvider.notifier)
-                          .togglePush(),
-            ),
-            _MenuItem(
-              icon: Icons.campaign_outlined,
-              label: '마케팅·이벤트 알림',
-              trailingWidget: _AppSwitch(
-                value: notification.marketingEnabled,
-                onChanged:
-                    (_) =>
-                        ref
-                            .read(notificationSettingVmProvider.notifier)
-                            .toggleMarketing(),
-              ),
-              onTap:
-                  () =>
-                      ref
-                          .read(notificationSettingVmProvider.notifier)
-                          .toggleMarketing(),
-            ),
-            _MenuItem(
-              icon: Icons.construction_outlined,
-              label: '시공 진행사항 알림',
-              trailingWidget: _AppSwitch(
-                value: notification.projectUpdateEnabled,
-                onChanged:
-                    (_) =>
-                        ref
-                            .read(notificationSettingVmProvider.notifier)
-                            .toggleProjectUpdate(),
-              ),
-              onTap:
-                  () =>
-                      ref
-                          .read(notificationSettingVmProvider.notifier)
-                          .toggleProjectUpdate(),
-            ),
-          ],
-        ),
-        SizedBox(height: sectionGap),
+              SizedBox(height: sectionGap),
 
-        // ── 정책·지원 ──────────────────────────────────────
-        _SectionHeader(title: '정책·지원'),
-        SizedBox(height: subGap),
-        _MenuGroup(
-          items: [
-            _MenuItem(
-              icon: Icons.description_outlined,
-              label: '서비스 이용약관',
-              onTap: () {},
-            ),
-            _MenuItem(
-              icon: Icons.privacy_tip_outlined,
-              label: '개인정보 처리방침',
-              onTap: () {},
-            ),
-            _MenuItem(
-              icon: Icons.headset_mic_outlined,
-              label: '고객 지원',
-              subtitle: '문의·신고·FAQ',
-              onTap: () {},
-            ),
-          ],
-        ),
-        SizedBox(height: sectionGap),
+              // ── 정책·지원 ──────────────────────────────────────
+              _SectionHeader(title: '정책·지원'),
+              SizedBox(height: subGap),
+              _MenuGroup(
+                items: [
+                  _MenuItem(
+                    icon: Icons.description_outlined,
+                    label: '서비스 이용약관',
+                    onTap: () {},
+                  ),
+                  _MenuItem(
+                    icon: Icons.privacy_tip_outlined,
+                    label: '개인정보 처리방침',
+                    onTap: () {},
+                  ),
+                  _MenuItem(
+                    icon: Icons.headset_mic_outlined,
+                    label: '고객 지원',
+                    subtitle: '문의·신고·FAQ',
+                    onTap: () {},
+                  ),
+                ],
+              ),
+              SizedBox(height: sectionGap),
 
-        // ── 로그아웃 / 탈퇴 ───────────────────────────────
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextButton(
-              onPressed: () {},
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.textSecondary,
-                textStyle: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
+              // ── 로그아웃 / 탈퇴 ───────────────────────────────
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () {},
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.textSecondary,
+                      textStyle: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    child: const Text('로그아웃'),
+                  ),
+                  Container(width: 1, height: 12, color: AppColors.border),
+                  TextButton(
+                    onPressed: () {},
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.error,
+                      textStyle: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    child: const Text('회원 탈퇴'),
+                  ),
+                ],
               ),
-              child: const Text('로그아웃'),
-            ),
-            Container(width: 1, height: 12, color: AppColors.border),
-            TextButton(
-              onPressed: () {},
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.error,
-                textStyle: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              child: const Text('회원 탈퇴'),
-            ),
-          ],
-        ),
             ],
           ),
         ),

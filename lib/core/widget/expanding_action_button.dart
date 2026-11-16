@@ -110,14 +110,20 @@ class _ExpandingActionButtonState extends State<ExpandingActionButton>
   }
 
   void _measure() {
+    final TextScaler scaler = MediaQuery.textScalerOf(context);
     final TextPainter painter = TextPainter(
       text: TextSpan(text: widget.label, style: widget.textStyle),
       textDirection: TextDirection.ltr,
+      textScaler: scaler,
       maxLines: 1,
     )..layout();
     final double collapsed = widget.collapsedSize;
-    _expanded = painter.width + 40;
+    final double screen = MediaQuery.sizeOf(context).width;
+    const double side = 20;
+    final double maxWidth = screen - widget.right - side;
+    _expanded = painter.width + 56;
     if (_expanded < collapsed) _expanded = collapsed;
+    if (_expanded > maxWidth && maxWidth >= collapsed) _expanded = maxWidth;
   }
 
   void _close() {
@@ -143,7 +149,8 @@ class _ExpandingActionButtonState extends State<ExpandingActionButton>
     return AnimatedBuilder(
       animation: _controller,
       builder: (BuildContext context, Widget? child) {
-        final double width = collapsed + (_expanded - collapsed) * _expand.value;
+        final double width =
+            collapsed + (_expanded - collapsed) * _expand.value;
         final double travel =
             (_expanded + widget.iconSize / 2 - collapsed / 2) * _expand.value;
         return Stack(
@@ -173,18 +180,25 @@ class _ExpandingActionButtonState extends State<ExpandingActionButton>
                               child: Transform.translate(
                                 filterQuality: FilterQuality.medium,
                                 offset: Offset(
-                                  (1 - _expand.value) * (_expanded - collapsed) / 2,
+                                  (1 - _expand.value) *
+                                      (_expanded - collapsed) /
+                                      2,
                                   0,
                                 ),
                                 child: Opacity(
                                   opacity: _label.value,
-                                  child: Text(
-                                    widget.label,
-                                    maxLines: 1,
-                                    softWrap: false,
-                                    overflow: TextOverflow.clip,
-                                    style: widget.textStyle.copyWith(
-                                      color: foreground,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                    ),
+                                    child: Text(
+                                      widget.label,
+                                      maxLines: 1,
+                                      softWrap: false,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: widget.textStyle.copyWith(
+                                        color: foreground,
+                                      ),
                                     ),
                                   ),
                                 ),

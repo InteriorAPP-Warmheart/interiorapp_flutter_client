@@ -473,6 +473,7 @@ class _BoardScaffoldState extends State<_BoardScaffold> {
                     label: '이 스타일로 상담받기',
                     backgroundColor: AppColors.primary,
                     foregroundColor: AppColors.white,
+                    right: 20,
                     bottom: showroomReadingDockClearance(context) + 14,
                     onPressed: () => widget.onPicking(true),
                   ),

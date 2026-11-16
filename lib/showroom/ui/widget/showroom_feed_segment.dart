@@ -1,4 +1,5 @@
-import 'package:animations/animations.dart';
+import 'dart:ui' show lerpDouble;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -386,6 +387,42 @@ class ShowroomMasonryGrid extends StatelessWidget {
 
 // ─── 마소니리 카드 ────────────────────────────────────────────────────────
 
+/// 카드 자리에서 글이 화면 크기로 커진다.
+///
+/// 글은 화면 크기로 한 번만 배치하고, 보이는 크기만 키운다.
+void openShowroomPage(
+  BuildContext context,
+  WidgetBuilder page, {
+  String? coverUrl,
+  Color background = Colors.white,
+  double radius = 16,
+}) {
+  final NavigatorState navigator = Navigator.of(context, rootNavigator: true);
+  final Rect? source = _cardRectInNavigator(context, navigator);
+  navigator.push<void>(
+    _ShowroomExpandRoute(
+      source: source,
+      page: page,
+      coverUrl: coverUrl,
+      background: background,
+      radius: radius,
+    ),
+  );
+}
+
+Rect? _cardRectInNavigator(BuildContext context, NavigatorState navigator) {
+  final RenderObject? cardObject = context.findRenderObject();
+  final RenderObject? hostObject = navigator.context.findRenderObject();
+  if (cardObject is! RenderBox || hostObject is! RenderBox) return null;
+  final RenderBox card = cardObject;
+  final RenderBox host = hostObject;
+  if (!card.attached || !host.attached || !card.hasSize || !host.hasSize) {
+    return null;
+  }
+  final Offset origin = host.localToGlobal(Offset.zero);
+  return (card.localToGlobal(Offset.zero) - origin) & card.size;
+}
+
 class _MasonryCard extends StatelessWidget {
   const _MasonryCard({required this.item, required this.imageAspectRatio});
 
@@ -394,35 +431,38 @@ class _MasonryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OpenContainer(
-      useRootNavigator: true,
-      tappable: false,
-      closedElevation: 0,
-      openElevation: 0,
-      closedColor: AppColors.background,
-      openColor: AppColors.background,
-      closedShape: const RoundedRectangleBorder(),
-      openShape: const RoundedRectangleBorder(),
-      closedBuilder: (BuildContext context, VoidCallback open) {
-        return GestureDetector(
-          onTap: open,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AspectRatio(
-                aspectRatio: imageAspectRatio,
-                child: ClipRRect(
+    return GestureDetector(
+      onTap:
+          () => openShowroomPage(
+            context,
+            (_) => ShowroomBoardScreen(showroomId: item.id),
+            coverUrl: item.imageUrl,
+          ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AspectRatio(
+            aspectRatio: imageAspectRatio,
+            child: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                final double imageHeight = constraints.maxHeight;
+                final bool short = imageHeight < 108;
+                final double band =
+                    short
+                        ? (imageHeight * 0.42).clamp(24.0, 36.0)
+                        : (imageHeight * 0.4).clamp(36.0, 52.0);
+                return ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
                       AppNetworkImage(url: item.imageUrl),
-                      const Positioned(
+                      Positioned(
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        height: 58,
-                        child: DecoratedBox(
+                        height: band,
+                        child: const DecoratedBox(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.bottomCenter,
@@ -433,20 +473,20 @@ class _MasonryCard extends StatelessWidget {
                         ),
                       ),
                       Positioned(
-                        left: 8,
-                        right: 8,
-                        bottom: 7,
+                        left: 6,
+                        right: 6,
+                        bottom: short ? 4 : 6,
                         child: Text(
                           item.title,
-                          maxLines: 2,
+                          maxLines: short ? 1 : 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
+                          style: TextStyle(
+                            fontSize: short ? 10.5 : 12,
                             fontWeight: FontWeight.w700,
                             letterSpacing: -0.2,
-                            height: 1.25,
+                            height: 1.2,
                             color: Colors.white,
-                            shadows: [
+                            shadows: const [
                               Shadow(
                                 color: Color(0x99000000),
                                 blurRadius: 6,
@@ -458,22 +498,19 @@ class _MasonryCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                ),
-              ),
-              const SizedBox(height: 6),
-              _CardCounts(
-                likes: item.likeCount,
-                comments: item.commentCount,
-                views: item.viewCount,
-                favorite: item.favoriteStatus,
-              ),
-            ],
+                );
+              },
+            ),
           ),
-        );
-      },
-      openBuilder: (BuildContext context, VoidCallback close) {
-        return ShowroomBoardScreen(showroomId: item.id);
-      },
+          const SizedBox(height: 6),
+          _CardCounts(
+            likes: item.likeCount,
+            comments: item.commentCount,
+            views: item.viewCount,
+            favorite: item.favoriteStatus,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -666,5 +703,248 @@ class _RenderEdgeCountRow extends RenderBox
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
     final Offset local = _scale == 1 ? position : position / _scale;
     return defaultHitTestChildren(result, position: local);
+  }
+}
+
+class _ShowroomExpandRoute extends PageRoute<void> {
+  _ShowroomExpandRoute({
+    required this.source,
+    required this.page,
+    required this.coverUrl,
+    required this.background,
+    required this.radius,
+  });
+
+  final Rect? source;
+  final WidgetBuilder page;
+  final String? coverUrl;
+  final Color background;
+  final double radius;
+  bool _settled = false;
+
+  @override
+  Color? get barrierColor => null;
+
+  @override
+  String? get barrierLabel => null;
+
+  @override
+  bool get maintainState => true;
+
+  /// 커지는 동안은 뒤 목록이 보이고, 다 열리면 목록을 가린다.
+  @override
+  bool get opaque => _settled;
+
+  @override
+  bool get barrierDismissible => false;
+
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 460);
+
+  @override
+  Duration get reverseTransitionDuration => const Duration(milliseconds: 380);
+
+  @override
+  void install() {
+    super.install();
+    animation!.addStatusListener(_onStatus);
+  }
+
+  void _onStatus(AnimationStatus status) {
+    final bool settled = status == AnimationStatus.completed;
+    if (settled == _settled) return;
+    _settled = settled;
+    changedInternalState();
+  }
+
+  @override
+  void dispose() {
+    animation?.removeStatusListener(_onStatus);
+    super.dispose();
+  }
+
+  @override
+  Widget buildPage(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+  ) {
+    return page(context);
+  }
+
+  @override
+  Widget buildTransitions(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return _ShowroomExpandTransition(
+      animation: animation,
+      source: source,
+      coverUrl: coverUrl,
+      background: background,
+      radius: radius,
+      child: child,
+    );
+  }
+}
+
+class _ShowroomExpandTransition extends StatefulWidget {
+  const _ShowroomExpandTransition({
+    required this.animation,
+    required this.source,
+    required this.coverUrl,
+    required this.background,
+    required this.radius,
+    required this.child,
+  });
+
+  final Animation<double> animation;
+  final Rect? source;
+  final String? coverUrl;
+  final Color background;
+  final double radius;
+  final Widget child;
+
+  @override
+  State<_ShowroomExpandTransition> createState() =>
+      _ShowroomExpandTransitionState();
+}
+
+class _ShowroomExpandTransitionState extends State<_ShowroomExpandTransition> {
+  late final CurvedAnimation _expand;
+  late final CurvedAnimation _fade;
+
+  @override
+  void initState() {
+    super.initState();
+    _expand = CurvedAnimation(
+      parent: widget.animation,
+      curve: Curves.fastOutSlowIn,
+      reverseCurve: Curves.fastOutSlowIn,
+    );
+    _fade = CurvedAnimation(
+      parent: widget.animation,
+      curve: const Interval(0.18, 0.62, curve: Curves.easeOut),
+      reverseCurve: const Interval(0.0, 0.45, curve: Curves.easeIn),
+    );
+  }
+
+  @override
+  void dispose() {
+    _expand.dispose();
+    _fade.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final Rect? source = widget.source;
+    if (source == null) {
+      return FadeTransition(opacity: _expand, child: widget.child);
+    }
+    return _GrowingPage(
+      expand: _expand,
+      coverFade: _fade,
+      source: source,
+      radius: widget.radius,
+      background: widget.background,
+      cover: _cover(),
+      child: widget.child,
+    );
+  }
+
+  Widget _cover() {
+    final String url = widget.coverUrl?.trim() ?? '';
+    if (url.isEmpty) {
+      return ColoredBox(color: widget.background);
+    }
+    return AppNetworkImage(url: url);
+  }
+}
+
+class _GrowingPage extends StatelessWidget {
+  const _GrowingPage({
+    required this.expand,
+    required this.coverFade,
+    required this.source,
+    required this.radius,
+    required this.background,
+    required this.cover,
+    required this.child,
+  });
+
+  final Animation<double> expand;
+  final Animation<double> coverFade;
+  final Rect source;
+  final double radius;
+  final Color background;
+  final Widget cover;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final Size screen = constraints.biggest;
+        final Rect end = Offset.zero & screen;
+        return AnimatedBuilder(
+          animation: expand,
+          builder: (BuildContext context, Widget? page) {
+            final double t = expand.value;
+            final Rect rect = Rect.lerp(source, end, t)!;
+            final double scale =
+                screen.width <= 0
+                    ? 1
+                    : (rect.width / screen.width).clamp(0.05, 1.0);
+            final double coverOpacity = (1 - coverFade.value).clamp(0.0, 1.0);
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                ColoredBox(color: Colors.black.withValues(alpha: 0.22 * t)),
+                Positioned.fromRect(
+                  rect: rect,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(
+                      lerpDouble(radius, 0, t)!,
+                    ),
+                    child: ColoredBox(
+                      color: background,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          OverflowBox(
+                            alignment: Alignment.topLeft,
+                            minWidth: screen.width,
+                            maxWidth: screen.width,
+                            minHeight: screen.height,
+                            maxHeight: screen.height,
+                            child: Transform.scale(
+                              alignment: Alignment.topLeft,
+                              scale: scale,
+                              filterQuality: FilterQuality.medium,
+                              child: page,
+                            ),
+                          ),
+                          if (coverOpacity > 0.01)
+                            IgnorePointer(
+                              child: Opacity(
+                                opacity: coverOpacity,
+                                child: cover,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+          child: RepaintBoundary(child: child),
+        );
+      },
+    );
   }
 }

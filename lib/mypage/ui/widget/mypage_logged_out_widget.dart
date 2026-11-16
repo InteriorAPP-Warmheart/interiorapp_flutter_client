@@ -14,62 +14,78 @@ class MyPageLoggedOutWidget extends StatelessWidget {
 
     final double tabSlot = MediaQuery.paddingOf(context).bottom;
 
-    return Center(
-      child: Padding(
-        padding: padding.copyWith(bottom: tabSlot),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.person_outline_rounded,
-                size: 38,
-                color: AppColors.primary,
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double bottomPad = tabSlot + 16;
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            padding.left,
+            8,
+            padding.right,
+            bottomPad,
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: (constraints.maxHeight - bottomPad - 8).clamp(
+                0,
+                double.infinity,
               ),
             ),
-            const SizedBox(height: 20),
-            Text(
-              '로그인이 필요한 서비스입니다.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 17 * fontScale,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.3,
-                color: AppColors.textPrimary,
-              ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.person_outline_rounded,
+                    size: 38,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  '로그인이 필요한 서비스입니다.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 17 * fontScale,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '로그인하면 저장 콘텐츠, 프로젝트 이력 등\n더 많은 기능을 이용할 수 있어요.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13 * fontScale,
+                    height: 1.6,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                AppButton(
+                  label: '로그인 하러가기',
+                  onPressed: () => context.push('/signin'),
+                ),
+                const SizedBox(height: 10),
+                AppButton(
+                  label: '회원가입',
+                  variant: AppButtonVariant.secondary,
+                  onPressed: () => context.push('/signup'),
+                ),
+                const SizedBox(height: 44),
+                const _FeaturePreviewRow(),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              '로그인하면 저장 콘텐츠, 프로젝트 이력 등\n더 많은 기능을 이용할 수 있어요.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13 * fontScale,
-                height: 1.6,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 32),
-            AppButton(
-              label: '로그인 하러가기',
-              onPressed: () => context.push('/signin'),
-            ),
-            const SizedBox(height: 10),
-            AppButton(
-              label: '회원가입',
-              variant: AppButtonVariant.secondary,
-              onPressed: () => context.push('/signup'),
-            ),
-            const SizedBox(height: 44),
-            const _FeaturePreviewRow(),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -88,34 +104,33 @@ class _FeaturePreviewRow extends StatelessWidget {
     ];
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: features.map((f) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(f.$1, size: 22, color: AppColors.primary),
+      children:
+          features.map((f) {
+            return Expanded(
+              child: Column(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(f.$1, size: 22, color: AppColors.primary),
+                  ),
+                  const SizedBox(height: 7),
+                  Text(
+                    f.$2,
+                    style: TextStyle(
+                      fontSize: 11 * fontScale,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 7),
-              Text(
-                f.$2,
-                style: TextStyle(
-                  fontSize: 11 * fontScale,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
+            );
+          }).toList(),
     );
   }
 }

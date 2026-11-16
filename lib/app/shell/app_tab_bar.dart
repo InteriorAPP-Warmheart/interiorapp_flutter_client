@@ -89,8 +89,11 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
 
   Widget _buildTab() {
     final EdgeInsets inset = ResponsiveSize.textInset(context);
-    final double tabGap = ResponsiveSize.subGap(context) * 0.5;
     final double barHeight = AppTabBarTheme.height(context);
+    final double slot =
+        (MediaQuery.sizeOf(context).width - inset.horizontal) /
+        ShellTabs.active.length;
+    final double tabGap = slot < 84 ? 2 : ResponsiveSize.subGap(context) * 0.5;
     return Padding(
       padding: EdgeInsets.fromLTRB(
         inset.left,
@@ -110,8 +113,16 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
               labelPadding: EdgeInsets.symmetric(horizontal: tabGap),
               labelColor: AppTabBarTheme.selectedColor,
               unselectedLabelColor: AppTabBarTheme.unselectedColor,
-              labelStyle: AppTabBarTheme.labelStyle(context),
-              unselectedLabelStyle: AppTabBarTheme.unselectedLabelStyle(context),
+              labelStyle: AppTabBarTheme.labelStyle(context).copyWith(
+                fontSize:
+                    (slot < 84 ? 11 : 12) * ResponsiveSize.fontScale(context),
+              ),
+              unselectedLabelStyle: AppTabBarTheme.unselectedLabelStyle(
+                context,
+              ).copyWith(
+                fontSize:
+                    (slot < 84 ? 11 : 12) * ResponsiveSize.fontScale(context),
+              ),
               indicator: AppTabBarTheme.indicator,
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
@@ -125,7 +136,11 @@ class _AppTabBarState extends ConsumerState<AppTabBar>
               tabs: [
                 for (final tab in ShellTabs.active)
                   Tab(
-                    icon: Icon(tab.icon, size: AppTabBarTheme.iconSize(context)),
+                    height: barHeight,
+                    icon: Icon(
+                      tab.icon,
+                      size: AppTabBarTheme.iconSize(context),
+                    ),
                     iconMargin: const EdgeInsets.only(bottom: 2),
                     text: tab.label,
                   ),
