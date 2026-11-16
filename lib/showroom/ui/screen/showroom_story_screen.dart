@@ -8,7 +8,10 @@ import 'package:interiorapp_flutter_client/mypage/presentation/provider/mypage_p
 import 'package:interiorapp_flutter_client/mypage/presentation/record_showroom_view.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/showroom_story_provider.dart';
+import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_body.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_gallery.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/story/showroom_story_scenes.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/write_body_editor.dart';
 
 class ShowroomStoryScreen extends ConsumerWidget {
   const ShowroomStoryScreen({super.key, required this.showroomId});
@@ -203,7 +206,16 @@ class _StoryPagerState extends ConsumerState<_StoryPager>
             .map((HotShowroomModel item) => item.favoriteStatus)
             .firstOrNull ??
         widget.story.favoriteStatus;
-    final List<_Beat> beats = _beats(widget.story);
+    final HotShowroomModel? card =
+        listed
+            .where((HotShowroomModel item) => item.id == widget.story.id)
+            .firstOrNull;
+    final List<_Beat> beats = _beats(
+      widget.story,
+      commentCount: card?.commentCount ?? 0,
+      viewCount: card?.viewCount ?? 0,
+      favorite: favorite,
+    );
 
     final int index = beats.isEmpty ? 0 : _index.clamp(0, beats.length - 1);
     final bool light = beats.isEmpty ? false : beats[index].light;
@@ -439,15 +451,28 @@ class _IndexRail extends StatelessWidget {
   }
 }
 
-List<_Beat> _beats(ShowroomStoryModel story) {
+List<_Beat> _beats(
+  ShowroomStoryModel story, {
+  int commentCount = 0,
+  int viewCount = 0,
+  bool favorite = false,
+}) {
   final ShowroomSituation? situation = story.situation;
   final ShowroomCost? cost = story.cost;
+  final List<ShowroomBlock> blocks =
+      story.blocks.where((ShowroomBlock block) => block.hasContent).toList();
   return <_Beat>[
     _Beat(
       light: false,
       reveal: const Duration(milliseconds: 520),
       build: (double progress) {
-        return StoryHeroScene(story: story, progress: progress);
+        return StoryHeroScene(
+          story: story,
+          progress: progress,
+          commentCount: commentCount,
+          viewCount: viewCount,
+          favorite: favorite,
+        );
       },
     ),
     if (situation != null)
@@ -466,27 +491,36 @@ List<_Beat> _beats(ShowroomStoryModel story) {
           return StoryCostScene(cost: cost, progress: progress);
         },
       ),
-    for (final ShowroomBeforeAfter pair in story.comparisons)
-      _Beat(
-        light: false,
-        reveal: const Duration(milliseconds: 500),
-        build: (double progress) {
-          return StoryBeforeAfterScene(beforeAfter: pair, progress: progress);
-        },
-      ),
-    for (var i = 0; i < story.process.length; i++)
-      _Beat(
-        light: false,
-        reveal: const Duration(milliseconds: 420),
-        build: (double progress) {
-          return StoryProcessFrameScene(
-            frame: story.process[i],
-            index: i,
-            count: story.process.length,
-          );
-        },
-      ),
-    if (story.guide.isNotEmpty)
+    if (blocks.isNotEmpty)
+      for (final ShowroomBlock block in blocks)
+        _Beat(
+          light: !_storyFullBleed(block),
+          reveal: const Duration(milliseconds: 420),
+          build: (double progress) => _StoryBlockPage(block: block),
+        ),
+    if (blocks.isEmpty)
+      for (final ShowroomBeforeAfter pair in story.comparisons)
+        _Beat(
+          light: false,
+          reveal: const Duration(milliseconds: 500),
+          build: (double progress) {
+            return StoryBeforeAfterScene(beforeAfter: pair, progress: progress);
+          },
+        ),
+    if (blocks.isEmpty)
+      for (var i = 0; i < story.process.length; i++)
+        _Beat(
+          light: false,
+          reveal: const Duration(milliseconds: 420),
+          build: (double progress) {
+            return StoryProcessFrameScene(
+              frame: story.process[i],
+              index: i,
+              count: story.process.length,
+            );
+          },
+        ),
+    if (blocks.isEmpty && story.guide.isNotEmpty)
       _Beat(
         light: true,
         reveal: const Duration(milliseconds: 720),
@@ -495,6 +529,50 @@ List<_Beat> _beats(ShowroomStoryModel story) {
         },
       ),
   ];
+}
+
+bool _storyFullBleed(ShowroomBlock block) {
+  return block.kind == ShowroomBlockKind.images &&
+      block.layout == ShowroomImageLayout.photo &&
+      !showroomSoloEmoticon(block) &&
+      block.urls.length == 1;
+}
+
+class _StoryBlockPage extends StatelessWidget {
+  const _StoryBlockPage({required this.block});
+
+  final ShowroomBlock block;
+
+  @override
+  Widget build(BuildContext context) {
+    if (_storyFullBleed(block)) {
+      return StoryPhoto(url: block.urls.first.trim());
+    }
+    final double top = MediaQuery.paddingOf(context).top + 64;
+    final double bottom = MediaQuery.paddingOf(context).bottom + 28;
+    return ColoredBox(
+      color: showroomPaper,
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          return SingleChildScrollView(
+            padding: EdgeInsets.only(top: top, bottom: bottom),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: (constraints.maxHeight - top - bottom).clamp(
+                  0,
+                  double.infinity,
+                ),
+              ),
+              child: SizedBox(
+                width: constraints.maxWidth,
+                child: ShowroomBodyView(blocks: <ShowroomBlock>[block]),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
 
 /// 지금 제스처가 시작한 인덱스. 스크롤 중에 바로 읽는다.

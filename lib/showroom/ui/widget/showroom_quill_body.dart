@@ -10,6 +10,7 @@ import 'package:interiorapp_flutter_client/core/widget/keyboard_dismiss.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_body.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/showroom_quill_document.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_gallery.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_process_editor.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/write_body_editor.dart';
 
@@ -486,7 +487,7 @@ class ShowroomQuillToolbar extends StatelessWidget {
                           ),
                           _InsertButton(
                             icon: Icons.emoji_emotions_outlined,
-                            label: '이모지',
+                            label: '이모티콘',
                             selected: emojiOpen,
                             onTap: onEmojiToggle,
                           ),
@@ -508,13 +509,23 @@ class ShowroomQuillToolbar extends StatelessWidget {
                                   canRequestFocus: false,
                                   borderRadius: BorderRadius.circular(8),
                                   child: SizedBox(
-                                    width: 36,
-                                    height: 36,
+                                    width: 48,
+                                    height: 48,
                                     child: Center(
-                                      child: Text(
-                                        emoji,
-                                        style: const TextStyle(fontSize: 20),
-                                      ),
+                                      child:
+                                          showroomEmoticonUrl(emoji)
+                                              ? Image.asset(
+                                                emoji,
+                                                width: 40,
+                                                height: 40,
+                                                fit: BoxFit.contain,
+                                              )
+                                              : Text(
+                                                emoji,
+                                                style: const TextStyle(
+                                                  fontSize: 20,
+                                                ),
+                                              ),
                                     ),
                                   ),
                                 ),

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_city_catalog.dart';
+import 'package:interiorapp_flutter_client/showroom/domain/showroom_popularity.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum ShowroomFeedSort { latest, popular }
@@ -79,6 +80,8 @@ List<T> sortedShowroomFeed<T>(
   ShowroomFeedSort sort, {
   required int Function(T item) likes,
   required DateTime Function(T item) publishedAt,
+  int Function(T item)? comments,
+  int Function(T item)? views,
   bool pinFavorites = false,
   bool Function(T item)? favorite,
 }) {
@@ -90,7 +93,17 @@ List<T> sortedShowroomFeed<T>(
       if (aPinned != bPinned) return aPinned ? -1 : 1;
     }
     if (sort == ShowroomFeedSort.popular) {
-      return likes(b).compareTo(likes(a));
+      final int aScore = showroomPopularity(
+        likes: likes(a),
+        comments: comments?.call(a) ?? 0,
+        views: views?.call(a) ?? 0,
+      );
+      final int bScore = showroomPopularity(
+        likes: likes(b),
+        comments: comments?.call(b) ?? 0,
+        views: views?.call(b) ?? 0,
+      );
+      return bScore.compareTo(aScore);
     }
     return publishedAt(b).compareTo(publishedAt(a));
   });

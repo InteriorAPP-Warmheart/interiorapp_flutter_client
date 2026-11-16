@@ -2,8 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/vm/showroom_write_vm.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_feed_segment.dart';
 
 const Color storyInk = Color(0xFF111111);
+
+/// 글 화면 배경. 카페 게시글처럼 본문은 흰 바탕이다.
+const Color showroomPaper = Color(0xFFFFFFFF);
+
+/// 본문. 카페 글은 먹색에 가깝고, 자간을 줄이지 않는다.
+const Color showroomInk = Color(0xFF000000);
+
+/// 캡션, 항목 이름. 네이버 본문 보조색.
+const Color showroomMuted = Color(0xFF767676);
+
+/// 구분선. 정보 칸에서만 쓴다.
+const Color showroomFigureLine = Color(0xFFEBEBEB);
+const Color showroomChip = Color(0xFFF2F4F6);
 const Color storyPaper = Color(0xFFF6F3EE);
 
 /// 글이 올라오는 데 쓰는 진행 구간.
@@ -143,15 +157,22 @@ class StoryHeroScene extends StatelessWidget {
     super.key,
     required this.story,
     required this.progress,
+    this.commentCount = 0,
+    this.viewCount = 0,
+    this.favorite = false,
   });
 
   final ShowroomStoryModel story;
   final double progress;
+  final int commentCount;
+  final int viewCount;
+  final bool favorite;
 
   @override
   Widget build(BuildContext context) {
-    final String likes =
-        story.likeCount > 999 ? '999+' : story.likeCount.toString();
+    final String likes = showroomCompactCount(story.likeCount);
+    final String comments = showroomCompactCount(commentCount);
+    final String views = showroomCompactCount(viewCount);
     const double hint = 1;
     final double bottom = MediaQuery.paddingOf(context).bottom + 28;
 
@@ -210,10 +231,44 @@ class StoryHeroScene extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    const Icon(Icons.favorite, size: 15, color: Colors.white),
+                    Icon(
+                      favorite ? Icons.favorite : Icons.favorite_border,
+                      size: 15,
+                      color: favorite ? const Color(0xFFFF4D6A) : Colors.white,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       likes,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Icon(
+                      Icons.mode_comment_outlined,
+                      size: 15,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      comments,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Icon(
+                      Icons.visibility_outlined,
+                      size: 15,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      views,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,

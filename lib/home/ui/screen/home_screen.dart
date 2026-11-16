@@ -152,7 +152,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Positioned.fill(
             child: ExpandingActionButton(
               controller: _consult,
-              icon: Icons.chat_bubble_outline,
+              icon: Icons.support_agent_outlined,
               label: '상담받기',
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.white,

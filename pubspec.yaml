@@ -56,6 +56,10 @@ flutter:
   assets:
     - assets/images/
     - assets/images/showroom/
+    - assets/images/showroom_real/
+    - assets/images/showroom_real/ddonga/
+    - assets/images/showroom_real/wh/
+    - assets/images/app_icons/
     - assets/images/app_images/
     - assets/logo/
     - lib/auth/util/

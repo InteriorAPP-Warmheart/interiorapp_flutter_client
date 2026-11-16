@@ -7,6 +7,8 @@ class FilteredShowroomModel {
   final String userProfileUrl;
   final bool favoriteStatus;
   final int likeCount;
+  final int commentCount;
+  final int viewCount;
   final List<String> tags;
   final DateTime? _publishedAt;
 
@@ -24,6 +26,8 @@ class FilteredShowroomModel {
     required this.userProfileUrl,
     required this.favoriteStatus,
     required this.likeCount,
+    this.commentCount = 0,
+    this.viewCount = 0,
     required this.tags,
     DateTime? publishedAt,
     this.imageRatio = 0.8,
@@ -88,6 +92,8 @@ class FilteredShowroomModel {
       userProfileUrl: readString('userProfileUrl'),
       favoriteStatus: readBool('favoriteStatus'),
       likeCount: readInt('likeCount'),
+      commentCount: readInt('commentCount'),
+      viewCount: readInt('viewCount'),
       tags: readStringList('tags'),
       publishedAt: DateTime.tryParse(publishedRaw) ?? _publishedAtFromId(id),
       imageRatio: readDouble('imageRatio'),
@@ -103,6 +109,8 @@ class FilteredShowroomModel {
     'userProfileUrl': userProfileUrl,
     'favoriteStatus': favoriteStatus,
     'likeCount': likeCount,
+    'commentCount': commentCount,
+    'viewCount': viewCount,
     'tags': tags,
     'publishedAt': publishedAt.toIso8601String(),
     'imageRatio': imageRatio,
@@ -117,6 +125,8 @@ class FilteredShowroomModel {
     String? userProfileUrl,
     bool? favoriteStatus,
     int? likeCount,
+    int? commentCount,
+    int? viewCount,
     List<String>? tags,
     DateTime? publishedAt,
     double? imageRatio,
@@ -130,6 +140,8 @@ class FilteredShowroomModel {
       userProfileUrl: userProfileUrl ?? this.userProfileUrl,
       favoriteStatus: favoriteStatus ?? this.favoriteStatus,
       likeCount: likeCount ?? this.likeCount,
+      commentCount: commentCount ?? this.commentCount,
+      viewCount: viewCount ?? this.viewCount,
       tags: tags ?? this.tags,
       publishedAt: publishedAt ?? this.publishedAt,
       imageRatio: imageRatio ?? this.imageRatio,

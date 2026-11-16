@@ -14,7 +14,9 @@ import 'package:interiorapp_flutter_client/mypage/presentation/record_showroom_v
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/showroom_story_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_comment_section.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_gallery.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_process_tour.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/write_body_editor.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_space_header.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_zone_compare.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/story/showroom_story_scenes.dart';
@@ -101,6 +103,7 @@ class _ShowroomBoardScreenState extends ConsumerState<ShowroomBoardScreen> {
         setState(() => _picking = false);
       },
       child: Scaffold(
+        backgroundColor: showroomPaper,
         appBar: AppBar(
           elevation: 0,
           scrolledUnderElevation: 0,
@@ -118,46 +121,27 @@ class _ShowroomBoardScreenState extends ConsumerState<ShowroomBoardScreen> {
             },
             icon: const Icon(Icons.arrow_back),
           ),
-          actions: [
-            storyAsync.maybeWhen(
-              data: (ShowroomStoryModel? story) {
-                final ShowroomStoryModel? overview =
-                    story ?? _overviewFromList(listed, showroomId);
-                if (overview == null) return const SizedBox.shrink();
-                final bool favorite =
-                    listed
-                        .where(
-                          (HotShowroomModel item) => item.id == overview.id,
-                        )
-                        .map((HotShowroomModel item) => item.favoriteStatus)
-                        .firstOrNull ??
-                    overview.favoriteStatus;
-                return IconButton(
-                  onPressed: () {
-                    ref
-                        .read(hotShowroomSliderVm.notifier)
-                        .toggleFavoriteByIndex(overview.id);
-                  },
-                  icon: Icon(
-                    favorite ? Icons.favorite : Icons.favorite_border,
-                    color:
-                        favorite
-                            ? const Color(0xFFFF4D6A)
-                            : Theme.of(context).colorScheme.onSurface,
-                  ),
-                );
-              },
-              orElse: () => const SizedBox.shrink(),
-            ),
-          ],
+          actions: const <Widget>[],
         ),
         body: () {
           final ShowroomStoryModel? overview =
               storyAsync.asData?.value ?? _overviewFromList(listed, showroomId);
           if (overview != null) {
+            final bool favorite =
+                listed
+                    .where((HotShowroomModel item) => item.id == overview.id)
+                    .map((HotShowroomModel item) => item.favoriteStatus)
+                    .firstOrNull ??
+                overview.favoriteStatus;
             return _Board(
               story: overview,
               picking: _picking,
+              favorite: favorite,
+              onFavorite: () {
+                ref
+                    .read(hotShowroomSliderVm.notifier)
+                    .toggleFavoriteByIndex(overview.id);
+              },
               onPicking: (bool value) => setState(() => _picking = value),
             );
           }
@@ -196,11 +180,15 @@ class _Board extends StatelessWidget {
   const _Board({
     required this.story,
     required this.picking,
+    required this.favorite,
+    required this.onFavorite,
     required this.onPicking,
   });
 
   final ShowroomStoryModel story;
   final bool picking;
+  final bool favorite;
+  final VoidCallback onFavorite;
   final ValueChanged<bool> onPicking;
 
   @override
@@ -218,27 +206,77 @@ class _Board extends StatelessWidget {
           ],
         ].where(((String, String) fact) => fact.$2.trim().isNotEmpty).toList();
     final ShowroomCost? cost = story.cost;
+    final List<String> bodyUrls =
+        story.blocks.isNotEmpty
+            ? showroomReadingImageUrls(story.blocks)
+            : <String>[
+              for (final ShowroomBeforeAfter item
+                  in story.comparisons) ...<String>[
+                if (item.beforeUrl.trim().isNotEmpty) item.beforeUrl.trim(),
+                if (item.afterUrl.trim().isNotEmpty) item.afterUrl.trim(),
+              ],
+              for (final ShowroomProcessFrame frame in story.process)
+                if (frame.imageUrl.trim().isNotEmpty) frame.imageUrl.trim(),
+            ];
+    final List<String> gallery = showroomGalleryWithCover(
+      bodyUrls,
+      story.thumbnailUrl,
+    );
+    final int coverShift = gallery.length - bodyUrls.length;
+    void openGallery(int index) {
+      openShowroomPhotoGallery(context, urls: gallery, initialIndex: index);
+    }
 
     return _BoardScaffold(
       story: story,
       picking: picking,
       onPicking: onPicking,
       child: ShowroomBoardWithComments(
+        showroomId: story.id,
         authorName: story.userName,
-        headerSlivers: [
-          showroomThumbnailBar(
-            context,
-            imageUrl: story.thumbnailUrl,
-            style: story.themeName,
-            title: story.title,
-            authorName: story.userName,
-            authorPhotoUrl: story.userProfileUrl,
-            likes: likes,
-          ),
-        ],
+        likes: likes,
+        favorite: favorite,
+        onFavorite: onFavorite,
+        headerSlivers: (int commentCount, VoidCallback _) {
+          return <Widget>[
+            showroomThumbnailBar(
+              context,
+              imageUrl: story.thumbnailUrl,
+              style: story.themeName,
+              title: story.title,
+              authorName: story.userName,
+              authorPhotoUrl: story.userProfileUrl,
+              likes: likes,
+              commentCount: commentCount,
+              sheetColor: showroomPaper,
+              onPhotoTap:
+                  story.thumbnailUrl.trim().isEmpty
+                      ? null
+                      : () => openGallery(
+                        coverShift == 1
+                            ? 0
+                            : gallery.indexOf(story.thumbnailUrl.trim()),
+                      ),
+            ),
+          ];
+        },
         leading: [
           if (facts.isNotEmpty || showroomHasCostDetail(cost)) ...[
-            const _SectionTitle('이 공간'),
+            story.blocks.isEmpty
+                ? const _SectionTitle('이 공간')
+                : const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 2, 16, 10),
+                  child: Text(
+                    '이 공간',
+                    style: TextStyle(
+                      fontSize: 13,
+                      height: 1.3,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.2,
+                      color: showroomMuted,
+                    ),
+                  ),
+                ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: ShowroomFactCard(
@@ -247,18 +285,37 @@ class _Board extends StatelessWidget {
               ),
             ),
           ],
-          if (story.comparisons.isNotEmpty) ...[
-            const _SectionTitle('시공 전후'),
-            _BoardComparisons(comparisons: story.comparisons),
+          if (story.blocks.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            ShowroomBodyView(
+              blocks: story.blocks,
+              onOpenImage: (int index) => openGallery(index + coverShift),
+            ),
           ],
-          if (story.process.isNotEmpty) ...[
+          if (story.blocks.isEmpty && story.comparisons.isNotEmpty) ...[
+            const _SectionTitle('시공 전후'),
+            _BoardComparisons(
+              comparisons: story.comparisons,
+              onOpen: (int index) => openGallery(index + coverShift),
+            ),
+          ],
+          if (story.blocks.isEmpty && story.process.isNotEmpty) ...[
             const _SectionTitle('현장 기록'),
             ShowroomProcessTour(
               frames: story.process,
               wrapPhoto: (int index, ShowroomProcessFrame frame, Widget photo) {
                 final String trade = frame.trade.trim();
                 final String caption = frame.caption.trim();
-                return ShowroomReferablePhoto(
+                final String url = frame.imageUrl.trim();
+                var seen = 0;
+                for (final ShowroomBeforeAfter item in story.comparisons) {
+                  if (item.beforeUrl.trim().isNotEmpty) seen += 1;
+                  if (item.afterUrl.trim().isNotEmpty) seen += 1;
+                }
+                for (var i = 0; i < index; i++) {
+                  if (story.process[i].imageUrl.trim().isNotEmpty) seen += 1;
+                }
+                final Widget referable = ShowroomReferablePhoto(
                   id: 'process-$index',
                   label:
                       caption.isEmpty
@@ -267,10 +324,16 @@ class _Board extends StatelessWidget {
                   imageUrl: frame.imageUrl,
                   child: photo,
                 );
+                if (url.isEmpty) return referable;
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => openGallery(seen + coverShift),
+                  child: referable,
+                );
               },
             ),
           ],
-          if (story.guide.isNotEmpty) ...[
+          if (story.blocks.isEmpty && story.guide.isNotEmpty) ...[
             const _SectionTitle('알고 가면'),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -406,11 +469,11 @@ class _BoardScaffoldState extends State<_BoardScaffold> {
                 Positioned.fill(
                   child: ExpandingActionButton(
                     controller: _consult,
-                    icon: Icons.chat_bubble_outline,
+                    icon: Icons.support_agent_outlined,
                     label: '이 스타일로 상담받기',
                     backgroundColor: AppColors.primary,
                     foregroundColor: AppColors.white,
-                    bottom: MediaQuery.paddingOf(context).bottom + 84,
+                    bottom: showroomReadingDockClearance(context) + 14,
                     onPressed: () => widget.onPicking(true),
                   ),
                 ),
@@ -435,6 +498,26 @@ class _BoardScaffoldState extends State<_BoardScaffold> {
       ],
     );
   }
+}
+
+List<Widget> _referenceBody(ShowroomStoryModel story) {
+  final List<ShowroomReferenceTarget> shots = showroomBlockReferencePhotos(
+    story,
+  );
+  if (shots.isEmpty) return const <Widget>[];
+  return <Widget>[
+    const SizedBox(height: 22),
+    const _ReferenceLabel('본문 사진'),
+    for (var i = 0; i < shots.length; i++) ...<Widget>[
+      if (i > 0) const SizedBox(height: 12),
+      _ReferencePhoto(
+        id: shots[i].id,
+        label: shots[i].label,
+        imageUrl: shots[i].imageUrl,
+        caption: shots[i].label.startsWith('사진 ') ? '' : shots[i].label,
+      ),
+    ],
+  ];
 }
 
 /// 참고 모드. 댓글 없이, 고를 사진과 핵심 정보만 보여 준다.
@@ -497,28 +580,32 @@ class _ReferenceBoard extends StatelessWidget {
           label: '대표 사진',
           imageUrl: story.thumbnailUrl,
         ),
-        if (story.comparisons.isNotEmpty) ...[
-          const SizedBox(height: 22),
-          const _ReferenceLabel('시공 전후'),
-          for (var i = 0; i < story.comparisons.length; i++) ...[
-            if (i > 0) const SizedBox(height: 12),
-            _ReferencePair(pair: story.comparisons[i], index: i),
+        if (story.blocks.isNotEmpty)
+          ..._referenceBody(story)
+        else ...[
+          if (story.comparisons.isNotEmpty) ...[
+            const SizedBox(height: 22),
+            const _ReferenceLabel('시공 전후'),
+            for (var i = 0; i < story.comparisons.length; i++) ...[
+              if (i > 0) const SizedBox(height: 12),
+              _ReferencePair(pair: story.comparisons[i], index: i),
+            ],
           ],
-        ],
-        if (story.process.isNotEmpty) ...[
-          const SizedBox(height: 22),
-          const _ReferenceLabel('현장 기록'),
-          for (var i = 0; i < story.process.length; i++) ...[
-            if (i > 0) const SizedBox(height: 12),
-            _ReferencePhoto(
-              id: 'process-$i',
-              label:
-                  story.process[i].caption.trim().isEmpty
-                      ? '현장 기록 ${i + 1}'
-                      : story.process[i].caption.trim(),
-              imageUrl: story.process[i].imageUrl,
-              caption: story.process[i].caption.trim(),
-            ),
+          if (story.process.isNotEmpty) ...[
+            const SizedBox(height: 22),
+            const _ReferenceLabel('현장 기록'),
+            for (var i = 0; i < story.process.length; i++) ...[
+              if (i > 0) const SizedBox(height: 12),
+              _ReferencePhoto(
+                id: 'process-$i',
+                label:
+                    story.process[i].caption.trim().isEmpty
+                        ? '현장 기록 ${i + 1}'
+                        : story.process[i].caption.trim(),
+                imageUrl: story.process[i].imageUrl,
+                caption: story.process[i].caption.trim(),
+              ),
+            ],
           ],
         ],
       ],
@@ -649,9 +736,10 @@ class _ReferencePair extends StatelessWidget {
 }
 
 class _BoardComparisons extends StatelessWidget {
-  const _BoardComparisons({required this.comparisons});
+  const _BoardComparisons({required this.comparisons, required this.onOpen});
 
   final List<ShowroomBeforeAfter> comparisons;
+  final ValueChanged<int> onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -669,10 +757,28 @@ class _BoardComparisons extends StatelessWidget {
         ),
       );
     }
+    final List<int> beforeIndex = <int>[];
+    final List<int> afterIndex = <int>[];
+    var cursor = 0;
+    for (final ShowroomBeforeAfter item in comparisons) {
+      beforeIndex.add(item.beforeUrl.trim().isEmpty ? -1 : cursor++);
+      afterIndex.add(item.afterUrl.trim().isEmpty ? -1 : cursor++);
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ShowroomZoneCompare(zones: zones),
+        ShowroomZoneCompare(
+          zones: zones,
+          onOpen: (int zoneIndex, bool showingAfter) {
+            final int before = beforeIndex[zoneIndex];
+            final int after = afterIndex[zoneIndex];
+            final int picked =
+                showingAfter
+                    ? (after >= 0 ? after : before)
+                    : (before >= 0 ? before : after);
+            if (picked >= 0) onOpen(picked);
+          },
+        ),
         ShowroomReferenceTargets(
           targets: [
             for (var i = 0; i < comparisons.length; i++) ...[

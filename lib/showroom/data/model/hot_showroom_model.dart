@@ -7,6 +7,8 @@ class HotShowroomModel {
   final String userProfileUrl;
   final bool favoriteStatus;
   final int likeCount;
+  final int commentCount;
+  final int viewCount;
 
   /// 시 단위 동네. 예: 서울, 수원시.
   final String city;
@@ -27,6 +29,8 @@ class HotShowroomModel {
     required this.userProfileUrl,
     required this.favoriteStatus,
     required this.likeCount,
+    this.commentCount = 0,
+    this.viewCount = 0,
     this.city = '',
     DateTime? publishedAt,
     this.imageRatio = 0.8,
@@ -83,6 +87,8 @@ class HotShowroomModel {
       userProfileUrl: readString('userProfileUrl'),
       favoriteStatus: readBool('favoriteStatus'),
       likeCount: readInt('likeCount'),
+      commentCount: readInt('commentCount'),
+      viewCount: readInt('viewCount'),
       city: readString('city'),
       publishedAt: DateTime.tryParse(publishedRaw),
       imageRatio: readDouble('imageRatio'),
@@ -99,6 +105,8 @@ class HotShowroomModel {
     'userProfileUrl': userProfileUrl,
     'favoriteStatus': favoriteStatus,
     'likeCount': likeCount,
+    'commentCount': commentCount,
+    'viewCount': viewCount,
     'city': city,
     'publishedAt': publishedAt.toIso8601String(),
     'imageRatio': imageRatio,
@@ -114,6 +122,8 @@ class HotShowroomModel {
     String? userProfileUrl,
     bool? favoriteStatus,
     int? likeCount,
+    int? commentCount,
+    int? viewCount,
     String? city,
     DateTime? publishedAt,
     double? imageRatio,
@@ -127,6 +137,8 @@ class HotShowroomModel {
       userProfileUrl: userProfileUrl ?? this.userProfileUrl,
       favoriteStatus: favoriteStatus ?? this.favoriteStatus,
       likeCount: likeCount ?? this.likeCount,
+      commentCount: commentCount ?? this.commentCount,
+      viewCount: viewCount ?? this.viewCount,
       city: city ?? this.city,
       publishedAt: publishedAt ?? this.publishedAt,
       imageRatio: imageRatio ?? this.imageRatio,
@@ -159,6 +171,8 @@ class HotShowroomModel {
         other.userProfileUrl == userProfileUrl &&
         other.favoriteStatus == favoriteStatus &&
         other.likeCount == likeCount &&
+        other.commentCount == commentCount &&
+        other.viewCount == viewCount &&
         other.city == city &&
         other.publishedAt == publishedAt &&
         other.imageRatio == imageRatio;
@@ -174,6 +188,8 @@ class HotShowroomModel {
     userProfileUrl,
     favoriteStatus,
     likeCount,
+    commentCount,
+    viewCount,
     city,
     publishedAt,
     imageRatio,

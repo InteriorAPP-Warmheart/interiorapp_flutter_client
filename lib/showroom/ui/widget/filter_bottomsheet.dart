@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_segment.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/filter_entity.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/quick_filter_catalog.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/filter_provider.dart';
@@ -60,33 +61,7 @@ class FilterBottomSheet extends ConsumerWidget {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: SizedBox(
-                height: 40,
-                child: Row(
-                  children: [
-                    for (final String label in quickFilterLabels)
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(3),
-                          child: _SheetCategoryTab(
-                            label: quickFilterShortLabels[label] ?? label,
-                            selected: label == category,
-                            onTap:
-                                () => ref
-                                    .read(filterProvider.notifier)
-                                    .selectCategory(label),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
+            child: _FilterCategoryBar(category: category),
           ),
           Expanded(child: _buildFilterContent(ref, filterState, category)),
           const Divider(height: 1, color: _line),
@@ -485,39 +460,77 @@ class FilterBottomSheet extends ConsumerWidget {
   }
 }
 
-class _SheetCategoryTab extends StatelessWidget {
-  const _SheetCategoryTab({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
+class _FilterCategoryBar extends ConsumerStatefulWidget {
+  const _FilterCategoryBar({required this.category});
 
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
+  final String category;
+
+  @override
+  ConsumerState<_FilterCategoryBar> createState() => _FilterCategoryBarState();
+}
+
+class _FilterCategoryBarState extends ConsumerState<_FilterCategoryBar>
+    with SingleTickerProviderStateMixin {
+  late final AppSegmentController _controller;
+  late int _index;
+
+  @override
+  void initState() {
+    super.initState();
+    _index = _indexOf(widget.category);
+    _controller = AppSegmentController(
+      vsync: this,
+      length: quickFilterLabels.length,
+      initialIndex: _index,
+    )..addListener(_syncCategory);
+  }
+
+  int _indexOf(String category) {
+    final int index = quickFilterLabels.indexOf(category);
+    if (index < 0) return 0;
+    return index;
+  }
+
+  void _syncCategory() {
+    final int next = _controller.index;
+    if (!mounted || next == _index) return;
+    if ((_controller.page - next).abs() > 0.02) return;
+    _index = next;
+    ref.read(filterProvider.notifier).selectCategory(quickFilterLabels[next]);
+  }
+
+  @override
+  void didUpdateWidget(covariant _FilterCategoryBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final int next = _indexOf(widget.category);
+    if (next == _indexOf(oldWidget.category)) return;
+    if ((_controller.page - next).abs() < 0.02) return;
+    _controller.animateTo(next);
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_syncCategory);
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: selected ? Colors.white : Colors.transparent,
-      borderRadius: BorderRadius.circular(9),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(9),
-        child: Center(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              color:
-                  selected ? FilterBottomSheet._ink : FilterBottomSheet._mute,
-            ),
-          ),
-        ),
-      ),
+    return AppSegmentBar(
+      controller: _controller,
+      labels: <String>[
+        for (final String label in quickFilterLabels)
+          quickFilterShortLabels[label] ?? label,
+      ],
+      height: 40,
+      fontSize: 13,
+      radius: 10,
+      trackColor: AppColors.surface,
+      thumbColor: AppColors.primary,
+      selectedColor: AppColors.white,
+      unselectedColor: AppColors.textSecondary,
+      borderColor: AppColors.border,
     );
   }
 }

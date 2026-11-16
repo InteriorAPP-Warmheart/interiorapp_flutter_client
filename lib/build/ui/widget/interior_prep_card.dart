@@ -61,7 +61,7 @@ class ConsultLaunchBand extends StatelessWidget {
                     onTap: onConsult,
                     color: AppColors.primary,
                     foreground: AppColors.white,
-                    icon: Icons.chat_bubble_outline,
+                    icon: Icons.support_agent_outlined,
                     iconColor: AppColors.white,
                     label: '상담받기',
                     fontScale: fontScale,

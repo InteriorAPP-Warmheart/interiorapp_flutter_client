@@ -1,36 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:interiorapp_flutter_client/core/editor/rich_text_document.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
-import 'package:interiorapp_flutter_client/core/editor/rich_text_editor.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_body.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_gallery.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_ratio.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_process_tour.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_wipe_compare.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_zone_compare.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/story/showroom_story_scenes.dart';
 
 class ShowroomBodyView extends StatelessWidget {
-  const ShowroomBodyView({super.key, required this.blocks});
+  const ShowroomBodyView({super.key, required this.blocks, this.onOpenImage});
 
   final List<ShowroomBlock> blocks;
+
+  /// 본문 사진 순서. 표지를 앞에 붙인 화면은 이 인덱스에 더해 연다.
+  final ValueChanged<int>? onOpenImage;
 
   @override
   Widget build(BuildContext context) {
     final List<ShowroomBlock> visible =
         blocks.where((ShowroomBlock block) => block.hasContent).toList();
     if (visible.isEmpty) return const SizedBox.shrink();
-    final List<ShowroomZone> zones = _zonesOf(visible);
+    final List<String> urls = showroomReadingImageUrls(blocks);
+    void open(int index) {
+      final ValueChanged<int>? onOpenImage = this.onOpenImage;
+      if (onOpenImage != null) {
+        onOpenImage(index);
+        return;
+      }
+      openShowroomPhotoGallery(context, urls: urls, initialIndex: index);
+    }
+
     final List<Widget> children = <Widget>[];
-    bool placedZones = false;
-    for (final ShowroomBlock block in visible) {
+    var cursor = 0;
+    for (var index = 0; index < visible.length; index++) {
+      final ShowroomBlock block = visible[index];
       if (block.kind == ShowroomBlockKind.text) {
-        children.add(
-          Padding(
-            padding: ResponsiveSize.textInset(context),
-            child: RichTextView(paragraphs: block.paragraphs),
-          ),
-        );
+        children.add(_ReadingText(block: block));
       } else if (block.kind == ShowroomBlockKind.process) {
         final List<ShowroomProcessFrame> frames = <ShowroomProcessFrame>[
           for (final ShowroomProcessFrame frame in block.frames)
@@ -40,24 +50,166 @@ class ShowroomBodyView extends StatelessWidget {
               frame,
         ];
         if (frames.isEmpty) continue;
-        children.add(ShowroomProcessTour(frames: frames));
+        final int start = cursor;
+        children.add(
+          ShowroomProcessTour(
+            frames: frames,
+            wrapPhoto: (
+              int frameIndex,
+              ShowroomProcessFrame frame,
+              Widget photo,
+            ) {
+              final String url = frame.imageUrl.trim();
+              if (url.isEmpty) return photo;
+              var seen = 0;
+              for (var i = 0; i < frameIndex; i++) {
+                if (frames[i].imageUrl.trim().isNotEmpty) seen += 1;
+              }
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => open(start + seen),
+                child: photo,
+              );
+            },
+          ),
+        );
+        cursor +=
+            frames
+                .where(
+                  (ShowroomProcessFrame frame) =>
+                      frame.imageUrl.trim().isNotEmpty,
+                )
+                .length;
       } else if (block.layout == ShowroomImageLayout.beforeAfter) {
-        if (!placedZones && zones.isNotEmpty) {
-          children.add(ShowroomZoneCompare(zones: zones));
-          placedZones = true;
-        } else {
-          continue;
+        final List<ShowroomZone> zones = _zonesOf(<ShowroomBlock>[block]);
+        if (zones.isEmpty) continue;
+        final List<int> beforeIndex = <int>[];
+        final List<int> afterIndex = <int>[];
+        for (final ShowroomZone zone in zones) {
+          beforeIndex.add(zone.beforeUrl.trim().isEmpty ? -1 : cursor++);
+          afterIndex.add(zone.afterUrl.trim().isEmpty ? -1 : cursor++);
         }
+        children.add(
+          ShowroomZoneCompare(
+            zones: zones,
+            onOpen: (int zoneIndex, bool showingAfter) {
+              final int before = beforeIndex[zoneIndex];
+              final int after = afterIndex[zoneIndex];
+              final int picked =
+                  showingAfter
+                      ? (after >= 0 ? after : before)
+                      : (before >= 0 ? before : after);
+              if (picked >= 0) open(picked);
+            },
+          ),
+        );
       } else {
-        children.add(_ImageLayoutView(block: block));
+        final int start = cursor;
+        children.add(
+          _ImageLayoutView(block: block, startIndex: start, onOpen: open),
+        );
+        cursor += showroomPhotoOffset(block.urls, block.urls.length);
       }
-      children.add(const SizedBox(height: 16));
+      if (index == visible.length - 1) continue;
+      children.add(SizedBox(height: _readingGap(block, visible[index + 1])));
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: children,
     );
   }
+}
+
+const TextStyle _readingBody = TextStyle(
+  fontSize: 16,
+  height: 1.6,
+  letterSpacing: 0,
+  fontWeight: FontWeight.w400,
+  color: showroomInk,
+);
+
+/// 글과 사진 사이는 같은 간격이다. 카페 글은 위아래를 다르게 벌리지 않는다.
+double _readingGap(ShowroomBlock current, ShowroomBlock next) {
+  return 16;
+}
+
+class _ReadingText extends StatelessWidget {
+  const _ReadingText({required this.block});
+
+  final ShowroomBlock block;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<
+      ({String text, RichTextAlign align, RichTextSize size, bool bold})
+    >
+    lines =
+        <({String text, RichTextAlign align, RichTextSize size, bool bold})>[];
+    for (final RichTextParagraph paragraph in block.paragraphs) {
+      final RichTextSize size =
+          paragraph.runs.isEmpty
+              ? RichTextSize.medium
+              : paragraph.runs.first.size;
+      final bool bold = paragraph.runs.any((RichTextRun run) => run.bold);
+      final List<String> chunks =
+          paragraph.text
+              .split(RegExp(r'\n\s*\n'))
+              .map((String chunk) => chunk.trim())
+              .where((String chunk) => chunk.isNotEmpty)
+              .toList();
+      for (final String chunk in chunks) {
+        lines.add((
+          text: chunk,
+          align: paragraph.align,
+          size: size,
+          bold: bold,
+        ));
+      }
+    }
+    if (lines.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: ResponsiveSize.textInset(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var index = 0; index < lines.length; index++) ...[
+            if (index > 0)
+              SizedBox(
+                height: lines[index - 1].size == RichTextSize.large ? 8 : 12,
+              ),
+            Text(
+              lines[index].text,
+              textAlign: switch (lines[index].align) {
+                RichTextAlign.left => TextAlign.left,
+                RichTextAlign.center => TextAlign.center,
+                RichTextAlign.right => TextAlign.right,
+              },
+              style: _readingStyle(lines[index].size, lines[index].bold),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+TextStyle _readingStyle(RichTextSize size, bool bold) {
+  return switch (size) {
+    RichTextSize.large => _readingBody.copyWith(
+      fontSize: 22,
+      height: 1.35,
+      letterSpacing: -0.4,
+      fontWeight: FontWeight.w700,
+    ),
+    RichTextSize.small => _readingBody.copyWith(
+      fontSize: 14,
+      height: 1.55,
+      fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
+    ),
+    RichTextSize.medium => _readingBody.copyWith(
+      fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
+    ),
+  };
 }
 
 List<ShowroomZone> _zonesOf(List<ShowroomBlock> blocks) {
@@ -101,14 +253,24 @@ class ShowroomImageCard extends StatelessWidget {
   String get _label {
     return switch (block.layout) {
       ShowroomImageLayout.photo => '사진',
-      ShowroomImageLayout.slider => '슬라이더',
+      ShowroomImageLayout.slider => '슬라이드',
       ShowroomImageLayout.gallery => '갤러리',
+      ShowroomImageLayout.stack => '나열',
       ShowroomImageLayout.beforeAfter => '전후',
     };
   }
 
   @override
   Widget build(BuildContext context) {
+    if (showroomSoloEmoticon(block)) {
+      return GestureDetector(
+        onLongPress: onRemove,
+        child: Align(
+          alignment: Alignment.center,
+          child: _ShowroomEmoticon(url: block.urls.first.trim()),
+        ),
+      );
+    }
     return DecoratedBox(
       decoration: BoxDecoration(
         color: const Color(0xFFF0F1F3),
@@ -199,12 +361,15 @@ class _FlatImages extends StatelessWidget {
             ),
           )
         else if (layout == ShowroomImageLayout.photo)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: AspectRatio(
-              aspectRatio: 4 / 5,
-              child: AppNetworkImage(url: urls.first),
-            ),
+          _EditorImage(url: urls.first, aspectRatio: 4 / 5)
+        else if (layout == ShowroomImageLayout.stack)
+          Column(
+            children: [
+              for (var index = 0; index < urls.length; index++) ...[
+                if (index > 0) const SizedBox(height: 8),
+                _EditorImage(url: urls[index], aspectRatio: 3 / 2),
+              ],
+            ],
           )
         else if (layout == ShowroomImageLayout.slider)
           LayoutBuilder(
@@ -224,8 +389,12 @@ class _FlatImages extends StatelessWidget {
                   separatorBuilder:
                       (context, index) => SizedBox(width: measure.gap),
                   itemBuilder: (BuildContext context, int index) {
+                    final String url = urls[index];
+                    if (showroomEmoticonUrl(url)) {
+                      return _ShowroomEmoticon(url: url);
+                    }
                     return _PhotoTile(
-                      url: urls[index],
+                      url: url,
                       width: measure.cardWidth,
                       height: measure.cardWidth * 5 / 4,
                     );
@@ -250,13 +419,19 @@ class _FlatImages extends StatelessWidget {
 class _FocusGallery extends StatefulWidget {
   const _FocusGallery({
     required this.urls,
-    this.aspectRatio = 16 / 10,
     this.radius = 12,
+    this.thumbInset = 0,
+    this.onOpen,
   });
 
   final List<String> urls;
-  final double aspectRatio;
   final double radius;
+
+  /// 작은 사진 줄만 안으로 들인다. 큰 사진은 주어진 폭을 그대로 쓴다.
+  final double thumbInset;
+
+  /// 큰 사진을 누르면 그 장부터 연다. 작은 사진은 큰 사진만 바꾼다.
+  final ValueChanged<int>? onOpen;
 
   @override
   State<_FocusGallery> createState() => _FocusGalleryState();
@@ -281,21 +456,37 @@ class _FocusGalleryState extends State<_FocusGallery> {
     final int index = _index.clamp(0, widget.urls.length - 1);
     return Column(
       children: [
-        ClipRRect(
-          key: ValueKey<String>(widget.urls[index]),
-          borderRadius: BorderRadius.circular(widget.radius),
-          child: AspectRatio(
-            aspectRatio: widget.aspectRatio,
-            child: AppNetworkImage(url: widget.urls[index]),
-          ),
-        ),
+        showroomEmoticonUrl(widget.urls[index])
+            ? Align(
+              alignment: Alignment.center,
+              child: _ShowroomEmoticon(url: widget.urls[index]),
+            )
+            : GestureDetector(
+              onTap: widget.onOpen == null ? null : () => widget.onOpen!(index),
+              child: ShowroomPhotoRatio(
+                url: widget.urls[index],
+                builder: (BuildContext context, double aspectRatio) {
+                  return ClipRRect(
+                    key: ValueKey<String>(widget.urls[index]),
+                    borderRadius: BorderRadius.circular(widget.radius),
+                    child: AspectRatio(
+                      aspectRatio: aspectRatio,
+                      child: AppNetworkImage(
+                        url: widget.urls[index],
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
         if (widget.urls.length > 1) ...[
           const SizedBox(height: 8),
           SizedBox(
             height: 64,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.zero,
+              padding: EdgeInsets.symmetric(horizontal: widget.thumbInset),
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
               itemCount: widget.urls.length,
               separatorBuilder:
@@ -313,17 +504,23 @@ class _FocusGalleryState extends State<_FocusGallery> {
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color:
-                              selected ? AppColors.primary : Colors.transparent,
-                          width: 2,
+                              selected ? AppColors.primary : AppColors.border,
+                          width: selected ? 2 : 1,
                         ),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(2),
-                        child: _PhotoTile(
-                          url: widget.urls[thumbIndex],
-                          width: 72,
-                          height: 56,
-                        ),
+                        child:
+                            showroomEmoticonUrl(widget.urls[thumbIndex])
+                                ? _ShowroomEmoticon(
+                                  url: widget.urls[thumbIndex],
+                                  size: 56,
+                                )
+                                : _PhotoTile(
+                                  url: widget.urls[thumbIndex],
+                                  width: 72,
+                                  height: 56,
+                                ),
                       ),
                     ),
                   ),
@@ -730,67 +927,183 @@ class _SliderMeasure {
 }
 
 class _ImageLayoutView extends StatelessWidget {
-  const _ImageLayoutView({required this.block});
+  const _ImageLayoutView({
+    required this.block,
+    required this.startIndex,
+    required this.onOpen,
+  });
 
   final ShowroomBlock block;
+  final int startIndex;
+  final ValueChanged<int> onOpen;
 
   @override
   Widget build(BuildContext context) {
     if (block.layout == ShowroomImageLayout.photo) {
       final String url = block.urls.isEmpty ? '' : block.urls.first;
       if (url.isEmpty) return const SizedBox.shrink();
-      return Padding(
-        padding: ResponsiveSize.textInset(context),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: AspectRatio(
-            aspectRatio: 4 / 5,
-            child: AppNetworkImage(url: url),
-          ),
-        ),
+      if (showroomEmoticonUrl(url)) {
+        return Align(
+          alignment: Alignment.center,
+          child: _ShowroomEmoticon(url: url),
+        );
+      }
+      return ShowroomReadingFigure(
+        child: _ReadingPhoto(url: url, onTap: () => onOpen(startIndex)),
+      );
+    }
+    if (block.layout == ShowroomImageLayout.stack) {
+      final List<String> urls =
+          block.urls.where((String url) => url.trim().isNotEmpty).toList();
+      if (urls.isEmpty) return const SizedBox.shrink();
+      return Column(
+        children: [
+          for (var index = 0; index < urls.length; index++) ...[
+            if (index > 0) const SizedBox(height: 8),
+            showroomEmoticonUrl(urls[index])
+                ? Align(
+                  alignment: Alignment.center,
+                  child: _ShowroomEmoticon(url: urls[index]),
+                )
+                : _ReadingPhoto(
+                  url: urls[index],
+                  onTap:
+                      () =>
+                          onOpen(startIndex + showroomPhotoOffset(urls, index)),
+                ),
+          ],
+        ],
       );
     }
     if (block.layout == ShowroomImageLayout.gallery) {
-      return Padding(
-        padding: ResponsiveSize.textInset(context),
-        child: _FocusGallery(urls: block.urls, aspectRatio: 4 / 5, radius: 14),
+      final List<String> urls =
+          block.urls.where((String url) => url.trim().isNotEmpty).toList();
+      if (urls.isEmpty) return const SizedBox.shrink();
+      return _FocusGallery(
+        urls: urls,
+        radius: 0,
+        thumbInset: ResponsiveSize.textInset(context).left,
+        onOpen: (int index) {
+          if (showroomEmoticonUrl(urls[index])) return;
+          onOpen(startIndex + showroomPhotoOffset(urls, index));
+        },
       );
     }
     if (block.layout == ShowroomImageLayout.slider) {
-      return LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-          final double inset = ResponsiveSize.textInset(context).left;
-          final _SliderMeasure measure = _SliderMeasure.of(
-            viewport: constraints.maxWidth,
-            inset: inset,
-            several: block.urls.length > 1,
-          );
-          return SizedBox(
-            height: measure.cardWidth * 5 / 4,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: measure.inset),
-              itemCount: block.urls.length,
-              separatorBuilder:
-                  (context, index) => SizedBox(width: measure.gap),
-              itemBuilder: (BuildContext context, int index) {
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: SizedBox(
-                    width: measure.cardWidth,
-                    child: AppNetworkImage(url: block.urls[index]),
-                  ),
-                );
-              },
-            ),
+      final String first = block.urls.isEmpty ? '' : block.urls.first;
+      return ShowroomPhotoRatio(
+        url: first,
+        builder: (BuildContext context, double aspectRatio) {
+          return LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final double inset = ResponsiveSize.textInset(context).left;
+              final _SliderMeasure measure = _SliderMeasure.of(
+                viewport: constraints.maxWidth,
+                inset: inset,
+                several: block.urls.length > 1,
+              );
+              final double height = measure.cardWidth / aspectRatio;
+              return SizedBox(
+                height: height,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: measure.inset),
+                  itemCount: block.urls.length,
+                  separatorBuilder:
+                      (context, index) => SizedBox(width: measure.gap),
+                  itemBuilder: (BuildContext context, int index) {
+                    final String url = block.urls[index];
+                    if (showroomEmoticonUrl(url)) {
+                      return _ShowroomEmoticon(url: url);
+                    }
+                    final int seen = showroomPhotoOffset(block.urls, index);
+                    return GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap:
+                          url.trim().isEmpty
+                              ? null
+                              : () => onOpen(startIndex + seen),
+                      child: SizedBox(
+                        width: measure.cardWidth,
+                        height: height,
+                        child: AppNetworkImage(url: url, fit: BoxFit.contain),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
           );
         },
       );
     }
     return Padding(
       padding: ResponsiveSize.textInset(context),
-      child: _FocusGallery(urls: block.urls, aspectRatio: 4 / 5, radius: 14),
+      child: _FocusGallery(urls: block.urls, radius: 14),
     );
+  }
+}
+
+class _ReadingPhoto extends StatelessWidget {
+  const _ReadingPhoto({required this.url, required this.onTap});
+
+  final String url;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: ShowroomPhotoRatio(
+        url: url,
+        builder: (BuildContext context, double aspectRatio) {
+          return AspectRatio(
+            aspectRatio: aspectRatio,
+            child: AppNetworkImage(url: url, fit: BoxFit.contain),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _EditorImage extends StatelessWidget {
+  const _EditorImage({required this.url, required this.aspectRatio});
+
+  final String url;
+  final double aspectRatio;
+
+  @override
+  Widget build(BuildContext context) {
+    if (showroomEmoticonUrl(url)) {
+      return Align(
+        alignment: Alignment.center,
+        child: _ShowroomEmoticon(url: url),
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: AspectRatio(
+        aspectRatio: aspectRatio,
+        child: AppNetworkImage(url: url),
+      ),
+    );
+  }
+}
+
+class _ShowroomEmoticon extends StatelessWidget {
+  const _ShowroomEmoticon({
+    required this.url,
+    this.size = showroomEmoticonSize,
+  });
+
+  final String url;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(url, width: size, height: size, fit: BoxFit.contain);
   }
 }
 

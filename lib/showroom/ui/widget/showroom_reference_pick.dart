@@ -7,12 +7,91 @@ import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dar
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
+import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
+import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_body.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_gallery.dart';
 
 const List<String> showroomReferenceAspects = <String>[
   '동일한 스타일',
   '동일한 예산',
   '같은 업종',
 ];
+
+/// 본문에 들어 있는 참고 사진. 대표 사진과 이모티콘은 빼 둔다.
+List<ShowroomReferenceTarget> showroomBlockReferencePhotos(
+  ShowroomStoryModel story,
+) {
+  final List<ShowroomReferenceTarget> shots = <ShowroomReferenceTarget>[];
+  final String cover = story.thumbnailUrl.trim();
+  var photoCount = 0;
+  for (final ShowroomBlock block in story.blocks) {
+    if (!block.hasContent || block.kind == ShowroomBlockKind.text) continue;
+    if (block.kind == ShowroomBlockKind.process) {
+      for (var index = 0; index < block.frames.length; index++) {
+        final ShowroomProcessFrame frame = block.frames[index];
+        final String url = frame.imageUrl.trim();
+        final String caption = frame.caption.trim();
+        final String trade = frame.trade.trim();
+        _addReferencePhoto(
+          shots,
+          id: '${block.id}-frame-$index',
+          label:
+              caption.isEmpty
+                  ? (trade.isEmpty ? '현장 기록 ${index + 1}' : trade)
+                  : caption,
+          imageUrl: url,
+          cover: cover,
+        );
+      }
+      continue;
+    }
+    if (block.layout == ShowroomImageLayout.beforeAfter) {
+      for (var index = 0; index < block.pairs.length; index++) {
+        final ShowroomBeforeAfterPair pair = block.pairs[index];
+        final String name = pair.caption.trim();
+        _addReferencePhoto(
+          shots,
+          id: '${block.id}-before-$index',
+          label: name.isEmpty ? '시공 전' : '$name 시공 전',
+          imageUrl: pair.beforeUrl.trim(),
+          cover: cover,
+        );
+        _addReferencePhoto(
+          shots,
+          id: '${block.id}-after-$index',
+          label: name.isEmpty ? '시공 후' : '$name 시공 후',
+          imageUrl: pair.afterUrl.trim(),
+          cover: cover,
+        );
+      }
+      continue;
+    }
+    for (var index = 0; index < block.urls.length; index++) {
+      final bool added = _addReferencePhoto(
+        shots,
+        id: '${block.id}-$index',
+        label: '사진 ${photoCount + 1}',
+        imageUrl: block.urls[index].trim(),
+        cover: cover,
+      );
+      if (added) photoCount += 1;
+    }
+  }
+  return shots;
+}
+
+bool _addReferencePhoto(
+  List<ShowroomReferenceTarget> shots, {
+  required String id,
+  required String label,
+  required String imageUrl,
+  required String cover,
+}) {
+  if (imageUrl.isEmpty || showroomEmoticonUrl(imageUrl)) return false;
+  if (cover.isNotEmpty && imageUrl == cover) return false;
+  shots.add(ShowroomReferenceTarget(id: id, label: label, imageUrl: imageUrl));
+  return true;
+}
 
 ImageProvider<Object> _referenceImageProvider(String url) {
   if (url.startsWith('assets/')) return AssetImage(url);

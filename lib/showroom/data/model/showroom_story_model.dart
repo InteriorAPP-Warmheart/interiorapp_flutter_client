@@ -1,3 +1,5 @@
+import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_body.dart';
+
 class ShowroomStoryModel {
   const ShowroomStoryModel({
     required this.id,
@@ -13,6 +15,7 @@ class ShowroomStoryModel {
     this.cost,
     this.process = const <ShowroomProcessFrame>[],
     this.guide = const <String>[],
+    this.blocks = const <ShowroomBlock>[],
   });
 
   final String id;
@@ -33,6 +36,9 @@ class ShowroomStoryModel {
       comparisons.isEmpty ? null : comparisons.first;
   final List<ShowroomProcessFrame> process;
   final List<String> guide;
+
+  /// 글쓰기 본문. 비어 있으면 아래 시공 전후·현장 기록·알고 가면으로 보여 준다.
+  final List<ShowroomBlock> blocks;
 }
 
 class ShowroomSituation {

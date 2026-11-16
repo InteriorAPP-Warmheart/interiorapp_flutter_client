@@ -151,6 +151,7 @@ class AppSegmentBar extends StatelessWidget {
     this.selectedColor = AppColors.textPrimary,
     this.unselectedColor = AppColors.textSecondary,
     this.borderColor,
+    this.radius,
   });
 
   final AppSegmentController controller;
@@ -164,11 +165,15 @@ class AppSegmentBar extends StatelessWidget {
   final Color unselectedColor;
   final Color? borderColor;
 
+  /// 트랙 모서리. 없으면 높이의 절반이라 알약 모양이 된다.
+  final double? radius;
+
   @override
   Widget build(BuildContext context) {
     assert(labels.length == controller.length);
     final double inset = 3;
-    final double radius = height / 2;
+    final double requestedRadius = this.radius ?? height / 2;
+    final double radius = requestedRadius.clamp(0, height / 2).toDouble();
     return AnimatedBuilder(
       animation: controller,
       builder: (BuildContext context, Widget? child) {

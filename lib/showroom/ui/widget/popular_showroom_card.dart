@@ -7,6 +7,7 @@ import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/hot_showroom_model.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_story_screen.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_feed_segment.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/story/showroom_story_scenes.dart';
 
 /// 인기 쇼룸. 대표 사진 한 장을 가로로 넘긴다.
@@ -84,8 +85,9 @@ class _LookbookCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String likeLabel =
-        item.likeCount > 999 ? '999+' : item.likeCount.toString();
+    final String likeLabel = showroomCompactCount(item.likeCount);
+    final String commentLabel = showroomCompactCount(item.commentCount);
+    final String viewLabel = showroomCompactCount(item.viewCount);
 
     return GestureDetector(
       onTap: onOpen,
@@ -178,7 +180,7 @@ class _LookbookCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 6),
-                      Flexible(
+                      Expanded(
                         child: Text(
                           item.userName,
                           maxLines: 1,
@@ -191,21 +193,17 @@ class _LookbookCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      const Icon(
-                        Icons.favorite,
-                        size: 13,
-                        color: Color(0xCCFFFFFF),
+                      const SizedBox(width: 12),
+                      _LookbookCount(icon: Icons.favorite, label: likeLabel),
+                      const SizedBox(width: 10),
+                      _LookbookCount(
+                        icon: Icons.mode_comment,
+                        label: commentLabel,
                       ),
-                      const SizedBox(width: 3),
-                      Text(
-                        likeLabel,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          height: 1.2,
-                          color: Color(0xCCFFFFFF),
-                        ),
+                      const SizedBox(width: 10),
+                      _LookbookCount(
+                        icon: Icons.visibility_outlined,
+                        label: viewLabel,
                       ),
                     ],
                   ),
@@ -215,6 +213,35 @@ class _LookbookCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _LookbookCount extends StatelessWidget {
+  const _LookbookCount({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 13, color: const Color(0xCCFFFFFF)),
+        const SizedBox(width: 3),
+        Text(
+          label,
+          maxLines: 1,
+          softWrap: false,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            height: 1.2,
+            color: Color(0xCCFFFFFF),
+          ),
+        ),
+      ],
     );
   }
 }

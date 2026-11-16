@@ -19,6 +19,10 @@ SliverAppBar showroomThumbnailBar(
   String authorName = '',
   String authorPhotoUrl = '',
   String likes = '',
+  bool showLike = true,
+  int? commentCount,
+  Color sheetColor = AppColors.background,
+  VoidCallback? onPhotoTap,
 }) {
   final String url = imageUrl.trim();
   return SliverAppBar(
@@ -31,7 +35,7 @@ SliverAppBar showroomThumbnailBar(
     shadowColor: Colors.transparent,
     surfaceTintColor: Colors.transparent,
     forceMaterialTransparency: true,
-    backgroundColor: AppColors.background,
+    backgroundColor: sheetColor,
     expandedHeight: showroomThumbnailExtent(context),
     flexibleSpace: FlexibleSpaceBar(
       collapseMode: CollapseMode.pin,
@@ -41,7 +45,11 @@ SliverAppBar showroomThumbnailBar(
           if (url.isEmpty)
             const ColoredBox(color: AppColors.imagePlaceholder)
           else
-            StoryPhoto(url: url),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onPhotoTap,
+              child: StoryPhoto(url: url),
+            ),
           const DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -57,15 +65,17 @@ SliverAppBar showroomThumbnailBar(
               ),
             ),
           ),
-          const Positioned(
+          Positioned(
             left: 0,
             right: 0,
             bottom: 0,
             height: 24,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                color: sheetColor,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
               ),
             ),
           ),
@@ -79,6 +89,8 @@ SliverAppBar showroomThumbnailBar(
               authorName: authorName.trim(),
               authorPhotoUrl: authorPhotoUrl.trim(),
               likes: likes.trim(),
+              showLike: showLike,
+              commentCount: commentCount,
             ),
           ),
         ],
@@ -94,6 +106,8 @@ class _CoverCaption extends StatelessWidget {
     required this.authorName,
     required this.authorPhotoUrl,
     required this.likes,
+    this.showLike = true,
+    this.commentCount,
   });
 
   final String style;
@@ -101,6 +115,8 @@ class _CoverCaption extends StatelessWidget {
   final String authorName;
   final String authorPhotoUrl;
   final String likes;
+  final bool showLike;
+  final int? commentCount;
 
   static const List<Shadow> _shadow = <Shadow>[
     Shadow(color: Color(0xCC000000), blurRadius: 16, offset: Offset(0, 1)),
@@ -108,7 +124,8 @@ class _CoverCaption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool showAuthor = authorName.isNotEmpty || likes.isNotEmpty;
+    final bool showAuthor =
+        authorName.isNotEmpty || likes.isNotEmpty || commentCount != null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -196,11 +213,32 @@ class _CoverCaption extends StatelessWidget {
                 ),
               ] else
                 const Spacer(),
-              const Icon(Icons.favorite, size: 15, color: Colors.white),
-              if (likes.isNotEmpty) ...[
+              if (showLike) ...[
+                const Icon(Icons.favorite, size: 15, color: Colors.white),
+                if (likes.isNotEmpty) ...[
+                  const SizedBox(width: 4),
+                  Text(
+                    likes,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      shadows: _shadow,
+                    ),
+                  ),
+                ],
+                const SizedBox(width: 12),
+              ],
+              if (commentCount != null) ...[
+                const Icon(
+                  Icons.mode_comment_outlined,
+                  size: 15,
+                  color: Colors.white,
+                  shadows: _shadow,
+                ),
                 const SizedBox(width: 4),
                 Text(
-                  likes,
+                  '댓글 $commentCount',
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -237,7 +275,7 @@ class ShowroomFactCard extends StatefulWidget {
 }
 
 class _ShowroomFactCardState extends State<ShowroomFactCard> {
-  bool _open = true;
+  bool _open = false;
 
   @override
   Widget build(BuildContext context) {
@@ -245,12 +283,11 @@ class _ShowroomFactCardState extends State<ShowroomFactCard> {
     final bool hasCost = showroomHasCostDetail(widget.cost);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE7E1D8)),
+        color: showroomChip,
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
         child: Column(
           children: [
             for (var i = 0; i < facts.length; i += 2)
@@ -278,6 +315,7 @@ class _ShowroomFactCardState extends State<ShowroomFactCard> {
                 ),
               ),
             if (hasCost) ...[
+              const Divider(height: 1, thickness: 1, color: showroomFigureLine),
               _CostDetailToggle(
                 shown: _open,
                 onChanged: (bool shown) => setState(() => _open = shown),
@@ -303,41 +341,35 @@ class _CostDetailToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
+      color: Colors.transparent,
       child: InkWell(
         onTap: () => onChanged(!shown),
-        borderRadius: BorderRadius.circular(14),
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFE4E4E4)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    '세부 공사비',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: storyInk,
-                    ),
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  '세부 공사비',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.2,
+                    color: showroomInk,
                   ),
                 ),
-                AnimatedRotation(
-                  turns: shown ? 0.5 : 0,
-                  duration: const Duration(milliseconds: 180),
-                  child: const Icon(
-                    Icons.keyboard_arrow_down,
-                    size: 20,
-                    color: Color(0xFF8A847A),
-                  ),
+              ),
+              AnimatedRotation(
+                turns: shown ? 0.5 : 0,
+                duration: const Duration(milliseconds: 180),
+                child: const Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 20,
+                  color: showroomMuted,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -353,51 +385,46 @@ class _Fact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE4E4E4)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF8A847A),
-              ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              height: 1.3,
+              fontWeight: FontWeight.w500,
+              color: showroomMuted,
             ),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.3,
-                height: 1.25,
-                color: storyInk,
-              ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.3,
+              height: 1.25,
+              color: showroomInk,
             ),
-            if (label == '예산')
-              if (CostFormattingViewModel.wonReading(value)
-                  case final String reading when reading.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  reading,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    height: 1.3,
-                    color: Color(0xFF8A847A),
-                  ),
+          ),
+          if (label == '예산')
+            if (CostFormattingViewModel.wonReading(value)
+                case final String reading when reading.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                reading,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  height: 1.3,
+                  color: showroomMuted,
                 ),
-              ],
-          ],
-        ),
+              ),
+            ],
+        ],
       ),
     );
   }
@@ -435,8 +462,8 @@ class ShowroomCostCard extends StatelessWidget {
                     lines[i].name,
                     style: const TextStyle(
                       fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF3A3834),
+                      fontWeight: FontWeight.w400,
+                      color: showroomInk,
                     ),
                   ),
                 ),
@@ -446,7 +473,7 @@ class ShowroomCostCard extends StatelessWidget {
             ),
           ),
           if (i != lines.length - 1)
-            const Divider(height: 1, thickness: 1, color: Color(0xFFE8E8E8)),
+            const Divider(height: 1, thickness: 1, color: showroomFigureLine),
         ],
       ],
     );
@@ -477,8 +504,8 @@ class _WonAmount extends StatelessWidget {
           amount,
           style: const TextStyle(
             fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: storyInk,
+            fontWeight: FontWeight.w600,
+            color: showroomInk,
           ),
         ),
         if (reading.isNotEmpty) ...[
@@ -487,8 +514,8 @@ class _WonAmount extends StatelessWidget {
             reading,
             style: const TextStyle(
               fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF8A847A),
+              fontWeight: FontWeight.w400,
+              color: showroomMuted,
             ),
           ),
         ],

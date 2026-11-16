@@ -25,11 +25,26 @@ class _ShowroomCitySheet extends StatefulWidget {
 
 class _ShowroomCitySheetState extends State<_ShowroomCitySheet> {
   final TextEditingController _query = TextEditingController();
+  final Map<String, GlobalKey> _sectionKeys = <String, GlobalKey>{
+    for (final ShowroomCityGroup group in showroomCityGroups)
+      group.name: GlobalKey(),
+  };
 
   @override
   void dispose() {
     _query.dispose();
     super.dispose();
+  }
+
+  void _focusRegion(String name) {
+    final BuildContext? target = _sectionKeys[name]?.currentContext;
+    if (target == null) return;
+    Scrollable.ensureVisible(
+      target,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      alignment: 0,
+    );
   }
 
   @override
@@ -96,8 +111,13 @@ class _ShowroomCitySheetState extends State<_ShowroomCitySheet> {
                       children: [
                         for (final ShowroomCityGroup group in groups) ...[
                           _RegionHeader(
+                            key: _sectionKeys[group.name],
                             name: group.name,
                             count: group.cities.length,
+                            onTap: () => _focusRegion(group.name),
+                          ),
+                          _CityTile(
+                            city: '${group.name} 전체',
                             selected: group.name == widget.current,
                             onTap: () => Navigator.pop(context, group.name),
                           ),
@@ -119,15 +139,14 @@ class _ShowroomCitySheetState extends State<_ShowroomCitySheet> {
 
 class _RegionHeader extends StatelessWidget {
   const _RegionHeader({
+    super.key,
     required this.name,
     required this.count,
-    required this.selected,
     required this.onTap,
   });
 
   final String name;
   final int count;
-  final bool selected;
   final VoidCallback onTap;
 
   @override
@@ -162,10 +181,6 @@ class _RegionHeader extends StatelessWidget {
                     color: AppColors.white.withValues(alpha: 0.8),
                   ),
                 ),
-                if (selected) ...[
-                  const SizedBox(width: 6),
-                  const Icon(Icons.check, color: AppColors.white, size: 18),
-                ],
               ],
             ),
           ),
@@ -191,28 +206,37 @@ class _CityTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 8),
       child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary.withValues(alpha: 0.08) : null,
-          border: const Border(
+        decoration: const BoxDecoration(
+          border: Border(
             left: BorderSide(color: AppColors.primary, width: 4),
           ),
         ),
-        child: ListTile(
-          dense: true,
-          visualDensity: VisualDensity.compact,
-          contentPadding: const EdgeInsets.only(left: 16, right: 12),
-          title: Text(
-            city,
-            style: TextStyle(
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          trailing:
+        child: Material(
+          color:
               selected
-                  ? const Icon(Icons.check, color: AppColors.primary, size: 20)
-                  : null,
-          onTap: onTap,
+                  ? AppColors.primary.withValues(alpha: 0.08)
+                  : Colors.transparent,
+          child: ListTile(
+            dense: true,
+            visualDensity: VisualDensity.compact,
+            contentPadding: const EdgeInsets.only(left: 16, right: 12),
+            title: Text(
+              city,
+              style: TextStyle(
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            trailing:
+                selected
+                    ? const Icon(
+                      Icons.check,
+                      color: AppColors.primary,
+                      size: 20,
+                    )
+                    : null,
+            onTap: onTap,
+          ),
         ),
       ),
     );

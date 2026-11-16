@@ -1,5 +1,6 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
@@ -250,6 +251,8 @@ class _ShowroomMasonryGrid extends ConsumerWidget {
       scoped,
       sort,
       likes: (HotShowroomModel item) => item.likeCount,
+      comments: (HotShowroomModel item) => item.commentCount,
+      views: (HotShowroomModel item) => item.viewCount,
       publishedAt: (HotShowroomModel item) => item.publishedAt,
       pinFavorites: pinFavorites,
       favorite: (HotShowroomModel item) => item.favoriteStatus,
@@ -290,6 +293,8 @@ class _ShowroomMasonryGrid extends ConsumerWidget {
             title: item.title,
             imageRatio: item.imageRatio,
             likeCount: item.likeCount,
+            commentCount: item.commentCount,
+            viewCount: item.viewCount,
             favoriteStatus: item.favoriteStatus,
           ),
       ],
@@ -305,6 +310,8 @@ class ShowroomMasonryEntry {
     required this.title,
     required this.imageRatio,
     required this.likeCount,
+    required this.commentCount,
+    required this.viewCount,
     required this.favoriteStatus,
   });
 
@@ -313,6 +320,8 @@ class ShowroomMasonryEntry {
   final String title;
   final double imageRatio;
   final int likeCount;
+  final int commentCount;
+  final int viewCount;
   final bool favoriteStatus;
 }
 
@@ -385,9 +394,6 @@ class _MasonryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String likeLabel =
-        item.likeCount > 999 ? '999+' : item.likeCount.toString();
-
     return OpenContainer(
       useRootNavigator: true,
       tappable: false,
@@ -411,25 +417,43 @@ class _MasonryCard extends StatelessWidget {
                     fit: StackFit.expand,
                     children: [
                       AppNetworkImage(url: item.imageUrl),
-                      Positioned(
-                        top: 6,
-                        right: 6,
-                        child: Icon(
-                          item.favoriteStatus
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color:
-                              item.favoriteStatus
-                                  ? const Color(0xFFFF4D6A)
-                                  : Colors.white,
-                          size: 16,
-                          shadows: const [
-                            Shadow(
-                              color: Color(0x99000000),
-                              blurRadius: 6,
-                              offset: Offset(0, 1),
+                      const Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        height: 58,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [Color(0xB3000000), Color(0x00000000)],
                             ),
-                          ],
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 8,
+                        right: 8,
+                        bottom: 7,
+                        child: Text(
+                          item.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.2,
+                            height: 1.25,
+                            color: Colors.white,
+                            shadows: [
+                              Shadow(
+                                color: Color(0x99000000),
+                                blurRadius: 6,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -437,41 +461,11 @@ class _MasonryCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      item.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -0.2,
-                        height: 1.2,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    item.favoriteStatus
-                        ? Icons.favorite
-                        : Icons.favorite_border,
-                    size: 11,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 2),
-                  Text(
-                    likeLabel,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      height: 1.2,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
+              _CardCounts(
+                likes: item.likeCount,
+                comments: item.commentCount,
+                views: item.viewCount,
+                favorite: item.favoriteStatus,
               ),
             ],
           ),
@@ -481,5 +475,196 @@ class _MasonryCard extends StatelessWidget {
         return ShowroomBoardScreen(showroomId: item.id);
       },
     );
+  }
+}
+
+String showroomCompactCount(int value) {
+  if (value < 1000) return value.toString();
+  if (value < 10000) {
+    final String compact = (value / 1000).toStringAsFixed(1);
+    final String trimmed =
+        compact.endsWith('.0')
+            ? compact.substring(0, compact.length - 2)
+            : compact;
+    return '$trimmed천';
+  }
+  final String compact = (value / 10000).toStringAsFixed(1);
+  final String trimmed =
+      compact.endsWith('.0')
+          ? compact.substring(0, compact.length - 2)
+          : compact;
+  return '$trimmed만';
+}
+
+class _CountSlot extends StatelessWidget {
+  const _CountSlot({
+    required this.icon,
+    required this.color,
+    required this.label,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 11, color: color),
+        const SizedBox(width: 2),
+        Text(
+          label,
+          maxLines: 1,
+          softWrap: false,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            height: 1.1,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CardCounts extends StatelessWidget {
+  const _CardCounts({
+    required this.likes,
+    required this.comments,
+    required this.views,
+    required this.favorite,
+  });
+
+  final int likes;
+  final int comments;
+  final int views;
+  final bool favorite;
+
+  @override
+  Widget build(BuildContext context) {
+    const Color heart = Color(0xFFFF4D6A);
+    return _EdgeCountRow(
+      children: <Widget>[
+        _CountSlot(
+          icon: favorite ? Icons.favorite : Icons.favorite_border,
+          color: favorite ? heart : AppColors.textSecondary,
+          label: showroomCompactCount(likes),
+        ),
+        _CountSlot(
+          icon: Icons.mode_comment_outlined,
+          color: AppColors.textSecondary,
+          label: showroomCompactCount(comments),
+        ),
+        _CountSlot(
+          icon: Icons.visibility_outlined,
+          color: AppColors.textSecondary,
+          label: showroomCompactCount(views),
+        ),
+      ],
+    );
+  }
+}
+
+/// 좋아요는 왼쪽 끝, 조회수는 오른쪽 끝.
+/// 좋아요와 댓글 사이만 [gap]으로 붙이고, 남는 폭은 댓글과 조회수 사이로 보낸다.
+/// 세 칸이 카드보다 넓으면 숫자 잘림 없이 줄 전체를 줄인다.
+class _EdgeCountRow extends MultiChildRenderObjectWidget {
+  const _EdgeCountRow({required super.children}) : super();
+
+  static const double gap = 6;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return _RenderEdgeCountRow(gap: gap);
+  }
+}
+
+class _EdgeCountParentData extends ContainerBoxParentData<RenderBox> {}
+
+class _RenderEdgeCountRow extends RenderBox
+    with
+        ContainerRenderObjectMixin<RenderBox, _EdgeCountParentData>,
+        RenderBoxContainerDefaultsMixin<RenderBox, _EdgeCountParentData> {
+  _RenderEdgeCountRow({required double gap}) : _gap = gap;
+
+  final double _gap;
+  double _scale = 1;
+
+  @override
+  void setupParentData(RenderBox child) {
+    if (child.parentData is! _EdgeCountParentData) {
+      child.parentData = _EdgeCountParentData();
+    }
+  }
+
+  @override
+  void performLayout() {
+    final List<RenderBox> kids = <RenderBox>[];
+    RenderBox? child = firstChild;
+    while (child != null) {
+      child.layout(const BoxConstraints(), parentUsesSize: true);
+      kids.add(child);
+      final _EdgeCountParentData data =
+          child.parentData! as _EdgeCountParentData;
+      child = data.nextSibling;
+    }
+    if (kids.length != 3) {
+      size = constraints.constrain(Size.zero);
+      return;
+    }
+
+    final double likesWidth = kids[0].size.width;
+    final double commentsWidth = kids[1].size.width;
+    final double viewsWidth = kids[2].size.width;
+    final double packed = likesWidth + _gap + commentsWidth + viewsWidth;
+    double contentHeight = kids[0].size.height;
+    if (kids[1].size.height > contentHeight) {
+      contentHeight = kids[1].size.height;
+    }
+    if (kids[2].size.height > contentHeight) {
+      contentHeight = kids[2].size.height;
+    }
+
+    final double maxWidth =
+        constraints.maxWidth.isFinite ? constraints.maxWidth : packed;
+    _scale = packed <= maxWidth || packed == 0 ? 1 : maxWidth / packed;
+
+    void place(RenderBox kid, double x) {
+      final _EdgeCountParentData data = kid.parentData! as _EdgeCountParentData;
+      data.offset = Offset(x, (contentHeight - kid.size.height) / 2);
+    }
+
+    place(kids[0], 0);
+    place(kids[1], likesWidth + _gap);
+    place(
+      kids[2],
+      _scale < 1 ? likesWidth + _gap + commentsWidth : maxWidth - viewsWidth,
+    );
+    size = constraints.constrain(Size(maxWidth, contentHeight * _scale));
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (_scale == 1) {
+      defaultPaint(context, offset);
+      return;
+    }
+    context.pushTransform(
+      needsCompositing,
+      offset,
+      Matrix4.diagonal3Values(_scale, _scale, 1),
+      (PaintingContext context, Offset offset) {
+        defaultPaint(context, offset);
+      },
+    );
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    final Offset local = _scale == 1 ? position : position / _scale;
+    return defaultHitTestChildren(result, position: local);
   }
 }

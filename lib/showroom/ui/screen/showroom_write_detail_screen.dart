@@ -17,6 +17,7 @@ import 'package:interiorapp_flutter_client/showroom/domain/showroom_quill_docume
 import 'package:interiorapp_flutter_client/showroom/presentation/vm/showroom_composer.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/vm/showroom_write_vm.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_quill_body.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_gallery.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_space_header.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/story/showroom_story_scenes.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/write_body_editor.dart';
@@ -159,6 +160,19 @@ class _ShowroomWriteDetailScreenState
     final QuillController? quill = _quill;
     if (quill == null || emoji.isEmpty) return;
     final int index = _caretIndex(quill);
+    if (showroomEmoticonUrl(emoji)) {
+      insertShowroomBlock(
+        quill,
+        ShowroomBlock.images(
+          id: _nextEmbedId('emoji'),
+          layout: ShowroomImageLayout.photo,
+          urls: <String>[emoji],
+        ),
+        index: index,
+      );
+      _bodyFocus.requestFocus();
+      return;
+    }
     quill.replaceText(
       index,
       0,
@@ -172,63 +186,53 @@ class _ShowroomWriteDetailScreenState
     return showModalBottomSheet<ShowroomImageLayout>(
       context: context,
       backgroundColor: AppColors.surface,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (BuildContext context) {
+        final double maxHeight = MediaQuery.sizeOf(context).height * 0.85;
         return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 8),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(20, 8, 20, 12),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    '이 사진들을 어떻게 넣을까요?',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: ListView(
+              shrinkWrap: true,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+              children: [
+                const Text(
+                  '이 사진들을 어떻게 넣을까요?',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _EmbedChoice(
-                        title: '슬라이더',
-                        detail: '옆으로 넘기며 봐요',
-                        preview: const _SliderSkeleton(),
-                        onTap:
-                            () => Navigator.pop(
-                              context,
-                              ShowroomImageLayout.slider,
-                            ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _EmbedChoice(
-                        title: '갤러리',
-                        detail: '아래 사진을 누르면 크게 보여요',
-                        preview: const _GallerySkeleton(),
-                        onTap:
-                            () => Navigator.pop(
-                              context,
-                              ShowroomImageLayout.gallery,
-                            ),
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 12),
+                _EmbedChoice(
+                  title: '갤러리',
+                  detail: '아래 사진을 누르면 크게 보여요',
+                  preview: const _GallerySkeleton(),
+                  onTap:
+                      () => Navigator.pop(context, ShowroomImageLayout.gallery),
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                _EmbedChoice(
+                  title: '슬라이드',
+                  detail: '옆으로 넘기며 봐요',
+                  preview: const _SliderSkeleton(),
+                  onTap:
+                      () => Navigator.pop(context, ShowroomImageLayout.slider),
+                ),
+                const SizedBox(height: 8),
+                _EmbedChoice(
+                  title: '나열',
+                  detail: '위에서 아래로 한 장씩 이어져요',
+                  preview: const _StackSkeleton(),
+                  onTap:
+                      () => Navigator.pop(context, ShowroomImageLayout.stack),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -594,7 +598,7 @@ class _ShowroomWriteDetailScreenState
                 const _BlockTitle('본문'),
                 const SizedBox(height: 4),
                 const Text(
-                  '한 장은 바로 들어가고, 여러 장이면 슬라이더와 갤러리 중 배치를 골라요. 전후와 현장 기록은 글 사이에 넣어요.',
+                  '한 장은 바로 들어가고, 여러 장이면 갤러리, 슬라이드, 나열 중 배치를 골라요. 전후와 현장 기록은 글 사이에 넣어요.',
                   style: TextStyle(
                     fontSize: 13,
                     height: 1.4,
@@ -756,6 +760,26 @@ class _GallerySkeleton extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StackSkeleton extends StatelessWidget {
+  const _StackSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      height: 72,
+      child: Column(
+        children: [
+          Expanded(child: _LayoutBone(strong: true)),
+          SizedBox(height: 4),
+          Expanded(child: _LayoutBone()),
+          SizedBox(height: 4),
+          Expanded(child: _LayoutBone()),
         ],
       ),
     );
@@ -1415,6 +1439,24 @@ class ShowroomDraftPreview extends StatelessWidget {
                     imageUrl: draft.thumbnailUrl,
                     style: draft.style,
                     title: draft.title,
+                    onPhotoTap: () {
+                      final List<String> body = showroomReadingImageUrls(
+                        draft.blocks,
+                      );
+                      final List<String> gallery = showroomGalleryWithCover(
+                        body,
+                        draft.thumbnailUrl,
+                      );
+                      final int index =
+                          gallery.length == body.length
+                              ? gallery.indexOf(draft.thumbnailUrl.trim())
+                              : 0;
+                      openShowroomPhotoGallery(
+                        context,
+                        urls: gallery,
+                        initialIndex: index < 0 ? 0 : index,
+                      );
+                    },
                   ),
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(0, 4, 0, 24),
@@ -1490,7 +1532,23 @@ class ShowroomDraftPreview extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      ShowroomBodyView(blocks: draft.blocks),
+                      ShowroomBodyView(
+                        blocks: draft.blocks,
+                        onOpenImage: (int index) {
+                          final List<String> body = showroomReadingImageUrls(
+                            draft.blocks,
+                          );
+                          final List<String> gallery = showroomGalleryWithCover(
+                            body,
+                            draft.thumbnailUrl,
+                          );
+                          openShowroomPhotoGallery(
+                            context,
+                            urls: gallery,
+                            initialIndex: index + gallery.length - body.length,
+                          );
+                        },
+                      ),
                     ]),
                   ),
                 ),

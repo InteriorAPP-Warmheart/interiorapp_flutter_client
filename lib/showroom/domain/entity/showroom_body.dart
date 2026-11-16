@@ -2,28 +2,20 @@ import 'package:interiorapp_flutter_client/core/editor/rich_text_document.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
 
 /// 쇼룸 본문에 붙이는 이모티콘. 시스템 키보드가 아니라 글쓰기 도구에서만 고른다.
+const String showroomEmoticonGamsa = 'assets/images/app_icons/wapll_gamsa.webp';
+const String showroomEmoticonCongratulations =
+    'assets/images/app_icons/wapll_congratulations.webp';
+const String showroomEmoticonSad = 'assets/images/app_icons/wapll_sad.webp';
+
 const List<String> showroomEmojiCatalog = <String>[
-  '✨',
-  '☕️',
-  '🍽️',
-  '🪴',
-  '💡',
-  '🪵',
-  '🪟',
-  '🪑',
-  '🪞',
-  '🏠',
-  '🤍',
-  '🌿',
-  '⭐',
-  '📐',
-  '🛠️',
-  '🕯️',
+  showroomEmoticonGamsa,
+  showroomEmoticonCongratulations,
+  showroomEmoticonSad,
 ];
 
 enum ShowroomBlockKind { text, images, process }
 
-enum ShowroomImageLayout { photo, slider, gallery, beforeAfter }
+enum ShowroomImageLayout { photo, slider, gallery, stack, beforeAfter }
 
 /// 시공 전·후 한 쌍.
 class ShowroomBeforeAfterPair {

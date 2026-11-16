@@ -23,9 +23,12 @@ class ShowroomZone {
 
 /// 시공 전후를 한 칸에 두고, 구역이 여러 개면 아래에서 고른다.
 class ShowroomZoneCompare extends StatefulWidget {
-  const ShowroomZoneCompare({super.key, required this.zones});
+  const ShowroomZoneCompare({super.key, required this.zones, this.onOpen});
 
   final List<ShowroomZone> zones;
+
+  /// 지금 보이는 전후 사진을 연다. [showingAfter]는 후가 앞에 있을 때다.
+  final void Function(int zoneIndex, bool showingAfter)? onOpen;
 
   @override
   State<ShowroomZoneCompare> createState() => _ShowroomZoneCompareState();
@@ -52,22 +55,15 @@ class _ShowroomZoneCompareState extends State<ShowroomZoneCompare> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!several && zone.label.trim().isNotEmpty) ...[
-          Padding(
-            padding: ResponsiveSize.textInset(context),
-            child: Text(
-              zone.label.trim(),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.2,
-                color: storyInk,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-        ShowroomWipeCompare(beforeUrl: zone.beforeUrl, afterUrl: zone.afterUrl),
+        ShowroomWipeCompare(
+          beforeUrl: zone.beforeUrl,
+          afterUrl: zone.afterUrl,
+          caption: several ? '' : zone.label.trim(),
+          onOpen:
+              widget.onOpen == null
+                  ? null
+                  : (bool showingAfter) => widget.onOpen!(_index, showingAfter),
+        ),
         if (showNote) ...[
           const SizedBox(height: 8),
           Padding(

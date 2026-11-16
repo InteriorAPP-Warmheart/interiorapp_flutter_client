@@ -3,11 +3,83 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_body.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_gallery.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_wipe_compare.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/write_body_editor.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  test('본문 사진은 전, 후, 한 장 순서로 모은다', () {
+    final List<String> urls = showroomReadingImageUrls(<ShowroomBlock>[
+      ShowroomBlock.images(
+        id: 'pair',
+        layout: ShowroomImageLayout.beforeAfter,
+        pairs: const <ShowroomBeforeAfterPair>[
+          ShowroomBeforeAfterPair(
+            id: 'front',
+            beforeUrl: 'before',
+            afterUrl: 'after',
+          ),
+        ],
+      ),
+      ShowroomBlock.images(
+        id: 'one',
+        layout: ShowroomImageLayout.photo,
+        urls: const <String>['hall'],
+      ),
+    ]);
+
+    expect(urls, <String>['before', 'after', 'hall']);
+    expect(
+      showroomReadingImageUrls(<ShowroomBlock>[
+        ShowroomBlock.images(
+          id: 'sticker',
+          layout: ShowroomImageLayout.photo,
+          urls: const <String>[showroomEmoticonGamsa],
+        ),
+        ShowroomBlock.images(
+          id: 'after-sticker',
+          layout: ShowroomImageLayout.photo,
+          urls: const <String>['hall'],
+        ),
+      ]),
+      <String>['hall'],
+    );
+    expect(showroomGalleryWithCover(urls, 'cover'), <String>[
+      'cover',
+      'before',
+      'after',
+      'hall',
+    ]);
+    expect(showroomGalleryWithCover(urls, 'hall'), urls);
+  });
+
+  testWidgets('나열은 사진을 위에서부터 한 장씩 붙인다', (WidgetTester tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ShowroomBodyView(
+            blocks: <ShowroomBlock>[
+              ShowroomBlock.images(
+                id: 'stack',
+                layout: ShowroomImageLayout.stack,
+                urls: <String>['https://img/a', 'https://img/b'],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final Rect first = tester.getRect(_image('https://img/a'));
+    final Rect second = tester.getRect(_image('https://img/b'));
+    expect(second.top, greaterThan(first.bottom - 1));
+    expect(second.left, first.left);
+  });
 
   testWidgets('갤러리에서 작은 사진을 누르면 큰 영역이 그 사진으로 바뀐다', (WidgetTester tester) async {
     await tester.binding.setSurfaceSize(const Size(400, 800));
@@ -75,7 +147,7 @@ void main() {
     expect(find.text('시공 후'), findsWidgets);
   });
 
-  testWidgets('전후가 여러 구역이면 한 칸에서 고른다', (WidgetTester tester) async {
+  testWidgets('전후는 글 순서대로 각각 붙는다', (WidgetTester tester) async {
     await tester.binding.setSurfaceSize(const Size(400, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -114,15 +186,13 @@ void main() {
       ),
     );
 
-    expect(find.byType(ShowroomBeforeAfterToggle), findsOneWidget);
+    expect(find.byType(ShowroomBeforeAfterToggle), findsNWidgets(2));
     expect(find.text('홀'), findsOneWidget);
     expect(find.text('주방'), findsOneWidget);
-
-    await tester.tap(find.text('주방'));
-    await tester.pump();
-
-    expect(find.byType(ShowroomBeforeAfterToggle), findsOneWidget);
-    expect(find.text('주방'), findsOneWidget);
+    expect(
+      tester.getRect(find.text('주방')).top,
+      greaterThan(tester.getRect(find.text('홀')).top),
+    );
   });
 
   testWidgets('현장 기록은 글 사이에 순서대로 나온다', (WidgetTester tester) async {
@@ -168,7 +238,9 @@ void main() {
     expect(find.text('마감 후 공간입니다'), findsOneWidget);
   });
 
-  testWidgets('슬라이더와 갤러리 작은 사진은 글과 같은 여백에서 시작한다', (WidgetTester tester) async {
+  testWidgets('슬라이더는 글 여백에서 시작하고 갤러리 큰 사진은 화면 폭이다', (
+    WidgetTester tester,
+  ) async {
     const double screen = 390;
     tester.view.physicalSize = const Size(screen, 1200);
     tester.view.devicePixelRatio = 1;
@@ -220,13 +292,13 @@ void main() {
 
     expect(firstSlide.left, textLeft);
     expect(nextSlide.left, screen - textLeft);
-    expect(hero.left, textLeft);
-    expect(hero.right, screen - textLeft);
+    expect(hero.left, 0);
+    expect(hero.right, screen);
     expect(thumb.left, greaterThanOrEqualTo(textLeft));
     expect(thumb.left, lessThan(textLeft + 8));
   });
 
-  testWidgets('사진 한 장은 글과 같은 여백에 한 장으로 붙는다', (WidgetTester tester) async {
+  testWidgets('사진 한 장은 화면 폭으로 붙는다', (WidgetTester tester) async {
     const double screen = 390;
     tester.view.physicalSize = const Size(screen, 1200);
     tester.view.devicePixelRatio = 1;
@@ -250,9 +322,138 @@ void main() {
       ),
     );
 
-    final double textLeft = tester.getRect(find.text('본문 문장입니다')).left;
-    final Rect photo = tester.getRect(find.byType(AppNetworkImage));
-    expect(photo.left, textLeft);
-    expect(photo.right, screen - textLeft);
+    final Rect figure = tester.getRect(find.byType(ShowroomReadingFigure));
+    expect(figure.left, 0);
+    expect(figure.right, screen);
   });
+
+  testWidgets('글쓰기의 이모티콘은 사진 칸 없이 가운데에 있다', (WidgetTester tester) async {
+    const double screen = 400;
+    tester.view.physicalSize = const Size(screen, 400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ShowroomImageCard(
+            block: ShowroomBlock.images(
+              id: 'emoji',
+              layout: ShowroomImageLayout.photo,
+              urls: const <String>[showroomEmoticonGamsa],
+            ),
+            onRemove: () {},
+            onAddImage: () {},
+            onPairs: (_) {},
+            pickImage: () async => null,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('사진 추가'), findsNothing);
+    expect(find.text('사진'), findsNothing);
+    final Rect sticker = tester.getRect(
+      find.byWidgetPredicate(
+        (Widget widget) =>
+            widget is Image && widget.width == showroomEmoticonSize,
+      ),
+    );
+    expect(sticker.center.dx, screen / 2);
+    expect(sticker.width, showroomEmoticonSize);
+  });
+
+  testWidgets('이모티콘은 사진 크기와 확대 갤러리로 들어가지 않는다', (WidgetTester tester) async {
+    const String sticker = showroomEmoticonGamsa;
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ShowroomBodyView(
+            blocks: <ShowroomBlock>[
+              ShowroomBlock.images(
+                id: 'sticker',
+                layout: ShowroomImageLayout.photo,
+                urls: const <String>[sticker],
+              ),
+              ShowroomBlock.images(
+                id: 'photo',
+                layout: ShowroomImageLayout.photo,
+                urls: const <String>['https://img/b'],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final Finder stickerImage = find.byWidgetPredicate(
+      (Widget widget) =>
+          widget is Image &&
+          widget.width == showroomEmoticonSize &&
+          widget.height == showroomEmoticonSize,
+    );
+    final Size stickerSize = tester.getSize(stickerImage);
+    expect(stickerSize.width, showroomEmoticonSize);
+    expect(stickerSize.height, showroomEmoticonSize);
+
+    await tester.tap(stickerImage);
+    await tester.pump();
+    expect(find.byType(ShowroomPhotoGallery), findsNothing);
+
+    await tester.tap(_image('https://img/b'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+    final ShowroomPhotoGallery gallery = tester.widget(
+      find.byType(ShowroomPhotoGallery),
+    );
+    expect(gallery.urls, <String>['https://img/b']);
+    expect(gallery.initialIndex, 0);
+  });
+
+  testWidgets('사진을 누르면 그 장부터 갤러리가 열린다', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(400, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ShowroomBodyView(
+            blocks: <ShowroomBlock>[
+              ShowroomBlock.images(
+                id: 'a',
+                layout: ShowroomImageLayout.photo,
+                urls: const <String>['https://img/a'],
+              ),
+              ShowroomBlock.images(
+                id: 'b',
+                layout: ShowroomImageLayout.photo,
+                urls: const <String>['https://img/b'],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(_image('https://img/b'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.text('2 / 2'), findsOneWidget);
+    expect(find.byType(ShowroomPhotoGallery), findsOneWidget);
+  });
+}
+
+Finder _image(String url) {
+  return find.byWidgetPredicate(
+    (Widget widget) => widget is AppNetworkImage && widget.url == url,
+  );
 }

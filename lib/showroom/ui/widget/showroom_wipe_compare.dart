@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_ratio.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/story/showroom_story_scenes.dart';
 
 /// 시공 전 사진 위로 시공 후가 쓸리듯 넘어갔다가, 다시 전으로 돌아온다.
@@ -10,10 +11,16 @@ class ShowroomWipeCompare extends StatefulWidget {
     super.key,
     required this.beforeUrl,
     required this.afterUrl,
+    this.caption = '',
+    this.onOpen,
   });
 
   final String beforeUrl;
   final String afterUrl;
+  final String caption;
+
+  /// 지금 화면에 나온 전 또는 후 사진을 연다.
+  final ValueChanged<bool>? onOpen;
 
   @override
   State<ShowroomWipeCompare> createState() => _ShowroomWipeCompareState();
@@ -63,15 +70,32 @@ class _ShowroomWipeCompareState extends State<ShowroomWipeCompare>
         widget.beforeUrl.isNotEmpty && widget.afterUrl.isNotEmpty;
     final bool after = canSwitch ? _after : widget.afterUrl.isNotEmpty;
     final String still = after ? widget.afterUrl : widget.beforeUrl;
-    return Padding(
-      padding: ResponsiveSize.textInset(context),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: AspectRatio(
-              aspectRatio: 4 / 5,
+    final String ratioUrl =
+        widget.afterUrl.isNotEmpty ? widget.afterUrl : widget.beforeUrl;
+    final String caption = widget.caption.trim();
+    final Widget? footer =
+        caption.isEmpty && !canSwitch
+            ? null
+            : _FigureFooter(
+              caption: caption,
+              toggle:
+                  canSwitch
+                      ? ShowroomBeforeAfterToggle(
+                        after: _after,
+                        onChanged: _setAfter,
+                      )
+                      : null,
+            );
+    return ShowroomReadingFigure(
+      footer: footer,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onOpen == null ? null : () => widget.onOpen!(_after),
+        child: ShowroomPhotoRatio(
+          url: ratioUrl,
+          builder: (BuildContext context, double aspectRatio) {
+            return AspectRatio(
+              aspectRatio: aspectRatio,
               child:
                   canSwitch
                       ? AnimatedBuilder(
@@ -96,7 +120,6 @@ class _ShowroomWipeCompareState extends State<ShowroomWipeCompare>
                                     clipper: _LeftFractionClipper(1 - reveal),
                                     child: _Photo(url: widget.beforeUrl),
                                   ),
-                                  const _PhotoShade(),
                                   if (reveal > 0.02 && reveal < 0.98)
                                     Positioned(
                                       left: edge - 1,
@@ -120,18 +143,73 @@ class _ShowroomWipeCompareState extends State<ShowroomWipeCompare>
                         fit: StackFit.expand,
                         children: [
                           _Photo(url: still),
-                          const _PhotoShade(),
                           ShowroomCompareBadge(label: after ? '시공 후' : '시공 전'),
                         ],
                       ),
-            ),
-          ),
-          if (canSwitch) ...[
-            const SizedBox(height: 12),
-            ShowroomBeforeAfterToggle(after: _after, onChanged: _setAfter),
-          ],
-        ],
+            );
+          },
+        ),
       ),
+    );
+  }
+}
+
+/// 사진과 같은 너비의 바닥. 왼쪽은 장소, 오른쪽은 전후.
+class _FigureFooter extends StatelessWidget {
+  const _FigureFooter({required this.caption, required this.toggle});
+
+  final String caption;
+  final Widget? toggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget? control =
+        toggle == null
+            ? null
+            : SizedBox(
+              width: caption.isEmpty ? double.infinity : 168,
+              height: 32,
+              child: toggle,
+            );
+    return Padding(
+      padding: ResponsiveSize.textInset(context).copyWith(top: 10),
+      child:
+          caption.isEmpty
+              ? control ?? const SizedBox.shrink()
+              : Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      caption,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        height: 1.4,
+                        fontWeight: FontWeight.w400,
+                        color: showroomMuted,
+                      ),
+                    ),
+                  ),
+                  if (control != null) ...[const SizedBox(width: 12), control],
+                ],
+              ),
+    );
+  }
+}
+
+/// 글 사이의 사진. 테두리 없이 화면 폭으로 두고, 설명만 글과 같은 여백에 둔다.
+class ShowroomReadingFigure extends StatelessWidget {
+  const ShowroomReadingFigure({super.key, required this.child, this.footer});
+
+  final Widget child;
+  final Widget? footer;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [child, if (footer != null) footer!],
     );
   }
 }
@@ -144,24 +222,9 @@ class _Photo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (url.isEmpty) return const ColoredBox(color: AppColors.imagePlaceholder);
-    return AppNetworkImage(url: url);
-  }
-}
-
-class _PhotoShade extends StatelessWidget {
-  const _PhotoShade();
-
-  @override
-  Widget build(BuildContext context) {
-    return const DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0x00000000), Color(0xCC000000)],
-          stops: [0.62, 1],
-        ),
-      ),
+    return ColoredBox(
+      color: AppColors.imagePlaceholder,
+      child: AppNetworkImage(url: url, fit: BoxFit.contain),
     );
   }
 }
@@ -212,65 +275,58 @@ class ShowroomBeforeAfterToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 280),
-        child: SizedBox(
-          width: double.infinity,
-          height: 40,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3F1EC),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: const Color(0xFFE7E1D8)),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(3),
-              child: LayoutBuilder(
-                builder: (BuildContext context, BoxConstraints constraints) {
-                  final double half = constraints.maxWidth / 2;
-                  return Stack(
-                    children: [
-                      AnimatedPositioned(
-                        duration: const Duration(milliseconds: 280),
-                        curve: Curves.easeOutCubic,
-                        left: after ? half : 0,
-                        top: 0,
-                        bottom: 0,
-                        width: half,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(999),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x14000000),
-                                blurRadius: 8,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          _ToggleSide(
-                            label: '시공 전',
-                            selected: !after,
-                            onTap: () => onChanged(false),
-                          ),
-                          _ToggleSide(
-                            label: '시공 후',
-                            selected: after,
-                            onTap: () => onChanged(true),
+    return SizedBox(
+      height: 32,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: showroomChip,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(2),
+          child: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final double half = constraints.maxWidth / 2;
+              return Stack(
+                children: [
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 280),
+                    curve: Curves.easeOutCubic,
+                    left: after ? half : 0,
+                    top: 0,
+                    bottom: 0,
+                    width: half,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(6),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x14000000),
+                            blurRadius: 2,
+                            offset: Offset(0, 1),
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      _ToggleSide(
+                        label: '시공 전',
+                        selected: !after,
+                        onTap: () => onChanged(false),
+                      ),
+                      _ToggleSide(
+                        label: '시공 후',
+                        selected: after,
+                        onTap: () => onChanged(true),
+                      ),
                     ],
-                  );
-                },
-              ),
-            ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -299,10 +355,9 @@ class _ToggleSide extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              fontSize: 13,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-              letterSpacing: -0.2,
-              color: selected ? storyInk : const Color(0xFF8A847A),
+              fontSize: 12,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+              color: selected ? showroomInk : showroomMuted,
             ),
           ),
         ),
