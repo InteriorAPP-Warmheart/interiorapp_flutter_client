@@ -17,15 +17,21 @@ import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_comment_s
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_gallery.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_process_tour.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/write_body_editor.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_story_screen.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_space_header.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_zone_compare.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/story/showroom_story_scenes.dart';
 
 /// 스토리를 생략하지 않고, 같은 데이터를 구역별로 펼쳐 보여 준다.
 class ShowroomBoardScreen extends ConsumerStatefulWidget {
-  const ShowroomBoardScreen({super.key, required this.showroomId});
+  const ShowroomBoardScreen({
+    super.key,
+    required this.showroomId,
+    this.startConsult = false,
+  });
 
   final String showroomId;
+  final bool startConsult;
 
   @override
   ConsumerState<ShowroomBoardScreen> createState() =>
@@ -33,7 +39,7 @@ class ShowroomBoardScreen extends ConsumerStatefulWidget {
 }
 
 class _ShowroomBoardScreenState extends ConsumerState<ShowroomBoardScreen> {
-  bool _picking = false;
+  late bool _picking = widget.startConsult;
   String? _recorded;
 
   @override
@@ -249,14 +255,9 @@ class _Board extends StatelessWidget {
               likes: likes,
               commentCount: commentCount,
               sheetColor: showroomPaper,
-              onPhotoTap:
-                  story.thumbnailUrl.trim().isEmpty
-                      ? null
-                      : () => openGallery(
-                        coverShift == 1
-                            ? 0
-                            : gallery.indexOf(story.thumbnailUrl.trim()),
-                      ),
+              onOpenHighlight: (BuildContext photoContext) {
+                openShowroomHighlight(photoContext, showroomId: story.id);
+              },
             ),
           ];
         },

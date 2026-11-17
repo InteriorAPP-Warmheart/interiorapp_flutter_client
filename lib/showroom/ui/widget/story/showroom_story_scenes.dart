@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/vm/showroom_write_vm.dart';
-import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_feed_segment.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_ratio.dart';
 
 const Color storyInk = Color(0xFF111111);
 
@@ -70,6 +70,199 @@ class StoryPhoto extends StatelessWidget {
       width: double.infinity,
       height: double.infinity,
       placeholderColor: const Color(0xFF2A2A2A),
+    );
+  }
+}
+
+/// 원본 비율을 유지한 채, 주어진 칸에서 가장 크게 놓는다.
+({double width, double height}) storyFitFrame({
+  required double maxWidth,
+  required double maxHeight,
+  required double aspectRatio,
+}) {
+  final double ratio = aspectRatio <= 0 ? 3 / 2 : aspectRatio;
+  double width = maxWidth;
+  double height = width / ratio;
+  if (height > maxHeight && maxHeight > 0) {
+    height = maxHeight;
+    width = height * ratio;
+  }
+  return (width: width, height: height);
+}
+
+/// 검은 슬라이드 위에 사진을 자르지 않고 가장 크게 놓는다.
+class StoryPhotoFrame extends StatelessWidget {
+  const StoryPhotoFrame({
+    super.key,
+    required this.aspectUrl,
+    required this.builder,
+  });
+
+  final String aspectUrl;
+  final Widget Function(double width, double height) builder;
+
+  @override
+  Widget build(BuildContext context) {
+    final EdgeInsets view = MediaQuery.paddingOf(context);
+    return ColoredBox(
+      color: storyInk,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(0, view.top + 64, 0, view.bottom + 12),
+        child: ShowroomPhotoRatio(
+          url: aspectUrl,
+          builder: (BuildContext context, double ratio) {
+            return LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                final ({double width, double height}) frame = storyFitFrame(
+                  maxWidth: constraints.maxWidth,
+                  maxHeight: constraints.maxHeight,
+                  aspectRatio: ratio,
+                );
+                return Align(
+                  alignment: const Alignment(0, -0.12),
+                  child: builder(frame.width, frame.height),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// 사진 한 장이 한 슬라이드다.
+class StorySlide extends StatelessWidget {
+  const StorySlide({super.key, required this.url});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return StoryPhotoFrame(
+      aspectUrl: url,
+      builder: (double width, double height) {
+        return AppNetworkImage(
+          url: url,
+          width: width,
+          height: height,
+          fit: BoxFit.cover,
+          placeholderColor: const Color(0xFF2A2A2A),
+        );
+      },
+    );
+  }
+}
+
+/// 나열 안에서 시공 전후를 화면 너비로 비교한다.
+class StoryCompareStrip extends StatefulWidget {
+  const StoryCompareStrip({super.key, required this.beforeAfter});
+
+  final ShowroomBeforeAfter beforeAfter;
+
+  @override
+  State<StoryCompareStrip> createState() => _StoryCompareStripState();
+}
+
+class _StoryCompareStripState extends State<StoryCompareStrip> {
+  double _fraction = 0.5;
+
+  void _drag(double delta, double width) {
+    if (width <= 0) return;
+    setState(() {
+      _fraction = (_fraction + delta / width).clamp(0.0, 1.0);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ShowroomPhotoRatio(
+      url: widget.beforeAfter.afterUrl,
+      builder: (BuildContext context, double ratio) {
+        return AspectRatio(
+          aspectRatio: ratio <= 0 ? 3 / 2 : ratio,
+          child: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final double width = constraints.maxWidth;
+              final double height = constraints.maxHeight;
+              final double x = _fraction * width;
+              return GestureDetector(
+                onHorizontalDragUpdate: (DragUpdateDetails details) {
+                  _drag(details.delta.dx, width);
+                },
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    StoryPhoto(url: widget.beforeAfter.afterUrl),
+                    ClipRect(
+                      clipper: _LeftFractionClipper(_fraction),
+                      child: StoryPhoto(url: widget.beforeAfter.beforeUrl),
+                    ),
+                    Positioned(
+                      left: x - 1.5,
+                      top: 0,
+                      width: 3,
+                      height: height,
+                      child: const ColoredBox(color: Colors.white),
+                    ),
+                    Positioned(
+                      left: x - 18,
+                      top: height / 2 - 18,
+                      child: const DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: SizedBox(
+                          width: 36,
+                          height: 36,
+                          child: Icon(
+                            Icons.swap_horiz,
+                            size: 20,
+                            color: storyInk,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const Positioned(
+                      left: 16,
+                      right: 16,
+                      bottom: 14,
+                      child: Row(
+                        children: [
+                          Text(
+                            '시공 전',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              shadows: <Shadow>[
+                                Shadow(color: Color(0xCC000000), blurRadius: 8),
+                              ],
+                            ),
+                          ),
+                          Spacer(),
+                          Text(
+                            '시공 후',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              shadows: <Shadow>[
+                                Shadow(color: Color(0xCC000000), blurRadius: 8),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
@@ -157,22 +350,17 @@ class StoryHeroScene extends StatelessWidget {
     super.key,
     required this.story,
     required this.progress,
-    this.commentCount = 0,
-    this.viewCount = 0,
-    this.favorite = false,
+    this.place = '',
   });
 
   final ShowroomStoryModel story;
   final double progress;
-  final int commentCount;
-  final int viewCount;
-  final bool favorite;
+  final String place;
 
   @override
   Widget build(BuildContext context) {
-    final String likes = showroomCompactCount(story.likeCount);
-    final String comments = showroomCompactCount(commentCount);
-    final String views = showroomCompactCount(viewCount);
+    final String space =
+        place.trim().isNotEmpty ? place.trim() : story.themeName.trim();
     const double hint = 1;
     final double bottom = MediaQuery.paddingOf(context).bottom + 28;
 
@@ -190,16 +378,17 @@ class StoryHeroScene extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  story.themeName,
-                  style: const TextStyle(
-                    color: Color(0xE6FFFFFF),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.4,
+                if (space.isNotEmpty)
+                  Text(
+                    space,
+                    style: const TextStyle(
+                      color: Color(0xE6FFFFFF),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.4,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
+                if (space.isNotEmpty) const SizedBox(height: 8),
                 Text(
                   story.title,
                   style: const TextStyle(
@@ -210,73 +399,6 @@ class StoryHeroScene extends StatelessWidget {
                     height: 1.15,
                   ),
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundImage: NetworkImage(story.userProfileUrl),
-                      radius: 14,
-                    ),
-                    const SizedBox(width: 10),
-                    Flexible(
-                      child: Text(
-                        story.userName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Icon(
-                      favorite ? Icons.favorite : Icons.favorite_border,
-                      size: 15,
-                      color: favorite ? const Color(0xFFFF4D6A) : Colors.white,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      likes,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Icon(
-                      Icons.mode_comment_outlined,
-                      size: 15,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      comments,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Icon(
-                      Icons.visibility_outlined,
-                      size: 15,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      views,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
@@ -285,7 +407,7 @@ class StoryHeroScene extends StatelessWidget {
           left: 0,
           right: 0,
           bottom: bottom,
-          child: StoryScrollCue(opacity: hint),
+          child: const StoryScrollCue(opacity: hint),
         ),
       ],
     );
@@ -408,107 +530,82 @@ class _StoryBeforeAfterSceneState extends State<StoryBeforeAfterScene> {
 
   @override
   Widget build(BuildContext context) {
-    final double bottom = MediaQuery.paddingOf(context).bottom + 28;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final double width = constraints.maxWidth;
-        final double height = constraints.maxHeight;
+    return StoryPhotoFrame(
+      aspectUrl: widget.beforeAfter.afterUrl,
+      builder: (double width, double height) {
         final double x = _fraction * width;
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            StoryPhoto(url: widget.beforeAfter.afterUrl),
-            ClipRect(
-              clipper: _LeftFractionClipper(_fraction),
-              child: StoryPhoto(url: widget.beforeAfter.beforeUrl),
-            ),
-            const StoryPhotoScrim(),
-            Positioned(
-              left: x - 1.5,
-              top: 0,
-              width: 3,
-              height: height,
-              child: const ColoredBox(color: Colors.white),
-            ),
-            Positioned(
-              left: x - 18,
-              top: height / 2 - 18,
-              child: const DecoratedBox(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
+        return GestureDetector(
+          onHorizontalDragUpdate: (DragUpdateDetails details) {
+            _drag(details.delta.dx, width);
+          },
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                StoryPhoto(url: widget.beforeAfter.afterUrl),
+                ClipRect(
+                  clipper: _LeftFractionClipper(_fraction),
+                  child: StoryPhoto(url: widget.beforeAfter.beforeUrl),
                 ),
-                child: SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: Icon(Icons.swap_horiz, size: 20, color: storyInk),
+                Positioned(
+                  left: x - 1.5,
+                  top: 0,
+                  width: 3,
+                  height: height,
+                  child: const ColoredBox(color: Colors.white),
                 ),
-              ),
-            ),
-            Positioned(
-              left: 28,
-              right: 28,
-              bottom: bottom,
-              child: Opacity(
-                opacity: widget.progress.clamp(0.0, 1.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.beforeAfter.caption,
-                      style: const TextStyle(
-                        color: Color(0xE6FFFFFF),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                Positioned(
+                  left: x - 18,
+                  top: height / 2 - 18,
+                  child: const DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: Icon(Icons.swap_horiz, size: 20, color: storyInk),
+                    ),
+                  ),
+                ),
+                const Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 14,
+                  child: Row(
+                    children: [
+                      Text(
+                        '시공 전',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          shadows: <Shadow>[
+                            Shadow(color: Color(0xCC000000), blurRadius: 8),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Row(
-                      children: [
-                        Text(
-                          '시공 전',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
+                      Spacer(),
+                      Text(
+                        '시공 후',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          shadows: <Shadow>[
+                            Shadow(color: Color(0xCC000000), blurRadius: 8),
+                          ],
                         ),
-                        Spacer(),
-                        Text(
-                          '시공 후',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
-            StoryKicker(
-              widget.beforeAfter.zone.trim().isEmpty
-                  ? '시공 전후'
-                  : widget.beforeAfter.zone.trim(),
-              onDark: true,
-            ),
-            Positioned(
-              left: 32,
-              top: 0,
-              right: 0,
-              bottom: 0,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onHorizontalDragUpdate: (DragUpdateDetails details) {
-                  _drag(details.delta.dx, width);
-                },
-                child: const SizedBox.expand(),
-              ),
-            ),
-          ],
+          ),
         );
       },
     );
@@ -637,63 +734,6 @@ class StoryCostScene extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class StoryProcessFrameScene extends StatelessWidget {
-  const StoryProcessFrameScene({
-    super.key,
-    required this.frame,
-    required this.index,
-    required this.count,
-  });
-
-  final ShowroomProcessFrame frame;
-  final int index;
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    final double bottom = MediaQuery.paddingOf(context).bottom + 28;
-
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        StoryPhoto(url: frame.imageUrl),
-        const StoryPhotoScrim(),
-        const StoryKicker('현장 기록', onDark: true),
-        Positioned(
-          left: 28,
-          right: 28,
-          bottom: bottom,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${index + 1} / $count',
-                style: const TextStyle(
-                  color: Color(0xE6FFFFFF),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                frame.caption,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  height: 1.35,
-                  letterSpacing: -0.3,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

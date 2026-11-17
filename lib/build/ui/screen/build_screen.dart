@@ -169,7 +169,8 @@ class _BuildScreenState extends ConsumerState<BuildScreen> {
   }
 }
 
-/// 탭바 위 높이에 상담 영역, 진행 중, 마친 공간이 함께 들어가게 간격을 줄인다.
+/// 탭바 위에 상담, 진행 중, 마친 공간이 들어가게 나누고
+/// 마친 공간은 진행 중 카드보다 낮게 둔다.
 class _SpaceFit {
   const _SpaceFit({
     required this.band,
@@ -191,26 +192,45 @@ class _SpaceFit {
     required double band,
     required double finished,
   }) {
-    const double minOngoing = 72;
-    final double titles = 24 * fontScale * 2;
-    final double reserved = titles + minOngoing;
-    final double limit = maxHeight - reserved;
-    final double flex = band + finished + sectionGap * 2 + subGap * 2;
-    if (limit <= 0 || flex <= limit) {
-      return _SpaceFit(
-        band: band,
-        finished: finished,
-        sectionGap: sectionGap,
-        subGap: subGap,
-      );
+    const double minBand = 100;
+    final double titles = 22 * fontScale * 2;
+    double bandH = band;
+    double section = sectionGap;
+    double sub = subGap;
+
+    double shared() => maxHeight - bandH - titles - section * 2 - sub * 2;
+
+    // 마친 공간은 가로 줄이다. 진행 중 카드보다 낮게 둔다.
+    double room = shared();
+    double finishedH = room <= 0 ? finished : _shorterStrip(finished, room);
+
+    double ongoing = room - finishedH;
+    if (ongoing < 120 && bandH > minBand) {
+      bandH = (bandH - (120 - ongoing)).clamp(minBand, band);
+      room = shared();
+      finishedH = _shorterStrip(finished, room);
+      ongoing = room - finishedH;
     }
-    final double scale = limit / flex;
+    if (ongoing < finishedH && room > 0) {
+      section = sectionGap * 0.7;
+      sub = subGap * 0.7;
+      room = shared();
+      finishedH = _shorterStrip(finished, room);
+    }
+
     return _SpaceFit(
-      band: band * scale,
-      finished: finished * scale,
-      sectionGap: sectionGap * scale,
-      subGap: subGap * scale,
+      band: bandH,
+      finished: finishedH,
+      sectionGap: section,
+      subGap: sub,
     );
+  }
+
+  /// 진행 중 영역이 마친 공간보다 크도록, 남은 높이의 일부만 쓴다.
+  static double _shorterStrip(double preferred, double room) {
+    final double cap = room * 0.36;
+    if (preferred < cap) return preferred;
+    return cap;
   }
 }
 

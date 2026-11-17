@@ -64,8 +64,7 @@ flutter:
     - lib/auth/util/
     # - assets/json/
     # - .env
-  
-  
+
   fonts:
     - family: Pretendard
       fonts:

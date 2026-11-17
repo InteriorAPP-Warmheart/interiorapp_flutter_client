@@ -5,9 +5,8 @@ import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/hot_showroom_model.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
-import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_story_screen.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_board_screen.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_feed_segment.dart';
-import 'package:interiorapp_flutter_client/showroom/ui/widget/story/showroom_story_scenes.dart';
 
 /// 인기 쇼룸. 대표 사진 한 장을 가로로 넘긴다.
 class PopularShowroomCardList extends ConsumerWidget {
@@ -69,9 +68,8 @@ class _LookbookCard extends StatelessWidget {
       onTap:
           () => openShowroomPage(
             context,
-            (_) => ShowroomStoryScreen(showroomId: item.id),
+            (_) => ShowroomBoardScreen(showroomId: item.id),
             coverUrl: item.thumbnailUrl,
-            background: storyInk,
           ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),

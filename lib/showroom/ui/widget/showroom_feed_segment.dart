@@ -923,7 +923,6 @@ class _GrowingPage extends StatelessWidget {
                             child: Transform.scale(
                               alignment: Alignment.topLeft,
                               scale: scale,
-                              filterQuality: FilterQuality.medium,
                               child: page,
                             ),
                           ),

@@ -2,16 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/vm/showroom_write_vm.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_ratio.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/story/showroom_story_scenes.dart';
 
-/// 가로로 납작하면 공간 사진의 위아래가 많이 잘린다. 거의 정사각으로 둔다.
-double showroomThumbnailExtent(BuildContext context) {
-  return MediaQuery.sizeOf(context).width * 0.96;
-}
+/// 갤러리 버튼을 눌러 갤러리를 연다. 인자로 받는 맥락이 버튼의 자리다.
+typedef ShowroomHighlightOpen = void Function(BuildContext photoContext);
 
-/// 맨 위 사진을 크게 두고, 스크롤하면 상담 화면처럼 위로 접힌다.
-/// 스타일, 제목, 작성자, 좋아요는 사진 위에 올린다.
-SliverAppBar showroomThumbnailBar(
+/// 맨 위 사진을 원본 비율로 두고, 스타일, 제목, 작성자, 좋아요를 사진 위에 올린다.
+Widget showroomThumbnailBar(
   BuildContext context, {
   required String imageUrl,
   required String style,
@@ -23,80 +21,188 @@ SliverAppBar showroomThumbnailBar(
   int? commentCount,
   Color sheetColor = AppColors.background,
   VoidCallback? onPhotoTap,
+  ShowroomHighlightOpen? onOpenHighlight,
 }) {
   final String url = imageUrl.trim();
-  return SliverAppBar(
-    primary: false,
-    automaticallyImplyLeading: false,
-    pinned: false,
-    toolbarHeight: 0,
-    elevation: 0,
-    scrolledUnderElevation: 0,
-    shadowColor: Colors.transparent,
-    surfaceTintColor: Colors.transparent,
-    forceMaterialTransparency: true,
-    backgroundColor: sheetColor,
-    expandedHeight: showroomThumbnailExtent(context),
-    flexibleSpace: FlexibleSpaceBar(
-      collapseMode: CollapseMode.pin,
-      background: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (url.isEmpty)
-            const ColoredBox(color: AppColors.imagePlaceholder)
-          else
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: onPhotoTap,
-              child: StoryPhoto(url: url),
-            ),
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0x00000000),
-                  Color(0x00000000),
-                  Color(0x73000000),
-                  Color(0xE6000000),
-                ],
-                stops: [0.0, 0.34, 0.62, 1.0],
-              ),
-            ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 24,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: sheetColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(24),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 20,
-            right: 20,
-            bottom: 40,
-            child: _CoverCaption(
-              style: style.trim(),
-              title: title.trim(),
-              authorName: authorName.trim(),
-              authorPhotoUrl: authorPhotoUrl.trim(),
-              likes: likes.trim(),
-              showLike: showLike,
-              commentCount: commentCount,
-            ),
-          ),
-        ],
+  return SliverToBoxAdapter(
+    child: _CoverPhoto(
+      url: url,
+      sheetColor: sheetColor,
+      onPhotoTap: onPhotoTap,
+      onOpenHighlight: onOpenHighlight,
+      caption: _CoverCaption(
+        style: style.trim(),
+        title: title.trim(),
+        authorName: authorName.trim(),
+        authorPhotoUrl: authorPhotoUrl.trim(),
+        likes: likes.trim(),
+        showLike: showLike,
+        commentCount: commentCount,
       ),
     ),
   );
+}
+
+class _CoverPhoto extends StatelessWidget {
+  const _CoverPhoto({
+    required this.url,
+    required this.sheetColor,
+    required this.caption,
+    this.onPhotoTap,
+    this.onOpenHighlight,
+  });
+
+  final String url;
+  final Color sheetColor;
+  final Widget caption;
+  final VoidCallback? onPhotoTap;
+  final ShowroomHighlightOpen? onOpenHighlight;
+
+  @override
+  Widget build(BuildContext context) {
+    if (url.isEmpty) {
+      return const AspectRatio(
+        aspectRatio: 3 / 2,
+        child: ColoredBox(color: AppColors.imagePlaceholder),
+      );
+    }
+    return ShowroomPhotoRatio(
+      url: url,
+      builder: (BuildContext context, double ratio) {
+        return AspectRatio(
+          aspectRatio: ratio <= 0 ? 3 / 2 : ratio,
+          child: _CoverHit(
+            url: url,
+            sheetColor: sheetColor,
+            caption: caption,
+            onPhotoTap: onPhotoTap,
+            onOpenHighlight: onOpenHighlight,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CoverHit extends StatefulWidget {
+  const _CoverHit({
+    required this.url,
+    required this.sheetColor,
+    required this.caption,
+    this.onPhotoTap,
+    this.onOpenHighlight,
+  });
+
+  final String url;
+  final Color sheetColor;
+  final Widget caption;
+  final VoidCallback? onPhotoTap;
+  final ShowroomHighlightOpen? onOpenHighlight;
+
+  @override
+  State<_CoverHit> createState() => _CoverHitState();
+}
+
+class _CoverHitState extends State<_CoverHit> {
+  final GlobalKey _chipKey = GlobalKey();
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget cover = Stack(
+      fit: StackFit.expand,
+      children: [
+        StoryPhoto(url: widget.url),
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0x00000000),
+                Color(0x00000000),
+                Color(0x73000000),
+                Color(0xE6000000),
+              ],
+              stops: [0.0, 0.34, 0.62, 1.0],
+            ),
+          ),
+        ),
+        if (widget.onOpenHighlight != null)
+          Positioned(
+            top: 14,
+            right: 14,
+            child: KeyedSubtree(
+              key: _chipKey,
+              child: _HighlightChip(
+                onTap: () {
+                  final BuildContext? chip = _chipKey.currentContext;
+                  widget.onOpenHighlight!(chip ?? context);
+                },
+              ),
+            ),
+          ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 24,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: widget.sheetColor,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
+            ),
+          ),
+        ),
+        Positioned(left: 20, right: 20, bottom: 40, child: widget.caption),
+      ],
+    );
+    final VoidCallback? onPhotoTap = widget.onPhotoTap;
+    if (onPhotoTap == null) return cover;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onPhotoTap,
+      child: cover,
+    );
+  }
+}
+
+class _HighlightChip extends StatelessWidget {
+  const _HighlightChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: const DecoratedBox(
+        decoration: BoxDecoration(
+          color: Color(0xCC111111),
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.photo_library_outlined, size: 15, color: Colors.white),
+              SizedBox(width: 6),
+              Text(
+                '갤러리',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _CoverCaption extends StatelessWidget {

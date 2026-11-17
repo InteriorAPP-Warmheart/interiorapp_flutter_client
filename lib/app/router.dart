@@ -21,7 +21,6 @@ import 'package:interiorapp_flutter_client/mypage/ui/screen/content_history_scre
 import 'package:interiorapp_flutter_client/mypage/ui/screen/mypage_screen.dart';
 import 'package:interiorapp_flutter_client/mypage/ui/screen/profile_screen.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_board_screen.dart';
-import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_story_screen.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_write_detail_screen.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/screen/showroom_write_screen.dart';
 
@@ -182,19 +181,20 @@ class AppRouter {
         path: '/showroom/:id',
         builder:
             (context, state) => AdaptiveFrame(
-              child: ShowroomStoryScreen(
+              child: ShowroomBoardScreen(
                 showroomId: state.pathParameters['id'] ?? '',
+                startConsult: state.uri.queryParameters['consult'] == '1',
               ),
             ),
         routes: [
           GoRoute(
             path: 'board',
-            builder:
-                (context, state) => AdaptiveFrame(
-                  child: ShowroomBoardScreen(
-                    showroomId: state.pathParameters['id'] ?? '',
-                  ),
-                ),
+            redirect: (context, state) {
+              final String id = state.pathParameters['id'] ?? '';
+              final String consult = state.uri.queryParameters['consult'] ?? '';
+              if (consult == '1') return '/showroom/$id?consult=1';
+              return '/showroom/$id';
+            },
           ),
         ],
       ),
