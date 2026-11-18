@@ -1,0 +1,86 @@
+[
+  {
+    "file": "01_fall.png",
+    "action": "낙하",
+    "canvas": "320x320 px",
+    "format": "PNG RGBA / transparent background",
+    "animation_group": "single_pose"
+  },
+  {
+    "file": "02_look_left.png",
+    "action": "두리번_왼쪽",
+    "canvas": "320x320 px",
+    "format": "PNG RGBA / transparent background",
+    "animation_group": "look_around"
+  },
+  {
+    "file": "03_look_front.png",
+    "action": "두리번_정면",
+    "canvas": "320x320 px",
+    "format": "PNG RGBA / transparent background",
+    "animation_group": "look_around"
+  },
+  {
+    "file": "04_look_right.png",
+    "action": "두리번_오른쪽",
+    "canvas": "320x320 px",
+    "format": "PNG RGBA / transparent background",
+    "animation_group": "look_around"
+  },
+  {
+    "file": "05_happy_sit_loop.png",
+    "action": "앉아서_행복",
+    "canvas": "320x320 px",
+    "format": "PNG RGBA / transparent background",
+    "animation_group": "single_pose"
+  },
+  {
+    "file": "06_surprise.png",
+    "action": "놀람",
+    "canvas": "320x320 px",
+    "format": "PNG RGBA / transparent background",
+    "animation_group": "single_pose"
+  },
+  {
+    "file": "07_run_01.png",
+    "action": "달리기_프레임01",
+    "canvas": "320x320 px",
+    "format": "PNG RGBA / transparent background",
+    "animation_group": "run"
+  },
+  {
+    "file": "08_run_02.png",
+    "action": "달리기_프레임02",
+    "canvas": "320x320 px",
+    "format": "PNG RGBA / transparent background",
+    "animation_group": "run"
+  },
+  {
+    "file": "09_run_03.png",
+    "action": "달리기_프레임03",
+    "canvas": "320x320 px",
+    "format": "PNG RGBA / transparent background",
+    "animation_group": "run"
+  },
+  {
+    "file": "10_run_04.png",
+    "action": "달리기_프레임04",
+    "canvas": "320x320 px",
+    "format": "PNG RGBA / transparent background",
+    "animation_group": "run"
+  },
+  {
+    "file": "11_relief_sit.png",
+    "action": "안심_앉기",
+    "canvas": "320x320 px",
+    "format": "PNG RGBA / transparent background",
+    "animation_group": "single_pose"
+  },
+  {
+    "file": "12_happy_transition.png",
+    "action": "안심후_행복",
+    "canvas": "320x320 px",
+    "format": "PNG RGBA / transparent background",
+    "animation_group": "single_pose"
+  }
+]

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/build/ui/space_routes.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
+import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/expanding_action_button.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/quick_filter_catalog.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_reference_pick.dart';
@@ -13,6 +14,7 @@ import 'package:interiorapp_flutter_client/mypage/presentation/provider/mypage_p
 import 'package:interiorapp_flutter_client/mypage/presentation/record_showroom_view.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/showroom_story_provider.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/mascot/showroom_mascot.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_comment_section.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_gallery.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_process_tour.dart';
@@ -108,54 +110,66 @@ class _ShowroomBoardScreenState extends ConsumerState<ShowroomBoardScreen> {
         if (didPop || !_picking) return;
         setState(() => _picking = false);
       },
-      child: Scaffold(
-        backgroundColor: showroomPaper,
-        appBar: AppBar(
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          shadowColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
-          forceMaterialTransparency: true,
-          notificationPredicate: (ScrollNotification notification) => false,
-          leading: IconButton(
-            onPressed: () {
-              if (_picking) {
-                setState(() => _picking = false);
-                return;
-              }
-              Navigator.of(context).pop();
-            },
-            icon: const Icon(Icons.arrow_back),
+      child: Stack(
+        children: <Widget>[
+          Positioned.fill(
+            child: Scaffold(
+              backgroundColor: showroomPaper,
+              appBar: AppBar(
+                toolbarHeight: ResponsiveSize.appBarHeight(context),
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                shadowColor: Colors.transparent,
+                surfaceTintColor: Colors.transparent,
+                forceMaterialTransparency: true,
+                notificationPredicate:
+                    (ScrollNotification notification) => false,
+                leading: IconButton(
+                  onPressed: () {
+                    if (_picking) {
+                      setState(() => _picking = false);
+                      return;
+                    }
+                    Navigator.of(context).pop();
+                  },
+                  icon: const Icon(Icons.arrow_back),
+                ),
+                actions: const <Widget>[],
+              ),
+              body: () {
+                final ShowroomStoryModel? overview =
+                    storyAsync.asData?.value ??
+                    _overviewFromList(listed, showroomId);
+                if (overview != null) {
+                  final bool favorite =
+                      listed
+                          .where(
+                            (HotShowroomModel item) => item.id == overview.id,
+                          )
+                          .map((HotShowroomModel item) => item.favoriteStatus)
+                          .firstOrNull ??
+                      overview.favoriteStatus;
+                  return _Board(
+                    story: overview,
+                    picking: _picking,
+                    favorite: favorite,
+                    onFavorite: () {
+                      ref
+                          .read(hotShowroomSliderVm.notifier)
+                          .toggleFavoriteByIndex(overview.id);
+                    },
+                    onPicking: (bool value) => setState(() => _picking = value),
+                  );
+                }
+                if (storyAsync.hasError) {
+                  return const Center(child: Text('이야기를 불러오지 못했어요'));
+                }
+                return const SizedBox.shrink();
+              }(),
+            ),
           ),
-          actions: const <Widget>[],
-        ),
-        body: () {
-          final ShowroomStoryModel? overview =
-              storyAsync.asData?.value ?? _overviewFromList(listed, showroomId);
-          if (overview != null) {
-            final bool favorite =
-                listed
-                    .where((HotShowroomModel item) => item.id == overview.id)
-                    .map((HotShowroomModel item) => item.favoriteStatus)
-                    .firstOrNull ??
-                overview.favoriteStatus;
-            return _Board(
-              story: overview,
-              picking: _picking,
-              favorite: favorite,
-              onFavorite: () {
-                ref
-                    .read(hotShowroomSliderVm.notifier)
-                    .toggleFavoriteByIndex(overview.id);
-              },
-              onPicking: (bool value) => setState(() => _picking = value),
-            );
-          }
-          if (storyAsync.hasError) {
-            return const Center(child: Text('이야기를 불러오지 못했어요'));
-          }
-          return const SizedBox.shrink();
-        }(),
+          const ShowroomMascot(),
+        ],
       ),
     );
   }
