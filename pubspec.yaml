@@ -60,6 +60,7 @@ flutter:
     - assets/images/showroom_real/wh/
     - assets/images/app_icons/
     - assets/images/app_images/
+    - assets/images/home/
     - assets/logo/
     - assets/mascot/showroom/wapll_mascot_assets/
     - lib/auth/util/

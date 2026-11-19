@@ -58,6 +58,9 @@ class _ExpandingActionButtonState extends State<ExpandingActionButton>
   late final Animation<double> _label;
   double _expanded = 56;
 
+  /// 펼치기 직후의 레이아웃 알림이 버튼을 다시 접지 않게 막는 시각.
+  DateTime? _guardUntil;
+
   @override
   void initState() {
     super.initState();
@@ -127,16 +130,20 @@ class _ExpandingActionButtonState extends State<ExpandingActionButton>
   }
 
   void _close() {
-    if (_controller.value == 0) return;
+    final DateTime? guard = _guardUntil;
+    if (guard != null && DateTime.now().isBefore(guard)) return;
+    if (_controller.value == 0 && !_controller.isAnimating) return;
     _controller.reverse();
   }
 
   void _activate() {
-    if (_controller.isCompleted) {
-      _controller.value = 0;
+    if (_controller.value > 0.98) {
       widget.onPressed();
+      _controller.value = 0;
       return;
     }
+    // 탭이 스크롤에 빼앗겨도 눌린 순간 펼친다.
+    _guardUntil = DateTime.now().add(const Duration(milliseconds: 480));
     _controller.forward();
   }
 
@@ -165,9 +172,9 @@ class _ExpandingActionButtonState extends State<ExpandingActionButton>
                   shadowColor: const Color(0x33000000),
                   borderRadius: BorderRadius.circular(collapsed / 2),
                   clipBehavior: Clip.antiAlias,
-                  child: GestureDetector(
+                  child: Listener(
                     behavior: HitTestBehavior.opaque,
-                    onTap: _activate,
+                    onPointerDown: (_) => _activate(),
                     child: SizedBox(
                       height: collapsed,
                       width: width,

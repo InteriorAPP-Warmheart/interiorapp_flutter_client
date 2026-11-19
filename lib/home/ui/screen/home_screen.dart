@@ -42,6 +42,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    // 이미지 높이가 잡히며 나는 알림은 스크롤이 아니다.
+    if (!_scrollController.position.isScrollingNotifier.value) return;
     _consult.close();
     // 진행률 카드가 목록 끝에서 한 줄로 바뀌던 감지.
     // final position = _scrollController.position;

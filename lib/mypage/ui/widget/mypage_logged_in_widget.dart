@@ -163,8 +163,8 @@ class MyPageLoggedInWidget extends ConsumerWidget {
                   _MenuItem(
                     icon: Icons.headset_mic_outlined,
                     label: '고객 지원',
-                    subtitle: '문의·신고·FAQ',
-                    onTap: () {},
+                    subtitle: '공지·문의·신고',
+                    onTap: () => context.push('/board'),
                   ),
                 ],
               ),
