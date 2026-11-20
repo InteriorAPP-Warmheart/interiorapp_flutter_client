@@ -5,6 +5,7 @@ import 'package:interiorapp_flutter_client/build/ui/space_routes.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_asset_image.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_logo.dart';
 
 const String _mascot =
@@ -278,7 +279,12 @@ class _Hero extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Image.asset(_mascot, width: 72, height: 72, fit: BoxFit.contain),
+              AppAssetImage(
+                _mascot,
+                width: 72,
+                height: 72,
+                fit: BoxFit.contain,
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -349,7 +355,7 @@ class _Cost extends StatelessWidget {
                 children: [
                   Expanded(child: _ProfitBar(fontScale: fontScale)),
                   const SizedBox(width: 8),
-                  Image.asset(
+                  AppAssetImage(
                     _mascotHappy,
                     width: 64,
                     height: 64,
@@ -605,7 +611,7 @@ class _AppStageState extends State<_AppStage> {
                     child:
                         _photo == null
                             ? const _SplashGlass()
-                            : Image.asset(_photo!, fit: BoxFit.cover),
+                            : AppAssetImage(_photo!, fit: BoxFit.cover),
                   ),
                 ),
               ),
@@ -997,7 +1003,12 @@ class _Close extends StatelessWidget {
                   ],
                 ),
               ),
-              Image.asset(_mascot, width: 72, height: 72, fit: BoxFit.contain),
+              AppAssetImage(
+                _mascot,
+                width: 72,
+                height: 72,
+                fit: BoxFit.contain,
+              ),
             ],
           ),
           const SizedBox(height: 14),

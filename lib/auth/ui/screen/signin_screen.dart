@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_asset_image.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
 class SigninScreen extends StatelessWidget {
@@ -49,7 +50,7 @@ class SigninScreen extends StatelessWidget {
                   height: 52,
                   child: FilledButton.icon(
                     onPressed: () {},
-                    icon: Image.asset(
+                    icon: AppAssetImage(
                       'assets/images/kakao_icon.png',
                       width: 20,
                       height: 20,
@@ -100,7 +101,7 @@ class SigninScreen extends StatelessWidget {
                   height: 52,
                   child: OutlinedButton.icon(
                     onPressed: () {},
-                    icon: Image.asset(
+                    icon: AppAssetImage(
                       'assets/images/google_icon.png',
                       width: 18,
                       height: 18,

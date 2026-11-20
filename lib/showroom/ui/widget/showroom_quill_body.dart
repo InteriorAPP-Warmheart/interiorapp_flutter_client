@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:interiorapp_flutter_client/core/editor/quill_simulator_guard.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_asset_image.dart';
 import 'package:interiorapp_flutter_client/core/editor/rich_text_document.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/widget/keyboard_dismiss.dart';
@@ -514,7 +515,7 @@ class ShowroomQuillToolbar extends StatelessWidget {
                                     child: Center(
                                       child:
                                           showroomEmoticonUrl(emoji)
-                                              ? Image.asset(
+                                              ? AppAssetImage(
                                                 emoji,
                                                 width: 40,
                                                 height: 40,

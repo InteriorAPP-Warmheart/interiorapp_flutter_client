@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_asset_image.dart';
 
 /// 밝은 배경용 네이비 워드마크와 어두운 배경용 화이트 워드마크.
 class AppLogo extends StatelessWidget {
@@ -12,7 +13,7 @@ class AppLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
+    return AppAssetImage(
       onDark ? onDarkAsset : onLightAsset,
       height: height,
       fit: BoxFit.contain,

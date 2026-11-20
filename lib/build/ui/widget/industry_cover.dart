@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_asset_image.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
 /// 업종 표지. 카페와 베이커리만 시험 이미지가 있고, 나머지는 단색이다.
@@ -28,7 +29,7 @@ class IndustryCover extends StatelessWidget {
         if (asset == null)
           const ColoredBox(color: AppColors.primary)
         else
-          Image.asset(asset, fit: BoxFit.cover),
+          AppAssetImage(asset, fit: BoxFit.cover),
         const DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(

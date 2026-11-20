@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_asset_image.dart';
 
 /// 목록과 카드에서 같은 비율, 같은 로딩·실패 상태로 사진을 보여 준다.
 class AppNetworkImage extends StatelessWidget {
@@ -24,23 +25,26 @@ class AppNetworkImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (url.startsWith('/') || url.startsWith('file://')) {
-      final String path = url.startsWith('file://') ? Uri.parse(url).toFilePath() : url;
+      final String path =
+          url.startsWith('file://') ? Uri.parse(url).toFilePath() : url;
       return Image.file(
         File(path),
         fit: fit,
         width: width,
         height: height,
-        errorBuilder: (context, error, stackTrace) => _imageFallback(placeholderColor),
+        errorBuilder:
+            (context, error, stackTrace) =>
+                MissingAssetPlaceholder(color: placeholderColor),
       );
     }
 
     if (url.startsWith('assets/')) {
-      return Image.asset(
+      return AppAssetImage(
         url,
         fit: fit,
         width: width,
         height: height,
-        errorBuilder: (context, error, stackTrace) => _imageFallback(placeholderColor),
+        placeholderColor: placeholderColor,
       );
     }
 
@@ -51,16 +55,9 @@ class AppNetworkImage extends StatelessWidget {
       height: height,
       fadeInDuration: const Duration(milliseconds: 180),
       placeholder: (context, imageUrl) => ColoredBox(color: placeholderColor),
-      errorWidget: (context, imageUrl, error) => _imageFallback(placeholderColor),
+      errorWidget:
+          (context, imageUrl, error) =>
+              MissingAssetPlaceholder(color: placeholderColor),
     );
   }
-}
-
-Widget _imageFallback(Color color) {
-  return ColoredBox(
-    color: color,
-    child: const Center(
-      child: Icon(Icons.image_outlined, size: 28, color: AppColors.textSecondary),
-    ),
-  );
 }
