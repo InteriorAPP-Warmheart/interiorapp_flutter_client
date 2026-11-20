@@ -4,7 +4,10 @@ import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dar
 import 'package:interiorapp_flutter_client/core/widget/calendar/app_calendar_date.dart';
 
 /// 컬렉션 종류. 화면의 칸 순서와 같다.
-enum HomeCollectionKind { trade, task, document }
+///
+/// 공정은 현장에서 진행되는 일이고, 내 할 일은 고객이 직접 하는 일이다.
+/// 견적을 확인하고 넘기는 일도 할 일에 둔다.
+enum HomeCollectionKind { trade, task }
 
 /// 칸 하나를 눌렀을 때 여는 자리.
 enum HomePieceOpen { project, estimate }
@@ -20,6 +23,7 @@ class HomePiece {
     required this.note,
     required this.kind,
     required this.open,
+    this.settled = false,
   });
 
   final String id;
@@ -30,6 +34,10 @@ class HomePiece {
   final String note;
   final HomeCollectionKind kind;
   final HomePieceOpen open;
+
+  /// 서버가 이 할 일을 마쳤다고 알려 준 상태.
+  /// 고객이 직접 체크한 것은 여기가 아니라 세션 기록에 둔다.
+  final bool settled;
 
   String get subtitle {
     if (note.isEmpty) return placeName;
@@ -53,7 +61,7 @@ class HomeCollection {
   int get count => pieces.length;
 }
 
-/// 오늘부터 나흘. 칸은 공정, 내 할 일, 제출 문서로 고정한다.
+/// 오늘부터 나흘. 칸은 공정과 내 할 일로 고정한다.
 class HomeAgenda {
   const HomeAgenda({
     required this.today,
@@ -94,9 +102,9 @@ class HomeAgenda {
 
 const int _span = 4;
 
-/// 날짜별 공정, 고객이 해 둘 일, 제출할 문서.
+/// 날짜별 공정과 고객이 해 둘 일.
 ///
-/// 확인이 도착한 알림은 넣지 않는다. 문서는 오늘 처리해야 하는 것만 둔다.
+/// 확인이 도착한 알림은 넣지 않는다. 견적을 넘기는 일은 오늘 할 일에 둔다.
 HomeAgenda homeAgenda({
   required List<SpaceProject> projects,
   required ConstructionProgress? Function(String id) progressOf,
@@ -119,9 +127,9 @@ HomeAgenda homeAgenda({
           day: today,
           projectId: project.id,
           placeName: project.placeName,
-          title: '견적서',
-          note: '확인 후 넘겨요',
-          kind: HomeCollectionKind.document,
+          title: '견적서 넘기기',
+          note: '확인 후 제출',
+          kind: HomeCollectionKind.task,
           open: HomePieceOpen.estimate,
         ),
       );
@@ -204,7 +212,6 @@ String _collectionLabel(HomeCollectionKind kind) {
   return switch (kind) {
     HomeCollectionKind.trade => '공정',
     HomeCollectionKind.task => '내 할 일',
-    HomeCollectionKind.document => '제출 문서',
   };
 }
 
