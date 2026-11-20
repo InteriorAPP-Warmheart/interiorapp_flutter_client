@@ -13,8 +13,9 @@ import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_bottom_sheet.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/home/domain/home_agenda.dart';
+import 'package:interiorapp_flutter_client/home/presentation/provider/home_task_check_provider.dart';
 
-/// 광고 아래. 날짜에 맞춰 준비할 공정, 할 일, 문서.
+/// 광고 아래. 날짜에 맞춰 현장의 공정과 내가 할 일.
 class HomeSpaceDashboard extends StatelessWidget {
   const HomeSpaceDashboard({super.key});
 
@@ -89,20 +90,19 @@ class _DutyBoardState extends ConsumerState<_DutyBoard> {
 
   Future<void> _openCollection(HomeCollection collection) async {
     if (collection.pieces.isEmpty) return;
-    final HomePiece piece;
-    if (collection.pieces.length == 1) {
-      piece = collection.pieces.first;
-    } else {
-      final HomePiece? picked = await showAppBottomSheet<HomePiece>(
-        context: context,
-        title: collection.label,
-        size: AppBottomSheetSize.compact,
-        child: _PieceList(pieces: collection.pieces),
-      );
-      if (picked == null || !mounted) return;
-      piece = picked;
+    final bool tasks = collection.kind == HomeCollectionKind.task;
+    if (!tasks && collection.pieces.length == 1) {
+      _go(collection.pieces.first);
+      return;
     }
-    _go(piece);
+    final HomePiece? picked = await showAppBottomSheet<HomePiece>(
+      context: context,
+      title: collection.label,
+      size: AppBottomSheetSize.compact,
+      child: _PieceList(kind: collection.kind, pieces: collection.pieces),
+    );
+    if (picked == null || !mounted) return;
+    _go(picked);
   }
 
   void _go(HomePiece piece) {
@@ -274,7 +274,6 @@ String _collectionImage(HomeCollectionKind kind) {
   return switch (kind) {
     HomeCollectionKind.trade => 'assets/images/home/prep_trade.jpg',
     HomeCollectionKind.task => 'assets/images/home/prep_task.jpg',
-    HomeCollectionKind.document => 'assets/images/home/prep_document.jpg',
   };
 }
 
@@ -282,7 +281,6 @@ IconData _collectionIcon(HomeCollectionKind kind) {
   return switch (kind) {
     HomeCollectionKind.trade => Icons.architecture_rounded,
     HomeCollectionKind.task => Icons.checklist_rounded,
-    HomeCollectionKind.document => Icons.draw_rounded,
   };
 }
 
@@ -290,18 +288,20 @@ Color _collectionWash(HomeCollectionKind kind) {
   return switch (kind) {
     HomeCollectionKind.trade => AppColors.primary,
     HomeCollectionKind.task => AppColors.accent,
-    HomeCollectionKind.document => const Color(0xFF8C6A45),
   };
 }
 
-class _PieceList extends StatelessWidget {
-  const _PieceList({required this.pieces});
+class _PieceList extends ConsumerWidget {
+  const _PieceList({required this.kind, required this.pieces});
 
+  final HomeCollectionKind kind;
   final List<HomePiece> pieces;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final double fontScale = ResponsiveSize.fontScale(context);
+    final Set<String> checked = ref.watch(homeTaskCheckProvider);
+    final bool tasks = kind == HomeCollectionKind.task;
     return ListView.separated(
       itemCount: pieces.length,
       separatorBuilder: (BuildContext context, int index) {
@@ -309,16 +309,33 @@ class _PieceList extends StatelessWidget {
       },
       itemBuilder: (BuildContext context, int index) {
         final HomePiece piece = pieces[index];
+        final bool done = tasks && homeTaskDone(piece, checked);
         return Material(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(12),
+          color: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: const BorderSide(color: Color(0xFFD7DCE3)),
+          ),
+          clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: () => Navigator.of(context).pop(piece),
-            borderRadius: BorderRadius.circular(12),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+              padding: const EdgeInsets.fromLTRB(8, 10, 10, 10),
               child: Row(
                 children: [
+                  if (tasks)
+                    _TaskCheck(
+                      done: done,
+                      onTap: () {
+                        if (piece.settled) return;
+                        ref
+                            .read(homeTaskCheckProvider.notifier)
+                            .toggle(piece.id);
+                      },
+                    )
+                  else
+                    const _TradeMark(),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,7 +348,12 @@ class _PieceList extends StatelessWidget {
                             fontSize: 15 * fontScale,
                             fontWeight: FontWeight.w700,
                             letterSpacing: -0.2,
-                            color: AppColors.textPrimary,
+                            decoration:
+                                done ? TextDecoration.lineThrough : null,
+                            color:
+                                done
+                                    ? AppColors.textSecondary
+                                    : AppColors.textPrimary,
                           ),
                         ),
                         if (piece.subtitle.isNotEmpty) ...[
@@ -359,6 +381,63 @@ class _PieceList extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _TaskCheck extends StatelessWidget {
+  const _TaskCheck({required this.done, required this.onTap});
+
+  final bool done;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: done ? AppColors.accent : AppColors.background,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: done ? AppColors.accent : const Color(0xFFD7DCE3),
+        ),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: SizedBox(
+          width: 36,
+          height: 36,
+          child: Icon(
+            done ? Icons.check_rounded : null,
+            size: 20,
+            color: AppColors.white,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TradeMark extends StatelessWidget {
+  const _TradeMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 36,
+      height: 36,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: const Icon(
+        Icons.architecture_rounded,
+        size: 18,
+        color: AppColors.primary,
+      ),
     );
   }
 }
