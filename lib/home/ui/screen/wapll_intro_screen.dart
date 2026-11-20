@@ -539,28 +539,68 @@ class _AppStageState extends State<_AppStage> {
   @override
   Widget build(BuildContext context) {
     const double phoneWidth = 104;
+    const double designCard = 124;
+    const double baseBite = 14;
+    const double pairGap = 8;
     final double phoneHeight = phoneWidth * 19.5 / 9;
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        const double bite = 14;
-        const double maxCard = 124;
-        final double side = (constraints.maxWidth - phoneWidth) / 2;
-        final double reach = side + bite;
-        final double cardWidth = reach.clamp(
-          0.0,
-          maxCard < (constraints.maxWidth - 8) / 2
-              ? maxCard
-              : (constraints.maxWidth - 8) / 2,
+        final double width = constraints.maxWidth;
+        final double phone = phoneWidth < width ? phoneWidth : width;
+        final TextScaler scaler = MediaQuery.textScalerOf(context);
+        final TextStyle theme = DefaultTextStyle.of(context).style;
+        final (double textW, double textH) = _cardText(
+          scaler,
+          title: theme.copyWith(
+            fontSize: 12 * widget.fontScale,
+            fontWeight: FontWeight.w700,
+            height: 1.15,
+            letterSpacing: -0.2,
+          ),
+          body: theme.copyWith(
+            fontSize: 10 * widget.fontScale,
+            fontWeight: FontWeight.w400,
+            height: 1.15,
+          ),
         );
-        final double inset = (reach - cardWidth).clamp(0.0, side);
+        final double fitted = 7 + 20 + 6 + textW + 7 + _PointPainter.tip + 1;
+        final double maxPair = ((width - pairGap) / 2).clamp(0.0, width);
+        final double wanted = designCard > fitted ? designCard : fitted;
+        final double cardWidth = wanted < maxPair ? wanted : maxPair;
+        final double side = (width - phone) / 2;
+        final double rawInset = side + baseBite - cardWidth;
+        final double inset = rawInset < 0 ? 0 : rawInset;
+        final double gap = (width - 2 * inset - 2 * cardWidth).clamp(
+          0.0,
+          width,
+        );
+        final double shift = gap / 2 < 14 ? gap / 2 : 14;
+        final double cardH = (textH > 20 ? textH : 20) + 8;
+        final double block = 6 + cardH + 8 + cardH + 6;
+        final double stage = block > phoneHeight ? block : phoneHeight;
+        Widget pair(int left, int right) {
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: inset),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                SizedBox(width: cardWidth, child: _card(left, shift)),
+                const Spacer(),
+                SizedBox(width: cardWidth, child: _card(right, shift)),
+              ],
+            ),
+          );
+        }
+
         return SizedBox(
-          height: phoneHeight,
+          width: width,
+          height: stage,
           child: Stack(
             children: <Widget>[
               Align(
-                alignment: Alignment.bottomCenter,
+                alignment: Alignment.topCenter,
                 child: SizedBox(
-                  width: phoneWidth,
+                  width: phone,
                   child: _PhoneFrame(
                     child:
                         _photo == null
@@ -569,29 +609,15 @@ class _AppStageState extends State<_AppStage> {
                   ),
                 ),
               ),
-              Positioned(
-                left: inset,
-                top: 6,
-                width: cardWidth,
-                child: _card(0),
-              ),
-              Positioned(
-                right: inset,
-                top: 6,
-                width: cardWidth,
-                child: _card(1),
-              ),
-              Positioned(
-                left: inset,
-                top: 46,
-                width: cardWidth,
-                child: _card(2),
-              ),
-              Positioned(
-                right: inset,
-                top: 46,
-                width: cardWidth,
-                child: _card(3),
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Column(
+                  children: <Widget>[
+                    pair(0, 1),
+                    const SizedBox(height: 8),
+                    pair(2, 3),
+                  ],
+                ),
               ),
             ],
           ),
@@ -600,13 +626,44 @@ class _AppStageState extends State<_AppStage> {
     );
   }
 
-  Widget _card(int index) {
+  /// 카드 문구가 한 줄에 들어가는 너비와, 두 줄의 높이.
+  (double, double) _cardText(
+    TextScaler scaler, {
+    required TextStyle title,
+    required TextStyle body,
+  }) {
+    double width = 0;
+    double height = 0;
+    for (final (String label, String caption, IconData _) in _appSteps) {
+      final (double titleW, double titleH) = _line(label, title, scaler);
+      final (double bodyW, double bodyH) = _line(caption, body, scaler);
+      if (titleW > width) width = titleW;
+      if (bodyW > width) width = bodyW;
+      final double lines = titleH + bodyH;
+      if (lines > height) height = lines;
+    }
+    return (width, height);
+  }
+
+  (double, double) _line(String value, TextStyle style, TextScaler scaler) {
+    final TextPainter painter = TextPainter(
+      text: TextSpan(text: value, style: style),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout();
+    final (double, double) measured = (painter.width, painter.height);
+    painter.dispose();
+    return measured;
+  }
+
+  Widget _card(int index, double shift) {
     final (String title, String body, IconData icon) = _appSteps[index];
     final bool onLeft = index.isEven;
     return _PopCard(
       open: _open,
       index: index,
-      from: onLeft ? const Offset(18, 12) : const Offset(-18, 12),
+      from: Offset(onLeft ? shift : -shift, 10),
       title: title,
       body: body,
       icon: icon,
