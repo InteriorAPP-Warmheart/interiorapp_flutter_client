@@ -194,7 +194,7 @@ AdvSlide _slideFor(String path) {
   return switch (name) {
     'wapll_home_02.webp' => AdvSlide(
       imageUrl: path,
-      title: '라인 주방',
+      title: '자리야 주방',
       body: '주방의 실용성을 중요시하다',
     ),
     'wapll_home_03.webp' => AdvSlide(
