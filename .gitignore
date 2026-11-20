@@ -83,4 +83,6 @@ assets/logo
 assets/images/showroom
 develop_data
 docs
-figma-plugin
+
+# Figma 화면 문서 플러그인. 로컬에서만 실행하고 저장소에는 올리지 않는다.
+figma-plugin/

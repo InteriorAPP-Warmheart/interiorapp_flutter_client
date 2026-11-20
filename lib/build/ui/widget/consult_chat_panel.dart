@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:interiorapp_flutter_client/build/presentation/provider/space_confirm_provider.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/process_schedule.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/original_file_sheet.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/slide_to_confirm.dart';
@@ -36,6 +38,7 @@ class _ConsultChatPanelState extends State<ConsultChatPanel> {
         sentAt: sent,
         read: true,
         kind: _ChatKind.confirm,
+        confirmId: 'confirm-seongsu-light',
         title: '조명 위치 수정',
         summary: '홀 조명을 창가 쪽으로 옮겨요.',
         body: '창에 가깝게 조명을 옮겨, 낮의 창빛과 저녁 객석이 같이 보이게 해요.',
@@ -320,6 +323,11 @@ class _ConsultChatPanelState extends State<ConsultChatPanel> {
                 setState(
                   () => _messages[i] = message.copyWith(confirmed: true),
                 );
+                final String confirmId = message.confirmId;
+                if (confirmId.isEmpty) return;
+                ProviderScope.containerOf(
+                  context,
+                ).read(spaceConfirmProvider.notifier).confirm(confirmId);
               },
             )
             : _Bubble(
@@ -343,6 +351,7 @@ class _ChatMessage {
     required this.sentAt,
     required this.read,
     this.kind = _ChatKind.text,
+    this.confirmId = '',
     this.confirmed = false,
     this.title = '',
     this.summary = '',
@@ -361,6 +370,7 @@ class _ChatMessage {
   final DateTime sentAt;
   final bool read;
   final _ChatKind kind;
+  final String confirmId;
   final bool confirmed;
   final String title;
   final String summary;
@@ -380,6 +390,7 @@ class _ChatMessage {
       sentAt: sentAt,
       read: read,
       kind: kind,
+      confirmId: confirmId,
       confirmed: confirmed ?? this.confirmed,
       title: title,
       summary: summary,

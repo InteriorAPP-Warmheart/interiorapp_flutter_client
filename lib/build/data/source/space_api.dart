@@ -688,6 +688,10 @@ class SpaceApi {
       ],
       trades: ['철거', '설비·급배수', '목공', '전기', '도장', '마감'],
       tradeIndex: 2,
+      sideTrades: <SideTrade>[
+        SideTrade(name: '설비', summary: '배수 위치를 맞춰요', when: '오늘'),
+        SideTrade(name: '필름', summary: '문틀 면을 붙여요', when: '오늘'),
+      ],
       nextWhen: '내일',
       nextTrade: '전기 공사',
       nextSummary: '조명과 콘센트 배선을 시작해요',
