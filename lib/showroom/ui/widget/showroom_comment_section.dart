@@ -239,85 +239,78 @@ class _ShowroomBoardWithCommentsState
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     ...widget.leading,
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 20),
+                    const Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: AppColors.border,
+                    ),
+                    const SizedBox(height: 18),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
                             children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    '댓글 $_total',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: -0.3,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  if (_comments.isNotEmpty)
-                                    GestureDetector(
-                                      onTap: _openAll,
-                                      behavior: HitTestBehavior.opaque,
-                                      child: const Text(
-                                        '모두 보기',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.primary,
-                                        ),
-                                      ),
-                                    ),
-                                ],
+                              Text(
+                                '댓글 $_total',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.3,
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
-                              const SizedBox(height: 14),
-                              if (!_ready)
-                                const SizedBox.shrink()
-                              else if (_comments.isEmpty)
-                                const Padding(
-                                  padding: EdgeInsets.only(bottom: 10),
-                                  child: Text(
-                                    '첫 댓글을 남겨 주세요',
+                              const Spacer(),
+                              if (_comments.isNotEmpty)
+                                GestureDetector(
+                                  onTap: _openAll,
+                                  behavior: HitTestBehavior.opaque,
+                                  child: const Text(
+                                    '모두 보기',
                                     style: TextStyle(
-                                      fontSize: 15,
-                                      height: 1.5,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.textPrimary,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primary,
                                     ),
                                   ),
-                                )
-                              else
-                                for (final ShowroomComment comment in best)
-                                  _ShowroomCommentCard(
-                                    comment: comment,
-                                    authorName: widget.authorName,
-                                    expanded: _expanded.contains(comment.id),
-                                    onToggle: () {
-                                      setState(() {
-                                        if (!_expanded.add(comment.id)) {
-                                          _expanded.remove(comment.id);
-                                        }
-                                      });
-                                    },
-                                    onReply: (ShowroomComment target) {
-                                      setState(() => _replyTo = target);
-                                      _openAll();
-                                    },
-                                    onReport: _report,
-                                  ),
+                                ),
                             ],
                           ),
-                        ),
+                          const SizedBox(height: 16),
+                          if (!_ready)
+                            const SizedBox.shrink()
+                          else if (_comments.isEmpty)
+                            const Text(
+                              '첫 댓글을 남겨 주세요',
+                              style: TextStyle(
+                                fontSize: 15,
+                                height: 1.5,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textPrimary,
+                              ),
+                            )
+                          else
+                            for (final ShowroomComment comment in best)
+                              _ShowroomCommentCard(
+                                comment: comment,
+                                authorName: widget.authorName,
+                                expanded: _expanded.contains(comment.id),
+                                onToggle: () {
+                                  setState(() {
+                                    if (!_expanded.add(comment.id)) {
+                                      _expanded.remove(comment.id);
+                                    }
+                                  });
+                                },
+                                onReply: (ShowroomComment target) {
+                                  setState(() => _replyTo = target);
+                                  _openAll();
+                                },
+                                onReport: _report,
+                              ),
+                        ],
                       ),
                     ),
                   ]),
