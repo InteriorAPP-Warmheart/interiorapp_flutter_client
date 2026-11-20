@@ -575,7 +575,7 @@ class _RegionEditorState extends State<_RegionEditor> {
     ) {
       if (!mounted) return;
       setState(() => _aspect = info.image.width / info.image.height);
-    });
+    }, onError: (Object exception, StackTrace? stackTrace) {});
     stream.addListener(listener);
     _imageStream = stream;
     _imageListener = listener;

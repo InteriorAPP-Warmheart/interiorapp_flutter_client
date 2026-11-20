@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_asset_image.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_body.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_comment.dart';
@@ -784,7 +785,7 @@ class _ShowroomCommentRow extends StatelessWidget {
               if (comment.emoticon != null)
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Image.asset(
+                  child: AppAssetImage(
                     comment.emoticon!,
                     width: showroomEmoticonSize,
                     height: showroomEmoticonSize,
@@ -1166,7 +1167,7 @@ class _ComposerBarState extends State<_ComposerBar> {
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 6,
                                   ),
-                                  child: Image.asset(
+                                  child: AppAssetImage(
                                     url,
                                     width: 40,
                                     height: 40,
@@ -1198,7 +1199,7 @@ class _ComposerBarState extends State<_ComposerBar> {
                               child: Stack(
                                 clipBehavior: Clip.none,
                                 children: [
-                                  Image.asset(
+                                  AppAssetImage(
                                     emoticon,
                                     width: showroomEmoticonSize,
                                     height: showroomEmoticonSize,

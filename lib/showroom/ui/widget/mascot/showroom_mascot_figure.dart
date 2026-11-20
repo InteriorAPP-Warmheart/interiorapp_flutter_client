@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_asset_image.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/mascot/showroom_mascot_assets.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/mascot/showroom_mascot_motion.dart';
 
@@ -29,7 +30,7 @@ class ShowroomMascotFigure extends StatelessWidget {
       size,
       MediaQuery.devicePixelRatioOf(context),
     );
-    return Image.asset(
+    return AppAssetImage(
       showroomMascotFrame(pose, cycle),
       width: size,
       height: size,

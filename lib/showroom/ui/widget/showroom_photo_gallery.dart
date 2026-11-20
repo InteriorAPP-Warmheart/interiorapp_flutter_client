@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_asset_image.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_body.dart';
@@ -491,7 +492,7 @@ class _GalleryPageState extends State<_GalleryPage> {
         final Size size = Size(constraints.maxWidth, constraints.maxHeight);
         if (showroomEmoticonUrl(widget.url)) {
           return Center(
-            child: Image.asset(
+            child: AppAssetImage(
               widget.url,
               width: showroomEmoticonSize,
               height: showroomEmoticonSize,

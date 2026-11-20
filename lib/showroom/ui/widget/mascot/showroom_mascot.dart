@@ -79,7 +79,7 @@ class _ShowroomMascotState extends State<ShowroomMascot>
       precacheImage(
         ResizeImage.resizeIfNeeded(px, px, AssetImage(path)),
         context,
-      );
+      ).ignore();
     }
   }
 

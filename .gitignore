@@ -78,9 +78,12 @@ GoogleService-Info.plist
 doc/api/
 .metadata
 .dart_tool
-# 큰 이미지 폴더만 제외한다. assets 전체를 무시하면 폰트가 머지 때 저장소에서 빠진다.
-assets/logo
-assets/images/showroom
+# 큰 이미지 파일만 제외한다. assets 전체를 무시하면 폰트가 머지 때 저장소에서 빠진다.
+# 폴더 자체는 남긴다. 폴더가 없으면 pubspec 에셋 경로 때문에 빌드가 실패한다.
+assets/logo/*
+!assets/logo/.gitkeep
+assets/images/showroom/*
+!assets/images/showroom/.gitkeep
 develop_data
 docs
 

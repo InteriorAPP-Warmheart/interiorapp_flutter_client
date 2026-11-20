@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/core/editor/rich_text_document.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_asset_image.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_body.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
@@ -1103,7 +1104,7 @@ class _ShowroomEmoticon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(url, width: size, height: size, fit: BoxFit.contain);
+    return AppAssetImage(url, width: size, height: size, fit: BoxFit.contain);
   }
 }
 
