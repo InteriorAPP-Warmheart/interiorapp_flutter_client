@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:interiorapp_flutter_client/build/ui/space_routes.dart';
@@ -22,6 +23,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
   final ExpandingActionController _consult = ExpandingActionController();
+  List<AdvSlide> _slides = const <AdvSlide>[];
 
   /// 스크롤 끝에서 진행률 카드를 한 줄로 접을 때 쓰던 위치.
   // bool _atBottom = false;
@@ -39,6 +41,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _loadSlides();
+  }
+
+  /// `assets/images/home/wapll_home`으로 시작하는 사진만 슬라이드로 쓴다.
+  Future<void> _loadSlides() async {
+    final AssetManifest manifest = await AssetManifest.loadFromAssetBundle(
+      rootBundle,
+    );
+    final List<String> paths =
+        manifest
+            .listAssets()
+            .where(
+              (String path) => path.startsWith('assets/images/home/wapll_home'),
+            )
+            .toList()
+          ..sort();
+    if (!mounted) return;
+    setState(() => _slides = paths.map(_slideFor).toList());
   }
 
   void _onScroll() {
@@ -65,14 +85,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 샘플 이미지 URL들
-    final List<String> sampleImages = [
-      'https://picsum.photos/400/300?random=1',
-      'https://picsum.photos/400/300?random=2',
-      'https://picsum.photos/400/300?random=3',
-      'https://picsum.photos/400/300?random=4',
-    ];
-
     // 진행률 카드가 떠 있을 때 상담 버튼을 카드 위로 올리던 계산.
     // final projects = ref.watch(projectListProvider);
     // final bool isProjectBuilding = projects.isNotEmpty;
@@ -113,11 +125,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Padding(
                     padding: ResponsiveSize.textInset(context),
                     child: AdvWidget(
-                      imageUrls: sampleImages,
+                      slides: _slides,
                       borderRadius: 16,
                       indicatorColor: Colors.white54,
                       activeIndicatorColor: Colors.white,
                       indicatorSize: 8,
+                      onTap: (AdvSlide slide) {
+                        if (!slide.imageUrl.endsWith('wapll_home_01.png')) {
+                          return;
+                        }
+                        context.push('/home/intro');
+                      },
                     ),
                   ),
                   SizedBox(height: sectionGap),
@@ -168,6 +186,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
+}
+
+/// 01은 그림 안에 글이 있다. 02·03만 사진 위에 설명을 올린다.
+AdvSlide _slideFor(String path) {
+  final String name = path.split('/').last;
+  return switch (name) {
+    'wapll_home_02.webp' => AdvSlide(
+      imageUrl: path,
+      title: '라인 주방',
+      body: '주방의 실용성을 중요시하다',
+    ),
+    'wapll_home_03.webp' => AdvSlide(
+      imageUrl: path,
+      title: 'YoungShin',
+      body: '감각적인 로봇 사무실',
+    ),
+    _ => AdvSlide(imageUrl: path),
+  };
 }
 
 // 진행률 카드 표시용 테스트 목록. 카드가 다시 붙으면 홈에서 이 값을 본다.

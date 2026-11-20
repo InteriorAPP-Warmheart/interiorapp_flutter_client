@@ -15,6 +15,7 @@ import 'package:interiorapp_flutter_client/build/ui/screen/trade_create_screen.d
 import 'package:interiorapp_flutter_client/build/ui/screen/trade_detail_screen.dart';
 import 'package:interiorapp_flutter_client/core/widget/adaptive_frame.dart';
 import 'package:interiorapp_flutter_client/home/ui/screen/home_board_screen.dart';
+import 'package:interiorapp_flutter_client/home/ui/screen/wapll_intro_screen.dart';
 import 'package:interiorapp_flutter_client/notification/ui/notification_center_screen.dart';
 import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_result_screen.dart';
 import 'package:interiorapp_flutter_client/search/ui/screen/combine_search_screen.dart';
@@ -177,6 +178,11 @@ class AppRouter {
         builder:
             (context, state) =>
                 const AdaptiveFrame(child: NotificationCenterScreen()),
+      ),
+      GoRoute(
+        path: '/home/intro',
+        builder:
+            (context, state) => const AdaptiveFrame(child: WapllIntroScreen()),
       ),
       GoRoute(
         path: '/board',

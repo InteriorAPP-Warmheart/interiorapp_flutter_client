@@ -2,10 +2,22 @@
 import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 
+/// 홈 상단 슬라이드 한 장. 설명이 있으면 사진 아래에 올린다.
+class AdvSlide {
+  const AdvSlide({required this.imageUrl, this.title = '', this.body = ''});
+
+  final String imageUrl;
+  final String title;
+  final String body;
+
+  bool get hasCaption => title.isNotEmpty || body.isNotEmpty;
+}
+
 class AdvWidget extends StatefulWidget {
-  final List<String> imageUrls;
+  final List<AdvSlide> slides;
   final double height; // 수동 지정 높이 (useResponsiveHeight=false일 때 사용)
   final bool useResponsiveHeight; // 화면 너비/비율 기반으로 높이 자동 계산
   final double? aspectRatio; // null이면 내부 브레이크포인트로 결정
@@ -18,10 +30,11 @@ class AdvWidget extends StatefulWidget {
   final double indicatorSize;
   final Duration autoPlayInterval;
   final bool autoPlay;
+  final ValueChanged<AdvSlide>? onTap;
 
   const AdvWidget({
     super.key,
-    required this.imageUrls,
+    required this.slides,
     this.height = 280.0,
     this.useResponsiveHeight = true,
     this.aspectRatio, // 예: 16/9, 4/3 등
@@ -34,6 +47,7 @@ class AdvWidget extends StatefulWidget {
     this.indicatorSize = 8.0,
     this.autoPlayInterval = const Duration(seconds: 3),
     this.autoPlay = true,
+    this.onTap,
   });
 
   @override
@@ -48,6 +62,20 @@ class _ImageSliderWidgetState extends State<AdvWidget> {
   void initState() {
     super.initState();
     _carouselController = CarouselSliderController();
+  }
+
+  @override
+  void didUpdateWidget(covariant AdvWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final int count = widget.slides.length;
+    if (count == oldWidget.slides.length) return;
+    final int next = count == 0 ? 0 : _currentIndex.clamp(0, count - 1);
+    _currentIndex = next;
+    if (count == 0) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || widget.slides.length != count) return;
+      _carouselController.jumpToPage(next);
+    });
   }
 
   @override
@@ -69,6 +97,10 @@ class _ImageSliderWidgetState extends State<AdvWidget> {
           fixedHeight: widget.height,
         );
 
+        if (widget.slides.isEmpty) {
+          return SizedBox(width: double.infinity, height: effectiveHeight);
+        }
+
         return SizedBox(
           width: double.infinity,
           height: effectiveHeight,
@@ -77,25 +109,42 @@ class _ImageSliderWidgetState extends State<AdvWidget> {
               // 이미지 슬라이더
               CarouselSlider.builder(
                 carouselController: _carouselController,
-                itemCount: widget.imageUrls.length,
+                itemCount: widget.slides.length,
                 itemBuilder: (context, index, realIndex) {
-                  return Container(
-                    width: double.infinity,
-                    height: effectiveHeight,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(widget.borderRadius),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(widget.borderRadius),
-                      child: AppNetworkImage(url: widget.imageUrls[index]),
+                  final AdvSlide slide = widget.slides[index];
+                  return GestureDetector(
+                    onTap:
+                        widget.onTap == null
+                            ? null
+                            : () => widget.onTap!(slide),
+                    child: Container(
+                      width: double.infinity,
+                      height: effectiveHeight,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(
+                          widget.borderRadius,
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                          widget.borderRadius,
+                        ),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            AppNetworkImage(url: slide.imageUrl),
+                            if (slide.hasCaption) _SlideCaption(slide: slide),
+                          ],
+                        ),
+                      ),
                     ),
                   );
                 },
                 options: CarouselOptions(
                   height: effectiveHeight,
                   viewportFraction: 1.0,
-                  enableInfiniteScroll: widget.imageUrls.length > 1,
-                  autoPlay: widget.autoPlay && widget.imageUrls.length > 1,
+                  enableInfiniteScroll: widget.slides.length > 1,
+                  autoPlay: widget.autoPlay && widget.slides.length > 1,
                   autoPlayInterval: widget.autoPlayInterval,
                   autoPlayAnimationDuration: const Duration(milliseconds: 800),
                   autoPlayCurve: Curves.fastOutSlowIn,
@@ -109,7 +158,7 @@ class _ImageSliderWidgetState extends State<AdvWidget> {
               ),
 
               // 인디케이터 (우측 상단 오버레이)
-              if (widget.showIndicators && widget.imageUrls.length > 1)
+              if (widget.showIndicators && widget.slides.length > 1)
                 Positioned(
                   top: 12,
                   right: 12,
@@ -125,7 +174,7 @@ class _ImageSliderWidgetState extends State<AdvWidget> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children:
-                          widget.imageUrls.asMap().entries.map((entry) {
+                          widget.slides.asMap().entries.map((entry) {
                             return Container(
                               width: widget.indicatorSize,
                               height: widget.indicatorSize,
@@ -148,6 +197,73 @@ class _ImageSliderWidgetState extends State<AdvWidget> {
           ),
         );
       },
+    );
+  }
+}
+
+class _SlideCaption extends StatelessWidget {
+  const _SlideCaption({required this.slide});
+
+  final AdvSlide slide;
+
+  @override
+  Widget build(BuildContext context) {
+    final double fontScale = ResponsiveSize.fontScale(context);
+    return Stack(
+      children: [
+        const Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 108,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: <Color>[Color(0xC4000000), Color(0x00000000)],
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: 14,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (slide.title.isNotEmpty)
+                Text(
+                  slide.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 18 * fontScale,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
+                    height: 1.2,
+                    color: AppColors.white,
+                  ),
+                ),
+              if (slide.body.isNotEmpty) ...[
+                if (slide.title.isNotEmpty) const SizedBox(height: 4),
+                Text(
+                  slide.body,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13 * fontScale,
+                    fontWeight: FontWeight.w500,
+                    height: 1.35,
+                    color: const Color(0xF2FFFFFF),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
