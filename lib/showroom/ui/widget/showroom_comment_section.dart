@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
-import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_body.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_comment.dart';
@@ -186,6 +185,7 @@ class _ShowroomBoardWithCommentsState
               builder: (context, _, __) {
                 return _AllCommentsSheet(
                   total: _total,
+                  likes: widget.likes,
                   authorName: widget.authorName,
                   comments: _comments,
                   expanded: _expanded,
@@ -338,7 +338,83 @@ class _ShowroomBoardWithCommentsState
   }
 }
 
-const double showroomReadingDockHeight = 46;
+const double showroomReadingDockHeight = 52;
+
+const double _dockSlotPad = 12;
+const double _dockIconLike = 22;
+const double _dockIconComment = 20;
+const double _dockScrollSlot = 44;
+
+const TextStyle _dockLikeStyle = TextStyle(
+  fontSize: 13,
+  fontWeight: FontWeight.w700,
+  color: AppColors.textPrimary,
+);
+
+const TextStyle _dockLabelStyle = TextStyle(
+  fontSize: 14,
+  fontWeight: FontWeight.w700,
+  color: AppColors.textPrimary,
+);
+
+const TextStyle _dockCountStyle = TextStyle(
+  fontSize: 13,
+  fontWeight: FontWeight.w600,
+  color: AppColors.textSecondary,
+);
+
+double _dockTextWidth(String text, TextStyle style) {
+  final TextPainter painter = TextPainter(
+    text: TextSpan(text: text, style: style),
+    textDirection: TextDirection.ltr,
+    maxLines: 1,
+  )..layout();
+  final double width = painter.width;
+  painter.dispose();
+  return width;
+}
+
+TextStyle _dockStyle(TextStyle style, TextStyle base) {
+  return style.copyWith(
+    fontFamily: base.fontFamily,
+    fontFamilyFallback: base.fontFamilyFallback,
+  );
+}
+
+({double like, double comment, double width}) _dockSlots({
+  required String likes,
+  required int commentCount,
+  required TextStyle base,
+}) {
+  final TextStyle likeStyle = _dockStyle(_dockLikeStyle, base);
+  final TextStyle labelStyle = _dockStyle(_dockLabelStyle, base);
+  final TextStyle countStyle = _dockStyle(_dockCountStyle, base);
+  final double likeText =
+      likes.isEmpty ? 0 : 6 + _dockTextWidth(likes, likeStyle);
+  final double like = _dockSlotPad + _dockIconLike + likeText + _dockSlotPad;
+  final double comment =
+      _dockSlotPad +
+      _dockIconComment +
+      6 +
+      _dockTextWidth('댓글', labelStyle) +
+      6 +
+      _dockTextWidth('$commentCount', countStyle) +
+      _dockSlotPad;
+  return (
+    like: like,
+    comment: comment,
+    width: like + 1 + comment + 1 + _dockScrollSlot * 2,
+  );
+}
+
+/// 좋아요, 댓글, 스크롤이 빈칸 없이 붙는 막대 너비.
+double showroomReadingDockWidth({
+  required String likes,
+  required int commentCount,
+  required TextStyle base,
+}) {
+  return _dockSlots(likes: likes, commentCount: commentCount, base: base).width;
+}
 
 /// 게시글에는 탭바가 없어서 홈 표시 바로 위에 붙인다.
 /// 하단 여백이 없는 기기는 모서리가 잘리지 않을 만큼만 띄운다.
@@ -346,28 +422,6 @@ double showroomReadingDockBottom(BuildContext context) {
   final double safe = MediaQuery.viewPaddingOf(context).bottom;
   if (safe >= 20) return safe + 2;
   return 8;
-}
-
-/// 댓글 입력창이 펼쳐졌을 때의 좌우 여백.
-double showroomComposerSide(BuildContext context) {
-  final double inset = ResponsiveSize.textInset(context).left;
-  return inset < 20 ? 20 : inset;
-}
-
-double showroomComposerWidth(BuildContext context) {
-  return MediaQuery.sizeOf(context).width - showroomComposerSide(context) * 2;
-}
-
-/// 좋아요·댓글·스크롤 캡슐. 화면보다 좁게 가운데 둔다.
-double showroomReadingDockWidth(BuildContext context) {
-  final double screen = MediaQuery.sizeOf(context).width;
-  final double full = showroomComposerWidth(context);
-  final double side = screen >= 600 ? 200.0 : 80.0;
-  final double narrow = screen - side * 2;
-  const double minWidth = 248;
-  if (narrow < minWidth) return full < minWidth ? full : minWidth;
-  if (narrow > full) return full;
-  return narrow > 300 ? 300 : narrow;
 }
 
 double showroomReadingDockClearance(BuildContext context) {
@@ -389,6 +443,7 @@ BoxDecoration showroomReadingDockDecoration(double height, {double? radius}) {
 class _AllCommentsSheet extends StatefulWidget {
   const _AllCommentsSheet({
     required this.total,
+    required this.likes,
     required this.authorName,
     required this.comments,
     required this.expanded,
@@ -407,6 +462,7 @@ class _AllCommentsSheet extends StatefulWidget {
   });
 
   final int total;
+  final String likes;
   final String authorName;
   final List<ShowroomComment> comments;
   final Set<String> expanded;
@@ -520,6 +576,11 @@ class _AllCommentsSheetState extends State<_AllCommentsSheet> {
                 child: _MeasureHeight(
                   onChange: _onComposerHeight,
                   child: _ComposerBar(
+                    width: showroomReadingDockWidth(
+                      likes: widget.likes,
+                      commentCount: widget.total,
+                      base: DefaultTextStyle.of(context).style,
+                    ),
                     controller: widget.text,
                     replyName: widget.replyName,
                     emojiOpen: widget.emojiOpen,
@@ -833,12 +894,18 @@ class _ReadingDock extends StatelessWidget {
   Widget build(BuildContext context) {
     const Color heart = Color(0xFFFF4D6A);
     final double height = showroomReadingDockHeight;
+    final TextStyle base = DefaultTextStyle.of(context).style;
+    final ({double like, double comment, double width}) slots = _dockSlots(
+      likes: likes,
+      commentCount: commentCount,
+      base: base,
+    );
     return Padding(
       padding: EdgeInsets.only(bottom: showroomReadingDockBottom(context)),
       child: Align(
         alignment: Alignment.bottomCenter,
         child: SizedBox(
-          width: showroomReadingDockWidth(context),
+          width: slots.width,
           child: DecoratedBox(
             decoration: showroomReadingDockDecoration(height),
             child: ClipRRect(
@@ -849,69 +916,50 @@ class _ReadingDock extends StatelessWidget {
                   height: height,
                   child: Row(
                     children: [
-                      InkWell(
+                      _DockTap(
+                        width: slots.like,
                         onTap: onFavorite,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                favorite
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                size: 20,
-                                color: favorite ? heart : AppColors.textPrimary,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              favorite ? Icons.favorite : Icons.favorite_border,
+                              size: _dockIconLike,
+                              color: favorite ? heart : AppColors.textPrimary,
+                            ),
+                            if (likes.isNotEmpty) ...[
+                              const SizedBox(width: 6),
+                              Text(
+                                likes,
+                                style: _dockStyle(_dockLikeStyle, base),
                               ),
-                              if (likes.isNotEmpty) ...[
-                                const SizedBox(width: 5),
-                                Text(
-                                  likes,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ],
                             ],
-                          ),
+                          ],
                         ),
                       ),
                       const _DockDivider(),
-                      Expanded(
-                        child: InkWell(
-                          onTap: onOpenComments,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.mode_comment_outlined,
-                                  size: 18,
-                                  color: AppColors.textPrimary,
-                                ),
-                                const SizedBox(width: 6),
-                                const Text(
-                                  '댓글',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  '$commentCount',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
+                      _DockTap(
+                        width: slots.comment,
+                        onTap: onOpenComments,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.mode_comment_outlined,
+                              size: _dockIconComment,
+                              color: AppColors.textPrimary,
                             ),
-                          ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '댓글',
+                              style: _dockStyle(_dockLabelStyle, base),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '$commentCount',
+                              style: _dockStyle(_dockCountStyle, base),
+                            ),
+                          ],
                         ),
                       ),
                       const _DockDivider(),
@@ -920,7 +968,6 @@ class _ReadingDock extends StatelessWidget {
                         icon: Icons.keyboard_arrow_down,
                         onTap: onBottom,
                       ),
-                      const SizedBox(width: 2),
                     ],
                   ),
                 ),
@@ -929,6 +976,27 @@ class _ReadingDock extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _DockTap extends StatelessWidget {
+  const _DockTap({
+    required this.width,
+    required this.onTap,
+    required this.child,
+  });
+
+  final double width;
+  final VoidCallback? onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      height: showroomReadingDockHeight,
+      child: InkWell(onTap: onTap, child: Center(child: child)),
     );
   }
 }
@@ -960,9 +1028,9 @@ class _ScrollMark extends StatelessWidget {
         onTap: onTap,
         customBorder: const CircleBorder(),
         child: SizedBox(
-          width: 32,
-          height: 32,
-          child: Icon(icon, size: 20, color: AppColors.textPrimary),
+          width: _dockScrollSlot,
+          height: showroomReadingDockHeight,
+          child: Icon(icon, size: 24, color: AppColors.textPrimary),
         ),
       ),
     );
@@ -971,6 +1039,7 @@ class _ScrollMark extends StatelessWidget {
 
 class _ComposerBar extends StatefulWidget {
   const _ComposerBar({
+    required this.width,
     required this.controller,
     required this.replyName,
     required this.emojiOpen,
@@ -982,6 +1051,7 @@ class _ComposerBar extends StatefulWidget {
     required this.onSend,
   });
 
+  final double width;
   final TextEditingController controller;
   final String? replyName;
   final bool emojiOpen;
@@ -996,51 +1066,24 @@ class _ComposerBar extends StatefulWidget {
   State<_ComposerBar> createState() => _ComposerBarState();
 }
 
-class _ComposerBarState extends State<_ComposerBar>
-    with SingleTickerProviderStateMixin {
+class _ComposerBarState extends State<_ComposerBar> {
   final FocusNode _focus = FocusNode();
-  late final AnimationController _expand;
 
   @override
   void initState() {
     super.initState();
-    _expand = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 280),
-    );
     _focus.addListener(_onFocus);
-  }
-
-  @override
-  void didUpdateWidget(covariant _ComposerBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.emojiOpen != widget.emojiOpen) _syncSpan();
   }
 
   @override
   void dispose() {
     _focus.removeListener(_onFocus);
-    _expand.dispose();
     _focus.dispose();
     super.dispose();
   }
 
   void _onFocus() {
-    if (!_focus.hasFocus && widget.emojiOpen) {
-      widget.onToggleEmoji();
-      _expand.reverse();
-      return;
-    }
-    _syncSpan();
-  }
-
-  void _syncSpan() {
-    final bool open = _focus.hasFocus || widget.emojiOpen;
-    if (open) {
-      _expand.forward();
-    } else {
-      _expand.reverse();
-    }
+    if (!_focus.hasFocus && widget.emojiOpen) widget.onToggleEmoji();
   }
 
   void _toggleEmoji() {
@@ -1061,253 +1104,247 @@ class _ComposerBarState extends State<_ComposerBar>
     final double keyboard = MediaQuery.viewInsetsOf(context).bottom;
     final double bottom =
         keyboard > 0 ? 12 : showroomReadingDockBottom(context);
-    final double narrow = showroomReadingDockWidth(context);
-    final double wide = showroomComposerWidth(context);
     final double radius = showroomReadingDockHeight / 2;
     return Padding(
       padding: EdgeInsets.fromLTRB(0, 8, 0, bottom),
-      child: AnimatedBuilder(
-        animation: _expand,
-        builder: (BuildContext context, Widget? child) {
-          final double t = Curves.easeInOutCubic.transform(_expand.value);
-          final double width = narrow + (wide - narrow) * t;
-          return Align(
-            alignment: Alignment.bottomCenter,
-            child: SizedBox(width: width, child: child),
-          );
-        },
-        child: TextFieldTapRegion(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (replyName != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '$replyName님에게 답글',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: widget.onCancelReply,
-                        behavior: HitTestBehavior.opaque,
-                        child: const Icon(
-                          Icons.close,
-                          size: 16,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              if (widget.emojiOpen)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: const Color(0x990B1F38),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 8,
-                      ),
-                      child: Row(
-                        children: [
-                          for (final String url in showroomEmojiCatalog)
-                            GestureDetector(
-                              onTap: () => _attachEmoji(url),
-                              behavior: HitTestBehavior.opaque,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                ),
-                                child: Image.asset(
-                                  url,
-                                  width: 40,
-                                  height: 40,
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              DecoratedBox(
-                decoration: showroomReadingDockDecoration(
-                  showroomReadingDockHeight,
-                  radius: radius,
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(radius),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: SizedBox(
+          width: widget.width,
+          child: TextFieldTapRegion(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (replyName != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
                       children: [
-                        if (emoticon != null)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 18, 16, 4),
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                Image.asset(
-                                  emoticon,
-                                  width: showroomEmoticonSize,
-                                  height: showroomEmoticonSize,
-                                  fit: BoxFit.contain,
-                                ),
-                                Positioned(
-                                  top: -6,
-                                  right: -6,
-                                  child: GestureDetector(
-                                    onTap: widget.onClearEmoji,
-                                    behavior: HitTestBehavior.opaque,
-                                    child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        color: AppColors.surface,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: const Color(0xFFD3D8E0),
-                                        ),
-                                      ),
-                                      child: const SizedBox(
-                                        width: 22,
-                                        height: 22,
-                                        child: Icon(
-                                          Icons.close,
-                                          size: 14,
-                                          color: AppColors.textPrimary,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                        Expanded(
+                          child: Text(
+                            '$replyName님에게 답글',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
                             ),
                           ),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            minHeight: showroomReadingDockHeight,
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              IconButton(
-                                onPressed: _toggleEmoji,
-                                style: IconButton.styleFrom(
-                                  fixedSize: const Size(36, 36),
-                                  minimumSize: const Size(36, 36),
-                                  maximumSize: const Size(36, 36),
-                                  padding: EdgeInsets.zero,
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                  foregroundColor:
-                                      widget.emojiOpen
-                                          ? AppColors.primary
-                                          : AppColors.textSecondary,
-                                ),
-                                icon: const Icon(
-                                  Icons.emoji_emotions_outlined,
-                                  size: 20,
-                                ),
-                              ),
-                              Expanded(
-                                child: TextField(
-                                  controller: widget.controller,
-                                  focusNode: _focus,
-                                  minLines: 1,
-                                  maxLines: 4,
-                                  textAlignVertical: TextAlignVertical.center,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    height: 1.3,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                  decoration: InputDecoration(
-                                    isDense: true,
-                                    hintText:
-                                        replyName == null
-                                            ? '댓글을 남겨 주세요'
-                                            : '답글을 남겨 주세요',
-                                    hintStyle: const TextStyle(
-                                      fontSize: 14,
-                                      height: 1.3,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                    filled: false,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 8,
-                                    ),
-                                    border: InputBorder.none,
-                                    enabledBorder: InputBorder.none,
-                                    focusedBorder: InputBorder.none,
-                                  ),
-                                ),
-                              ),
-                              ListenableBuilder(
-                                listenable: widget.controller,
-                                builder: (context, _) {
-                                  final bool ready =
-                                      widget.controller.text
-                                          .trim()
-                                          .isNotEmpty ||
-                                      emoticon != null;
-                                  return Padding(
-                                    padding: const EdgeInsets.only(right: 8),
-                                    child: IconButton(
-                                      onPressed: ready ? widget.onSend : null,
-                                      style: IconButton.styleFrom(
-                                        fixedSize: const Size(30, 30),
-                                        minimumSize: const Size(30, 30),
-                                        maximumSize: const Size(30, 30),
-                                        padding: EdgeInsets.zero,
-                                        tapTargetSize:
-                                            MaterialTapTargetSize.shrinkWrap,
-                                        backgroundColor:
-                                            ready
-                                                ? AppColors.primary
-                                                : const Color(0xFFE3E6EB),
-                                        foregroundColor:
-                                            ready
-                                                ? AppColors.white
-                                                : AppColors.textSecondary,
-                                        disabledBackgroundColor: const Color(
-                                          0xFFE3E6EB,
-                                        ),
-                                        disabledForegroundColor:
-                                            AppColors.textSecondary,
-                                        shape: const CircleBorder(),
-                                      ),
-                                      icon: const Icon(
-                                        Icons.arrow_upward_rounded,
-                                        size: 16,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
+                        ),
+                        GestureDetector(
+                          onTap: widget.onCancelReply,
+                          behavior: HitTestBehavior.opaque,
+                          child: const Icon(
+                            Icons.close,
+                            size: 16,
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ],
                     ),
                   ),
+                if (widget.emojiOpen)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: const Color(0x990B1F38),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 8,
+                        ),
+                        child: Row(
+                          children: [
+                            for (final String url in showroomEmojiCatalog)
+                              GestureDetector(
+                                onTap: () => _attachEmoji(url),
+                                behavior: HitTestBehavior.opaque,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                  ),
+                                  child: Image.asset(
+                                    url,
+                                    width: 40,
+                                    height: 40,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                DecoratedBox(
+                  decoration: showroomReadingDockDecoration(
+                    showroomReadingDockHeight,
+                    radius: radius,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(radius),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (emoticon != null)
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 18, 16, 4),
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Image.asset(
+                                    emoticon,
+                                    width: showroomEmoticonSize,
+                                    height: showroomEmoticonSize,
+                                    fit: BoxFit.contain,
+                                  ),
+                                  Positioned(
+                                    top: -6,
+                                    right: -6,
+                                    child: GestureDetector(
+                                      onTap: widget.onClearEmoji,
+                                      behavior: HitTestBehavior.opaque,
+                                      child: DecoratedBox(
+                                        decoration: BoxDecoration(
+                                          color: AppColors.surface,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: const Color(0xFFD3D8E0),
+                                          ),
+                                        ),
+                                        child: const SizedBox(
+                                          width: 22,
+                                          height: 22,
+                                          child: Icon(
+                                            Icons.close,
+                                            size: 14,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              minHeight: showroomReadingDockHeight,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                IconButton(
+                                  onPressed: _toggleEmoji,
+                                  style: IconButton.styleFrom(
+                                    fixedSize: const Size(36, 36),
+                                    minimumSize: const Size(36, 36),
+                                    maximumSize: const Size(36, 36),
+                                    padding: EdgeInsets.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                    foregroundColor:
+                                        widget.emojiOpen
+                                            ? AppColors.primary
+                                            : AppColors.textSecondary,
+                                  ),
+                                  icon: const Icon(
+                                    Icons.emoji_emotions_outlined,
+                                    size: 20,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: TextField(
+                                    controller: widget.controller,
+                                    focusNode: _focus,
+                                    minLines: 1,
+                                    maxLines: 4,
+                                    textAlignVertical: TextAlignVertical.center,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      height: 1.3,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                    decoration: InputDecoration(
+                                      isDense: true,
+                                      hintText:
+                                          replyName == null
+                                              ? '댓글을 남겨 주세요'
+                                              : '답글을 남겨 주세요',
+                                      hintStyle: const TextStyle(
+                                        fontSize: 14,
+                                        height: 1.3,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                      filled: false,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            vertical: 8,
+                                          ),
+                                      border: InputBorder.none,
+                                      enabledBorder: InputBorder.none,
+                                      focusedBorder: InputBorder.none,
+                                    ),
+                                  ),
+                                ),
+                                ListenableBuilder(
+                                  listenable: widget.controller,
+                                  builder: (context, _) {
+                                    final bool ready =
+                                        widget.controller.text
+                                            .trim()
+                                            .isNotEmpty ||
+                                        emoticon != null;
+                                    return Padding(
+                                      padding: const EdgeInsets.only(right: 8),
+                                      child: IconButton(
+                                        onPressed: ready ? widget.onSend : null,
+                                        style: IconButton.styleFrom(
+                                          fixedSize: const Size(30, 30),
+                                          minimumSize: const Size(30, 30),
+                                          maximumSize: const Size(30, 30),
+                                          padding: EdgeInsets.zero,
+                                          tapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
+                                          backgroundColor:
+                                              ready
+                                                  ? AppColors.primary
+                                                  : const Color(0xFFE3E6EB),
+                                          foregroundColor:
+                                              ready
+                                                  ? AppColors.white
+                                                  : AppColors.textSecondary,
+                                          disabledBackgroundColor: const Color(
+                                            0xFFE3E6EB,
+                                          ),
+                                          disabledForegroundColor:
+                                              AppColors.textSecondary,
+                                          shape: const CircleBorder(),
+                                        ),
+                                        icon: const Icon(
+                                          Icons.arrow_upward_rounded,
+                                          size: 16,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
