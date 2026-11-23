@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/construction_progress.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/quick_filter_catalog.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_font_scale.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/site_photo_days.dart';
 
 /// 갤러리 또는 현장 사진에서 이미지 주소 하나를 고른다.
@@ -36,7 +37,8 @@ Future<List<String>> pickWriteImages(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (BuildContext context) {
-      return SafeArea(
+      return ShowroomFontScale(
+        child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
           child: Column(
@@ -82,6 +84,7 @@ Future<List<String>> pickWriteImages(
             ],
           ),
         ),
+        ),
       );
     },
   );
@@ -109,8 +112,13 @@ Future<List<String>> pickWriteImages(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder:
-        (BuildContext sheetContext) =>
-            _SitePhotoSheet(photos: photos, used: used, multiple: multiple),
+        (BuildContext sheetContext) => ShowroomFontScale(
+          child: _SitePhotoSheet(
+            photos: photos,
+            used: used,
+            multiple: multiple,
+          ),
+        ),
   );
   if (urls == null || urls.isEmpty) return const <String>[];
   return urls;
@@ -245,7 +253,10 @@ Future<String?> pickIndustry(BuildContext context, {String current = ''}) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (BuildContext context) => _IndustrySheet(current: current),
+    builder:
+        (BuildContext context) => ShowroomFontScale(
+          child: _IndustrySheet(current: current),
+        ),
   );
 }
 
@@ -262,7 +273,8 @@ Future<int?> pickPyeong(BuildContext context, {required int current}) {
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (BuildContext context) {
-      return SafeArea(
+      return ShowroomFontScale(
+        child: SafeArea(
         child: SizedBox(
           height: 340,
           child: Column(
@@ -331,6 +343,7 @@ Future<int?> pickPyeong(BuildContext context, {required int current}) {
               ),
             ],
           ),
+        ),
         ),
       );
     },

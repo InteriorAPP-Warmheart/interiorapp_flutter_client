@@ -5,6 +5,7 @@ import 'package:interiorapp_flutter_client/showroom/domain/entity/filter_entity.
 import 'package:interiorapp_flutter_client/showroom/domain/entity/quick_filter_catalog.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/filter_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/filter_bottomsheet.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_font_scale.dart';
 
 class QuickFilterBar extends ConsumerWidget {
   const QuickFilterBar({super.key});
@@ -66,7 +67,7 @@ class QuickFilterBar extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => const FilterBottomSheet(),
+      builder: (context) => const ShowroomFontScale(child: FilterBottomSheet()),
     );
   }
 }

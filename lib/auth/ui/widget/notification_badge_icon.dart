@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class NotificationBadgeIcon extends StatelessWidget {
   final int count;
@@ -21,28 +20,22 @@ class NotificationBadgeIcon extends StatelessWidget {
         ),
         if (count > 0)
           Positioned(
-            right: 8.w,
-            top: 8.h,
+            right: 8,
+            top: 8,
             child: Container(
-              padding: EdgeInsets.all(4.w),
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: Colors.orange,
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white,
-                  width: 1.5,
-                ),
+                border: Border.all(color: Colors.white, width: 1.5),
               ),
-              constraints: BoxConstraints(
-                minWidth: 16.w,
-                minHeight: 16.w,
-              ),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
               child: Center(
                 child: Text(
                   count > 99 ? '99+' : count.toString(),
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 10.sp,
+                    fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -52,4 +45,4 @@ class NotificationBadgeIcon extends StatelessWidget {
       ],
     );
   }
-} 
+}

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_city_catalog.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_font_scale.dart';
 
 Future<String?> showShowroomCitySheet(BuildContext context, {String? current}) {
   return showModalBottomSheet<String>(
@@ -10,7 +11,10 @@ Future<String?> showShowroomCitySheet(BuildContext context, {String? current}) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (BuildContext context) => _ShowroomCitySheet(current: current),
+    builder:
+        (BuildContext context) => ShowroomFontScale(
+          child: _ShowroomCitySheet(current: current),
+        ),
   );
 }
 

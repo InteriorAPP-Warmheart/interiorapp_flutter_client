@@ -566,6 +566,8 @@ class ShowroomCostCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     lines[i].name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w400,
@@ -603,29 +605,37 @@ class _WonAmount extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String reading = CostFormattingViewModel.wonReading(amount);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Text(
-          amount,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: showroomInk,
-          ),
-        ),
-        if (reading.isNotEmpty) ...[
-          const SizedBox(height: 2),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 168),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
           Text(
-            reading,
+            amount,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: showroomMuted,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: showroomInk,
             ),
           ),
+          if (reading.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              reading,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: showroomMuted,
+              ),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }

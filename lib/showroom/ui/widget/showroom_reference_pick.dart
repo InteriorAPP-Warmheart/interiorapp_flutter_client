@@ -9,6 +9,7 @@ import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_body.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_font_scale.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_gallery.dart';
 
 const List<String> showroomReferenceAspects = <String>[
@@ -425,11 +426,13 @@ Future<ShowroomReferenceRegion?> showShowroomReferenceEditor(
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder:
-        (BuildContext sheetContext) => _RegionEditor(
+        (BuildContext sheetContext) => ShowroomFontScale(
+          child: _RegionEditor(
           region: region,
           title: title,
           saveLabel: saveLabel,
           noteHint: noteHint,
+        ),
         ),
   );
 }

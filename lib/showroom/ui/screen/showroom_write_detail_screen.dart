@@ -16,6 +16,7 @@ import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_body.
 import 'package:interiorapp_flutter_client/showroom/domain/showroom_quill_document.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/vm/showroom_composer.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/vm/showroom_write_vm.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_font_scale.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_quill_body.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_gallery.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_space_header.dart';
@@ -192,7 +193,8 @@ class _ShowroomWriteDetailScreenState
       ),
       builder: (BuildContext context) {
         final double maxHeight = MediaQuery.sizeOf(context).height * 0.85;
-        return SafeArea(
+        return ShowroomFontScale(
+          child: SafeArea(
           child: ConstrainedBox(
             constraints: BoxConstraints(maxHeight: maxHeight),
             child: ListView(
@@ -233,6 +235,7 @@ class _ShowroomWriteDetailScreenState
                 ),
               ],
             ),
+          ),
           ),
         );
       },
@@ -369,7 +372,8 @@ class _ShowroomWriteDetailScreenState
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (BuildContext context) {
-        return SafeArea(
+        return ShowroomFontScale(
+          child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
             child: Column(
@@ -406,6 +410,7 @@ class _ShowroomWriteDetailScreenState
                 ),
               ],
             ),
+          ),
           ),
         );
       },
@@ -457,7 +462,8 @@ class _ShowroomWriteDetailScreenState
     if (!tuckPreview) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _syncPreviewHeight());
     }
-    return Scaffold(
+    return ShowroomFontScale(
+      child: Scaffold(
       backgroundColor: AppColors.background,
       resizeToAvoidBottomInset: !writingBody,
       appBar: AppBar(title: const Text('쇼룸 글쓰기')),
@@ -641,6 +647,7 @@ class _ShowroomWriteDetailScreenState
               onPressed: () => _openPreview(draft),
             ),
         ],
+      ),
       ),
     );
   }
@@ -1417,7 +1424,8 @@ class ShowroomDraftPreview extends StatelessWidget {
       if (draft.period.trim().isNotEmpty) ('기간', draft.period.trim()),
     ];
 
-    return Scaffold(
+    return ShowroomFontScale(
+      child: Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('미리보기'),
@@ -1579,6 +1587,7 @@ class ShowroomDraftPreview extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
