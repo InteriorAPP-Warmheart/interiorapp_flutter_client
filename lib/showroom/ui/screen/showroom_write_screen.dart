@@ -6,6 +6,7 @@ import 'package:interiorapp_flutter_client/build/presentation/provider/build_pro
 import 'package:interiorapp_flutter_client/build/presentation/vm/space_board_vm.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_font_scale.dart';
 
 class ShowroomWriteScreen extends ConsumerWidget {
   const ShowroomWriteScreen({super.key});
@@ -20,7 +21,8 @@ class ShowroomWriteScreen extends ConsumerWidget {
     final List<SpaceProject> finished = board.finished;
     final bool hasSpace = active.isNotEmpty || finished.isNotEmpty;
 
-    return Scaffold(
+    return ShowroomFontScale(
+      child: Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('쇼룸 글쓰기')),
       body: Column(
@@ -97,6 +99,7 @@ class ShowroomWriteScreen extends ConsumerWidget {
           ),
           const _DirectWriteBar(),
         ],
+      ),
       ),
     );
   }

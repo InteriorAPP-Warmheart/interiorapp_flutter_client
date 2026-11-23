@@ -16,6 +16,7 @@ import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_sh
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/showroom_story_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/mascot/showroom_mascot.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_comment_section.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_font_scale.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_gallery.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_process_tour.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/write_body_editor.dart';
@@ -113,7 +114,8 @@ class _ShowroomBoardScreenState extends ConsumerState<ShowroomBoardScreen> {
       child: Stack(
         children: <Widget>[
           Positioned.fill(
-            child: Scaffold(
+            child: ShowroomFontScale(
+              child: Scaffold(
               backgroundColor: showroomPaper,
               appBar: AppBar(
                 toolbarHeight: ResponsiveSize.appBarHeight(context),
@@ -166,6 +168,7 @@ class _ShowroomBoardScreenState extends ConsumerState<ShowroomBoardScreen> {
                 }
                 return const SizedBox.shrink();
               }(),
+              ),
             ),
           ),
           const ShowroomMascot(),

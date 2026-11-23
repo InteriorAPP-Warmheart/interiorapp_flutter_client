@@ -13,6 +13,7 @@ import 'package:interiorapp_flutter_client/showroom/ui/widget/quick_filter_bar.d
 import 'package:interiorapp_flutter_client/showroom/ui/widget/popular_showroom_card.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/post_section.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_feed_segment.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_font_scale.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_sort_toggle.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_segment.dart';
@@ -31,7 +32,8 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
     final EdgeInsets screenPadding = ResponsiveSize.textInset(context);
     final hasSelectedFilters = ref.watch(hasSelectedFiltersProvider);
 
-    return Scaffold(
+    return ShowroomFontScale(
+      child: Scaffold(
       body: SingleChildScrollView(
         padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
         child: Center(
@@ -112,6 +114,7 @@ class _ShowroomScreenState extends ConsumerState<ShowroomScreen> {
           shape: const CircleBorder(),
           child: const Icon(Icons.edit_outlined, size: 22),
         ),
+      ),
       ),
     );
   }

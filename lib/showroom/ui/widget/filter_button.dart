@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/filter_bottomsheet.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_font_scale.dart';
 
 class FilterButton extends StatelessWidget {
   final String text;
@@ -18,7 +19,8 @@ class FilterButton extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
-            builder: (context) => FilterBottomSheet(),
+            builder:
+                (context) => const ShowroomFontScale(child: FilterBottomSheet()),
           );
         },
         child: Container(

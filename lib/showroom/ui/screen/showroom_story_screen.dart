@@ -10,6 +10,7 @@ import 'package:interiorapp_flutter_client/showroom/presentation/provider/showro
 import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_body.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_gallery.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_ratio.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_font_scale.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/story/showroom_story_scenes.dart';
 
 /// 갤러리 버튼에서 화면이 쏟아져 나오고, 돌아갈 때는 그 버튼으로 작아져 빨려 들어간다.
@@ -214,7 +215,8 @@ class ShowroomStoryScreen extends ConsumerWidget {
       );
     });
 
-    return Scaffold(
+    return ShowroomFontScale(
+      child: Scaffold(
       backgroundColor: Colors.transparent,
       body: storyAsync.when(
         loading: () => const SizedBox.shrink(),
@@ -239,6 +241,7 @@ class ShowroomStoryScreen extends ConsumerWidget {
           }
           return _StoryLookbook(story: story, liftsCover: liftsCover);
         },
+      ),
       ),
     );
   }

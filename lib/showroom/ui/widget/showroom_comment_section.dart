@@ -7,6 +7,7 @@ import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_body.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_comment.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/showroom_comment_provider.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_font_scale.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_gallery.dart';
 
 /// 표지처럼 댓글 수를 알아야 하는 머리글.
@@ -149,7 +150,10 @@ class _ShowroomBoardWithCommentsState
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => _ReportSheet(name: comment.name),
+      builder:
+          (context) => ShowroomFontScale(
+            child: _ReportSheet(name: comment.name),
+          ),
     );
     if (!mounted || sent == null) return;
     await ref
@@ -177,7 +181,8 @@ class _ShowroomBoardWithCommentsState
       builder: (context) {
         final double keyboard = MediaQuery.viewInsetsOf(context).bottom;
         final double height = MediaQuery.sizeOf(context).height * 0.88;
-        return Padding(
+        return ShowroomFontScale(
+          child: Padding(
           padding: EdgeInsets.only(bottom: keyboard),
           child: SizedBox(
             height: height,
@@ -216,6 +221,7 @@ class _ShowroomBoardWithCommentsState
                 );
               },
             ),
+          ),
           ),
         );
       },
