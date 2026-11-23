@@ -518,7 +518,7 @@ class _SwipeDelete extends StatelessWidget {
             : const Color(0xFFD7DCE3);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: _cardFill(unread),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: edge),
       ),
@@ -584,7 +584,7 @@ class _NoticeLine extends StatelessWidget {
     final String detail = _noticeDetail(notice);
 
     return Material(
-      color: _cardFill(unread),
+      color: AppColors.surface,
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -672,10 +672,6 @@ _Kind _kindOf(AppNotice notice) {
       AppColors.textSecondary,
     ),
   };
-}
-
-Color _cardFill(bool unread) {
-  return unread ? AppColors.surface : AppColors.background;
 }
 
 class _UnreadMark extends StatelessWidget {
