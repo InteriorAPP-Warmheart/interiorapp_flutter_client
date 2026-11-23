@@ -6,6 +6,7 @@ import 'package:interiorapp_flutter_client/core/editor/rich_text_document.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/quick_filter_catalog.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_body.dart';
+import 'package:interiorapp_flutter_client/showroom/domain/showroom_quill_document.dart';
 
 class ShowroomDraft {
   const ShowroomDraft({
@@ -59,6 +60,54 @@ class ShowroomDraft {
   bool get hasBody => blocks.any((ShowroomBlock block) => block.hasContent);
 
   bool get canPreview => title.trim().isNotEmpty && hasBody;
+
+  /// 사용자가 고친 글이 같은지. 빈 칸을 넣었다 지운 것은 차이로 보지 않는다.
+  bool sameEditableContent(ShowroomDraft other) {
+    if (title.trim() != other.title.trim()) return false;
+    if (thumbnailUrl.trim() != other.thumbnailUrl.trim()) return false;
+    if (style.trim() != other.style.trim()) return false;
+    if (industry.trim() != other.industry.trim()) return false;
+    if (areaPyeong != other.areaPyeong) return false;
+    if (area.trim() != other.area.trim()) return false;
+    if (_moneyDigits(budget) != _moneyDigits(other.budget)) return false;
+    if (period.trim() != other.period.trim()) return false;
+    if (!_sameDay(periodStart, other.periodStart)) return false;
+    if (!_sameDay(periodEnd, other.periodEnd)) return false;
+    if (showCostDetail != other.showCostDetail) return false;
+    if (showCostDetail && !_sameCostLines(costLines, other.costLines)) {
+      return false;
+    }
+    return sameShowroomBody(
+      _visibleBlocks(blocks),
+      _visibleBlocks(other.blocks),
+    );
+  }
+
+  /// 수정 저장 때 기존 글의 작성자 정보는 두고, 고친 칸만 덮어 쓴다.
+  ShowroomStoryModel applyToStory(ShowroomStoryModel story) {
+    return ShowroomStoryModel(
+      id: story.id,
+      title: title.trim(),
+      themeName: style.trim(),
+      thumbnailUrl: thumbnailUrl.trim(),
+      userName: story.userName,
+      authorUserId: story.authorUserId,
+      userProfileUrl: story.userProfileUrl,
+      likeCount: story.likeCount,
+      favoriteStatus: story.favoriteStatus,
+      situation: ShowroomSituation(
+        industry: industry.trim(),
+        area: area.trim(),
+        budget: budget.trim(),
+        period: period.trim(),
+      ),
+      comparisons: story.comparisons,
+      cost: showCostDetail ? cost : null,
+      process: story.process,
+      guide: story.guide,
+      blocks: blocks,
+    );
+  }
 
   ShowroomCost get cost => ShowroomCost(
     total: costTotal.trim(),
@@ -194,6 +243,33 @@ class ShowroomComposer extends Notifier<ShowroomDraft> {
       periodEnd: periodEnd,
       process: const <ShowroomProcessFrame>[],
       blocks: _blocksFrom(record),
+    );
+    state = draft;
+    return draft;
+  }
+
+  /// 이미 올라간 글을 수정 화면에 채운다.
+  ShowroomDraft seedFromStory(ShowroomStoryModel story) {
+    final ShowroomSituation? situation = story.situation;
+    final int pyeong = _pyeongFrom(situation?.area ?? '');
+    final List<ShowroomCostLine> lines = _bucketsFrom(story.cost);
+    final bool hasCost = lines.any(
+      (ShowroomCostLine line) => line.amount.trim().isNotEmpty,
+    );
+    final ShowroomDraft draft = ShowroomDraft(
+      seeded: true,
+      thumbnailUrl: story.thumbnailUrl,
+      title: story.title,
+      style: story.themeName,
+      industry: situation?.industry.trim() ?? '',
+      areaPyeong: pyeong,
+      area: '$pyeong평',
+      budget: _moneyLabel(situation?.budget ?? ''),
+      period: situation?.period.trim() ?? '',
+      showCostDetail: hasCost,
+      costTotal: hasCost ? _costSum(lines) : '',
+      costLines: hasCost ? lines : const <ShowroomCostLine>[],
+      blocks: story.blocks,
     );
     state = draft;
     return draft;
@@ -489,6 +565,45 @@ class ShowroomComposer extends Notifier<ShowroomDraft> {
     return industry;
   }
 
+  int _pyeongFrom(String area) {
+    final RegExpMatch? match = RegExp(r'\d+').firstMatch(area);
+    final int? parsed = match == null ? null : int.tryParse(match.group(0)!);
+    if (parsed == null || parsed <= 0) return 50;
+    return parsed.clamp(1, 1000);
+  }
+
+  String _moneyLabel(String raw) {
+    final int? won = _wonAmount(raw);
+    if (won == null || won <= 0) return '';
+    return '${formatWon(won)}원';
+  }
+
+  List<ShowroomCostLine> _bucketsFrom(ShowroomCost? cost) {
+    var material = 0;
+    var labor = 0;
+    var expense = 0;
+    for (final ShowroomCostLine line
+        in cost?.lines ?? const <ShowroomCostLine>[]) {
+      final int? won = _wonAmount(line.amount);
+      if (won == null || won <= 0) continue;
+      final String name = line.name.replaceAll(RegExp(r'\s'), '');
+      if (name.contains('경비') || name.contains('잡비')) {
+        expense += won;
+      } else if (name.contains('인력') ||
+          name.contains('인건') ||
+          name.contains('노무')) {
+        labor += won;
+      } else {
+        material += won;
+      }
+    }
+    return <ShowroomCostLine>[
+      ShowroomCostLine(name: '자재비', amount: _won(material)),
+      ShowroomCostLine(name: '인력비', amount: _won(labor)),
+      ShowroomCostLine(name: '경비', amount: _won(expense)),
+    ];
+  }
+
   int _pyeong(PrepRecord? record) {
     if (record == null) return 50;
     final String area = record.area.trim();
@@ -632,6 +747,69 @@ ShowroomCost showroomCostFromQuote(WorkQuote quote) {
 }
 
 String _won(int amount) => amount <= 0 ? '' : '${formatWon(amount)}원';
+
+String _moneyDigits(String raw) {
+  final String digits = raw.replaceAll(RegExp(r'[^\d]'), '');
+  if (digits.isEmpty) return '';
+  final String trimmed = digits.replaceFirst(RegExp(r'^0+'), '');
+  return trimmed.isEmpty ? '0' : trimmed;
+}
+
+bool _sameDay(DateTime? left, DateTime? right) {
+  if (left == null || right == null) return left == null && right == null;
+  return left.year == right.year &&
+      left.month == right.month &&
+      left.day == right.day;
+}
+
+bool _sameCostLines(List<ShowroomCostLine> left, List<ShowroomCostLine> right) {
+  final List<String> a = _costMarks(left);
+  final List<String> b = _costMarks(right);
+  if (a.length != b.length) return false;
+  for (var index = 0; index < a.length; index++) {
+    if (a[index] != b[index]) return false;
+  }
+  return true;
+}
+
+List<String> _costMarks(List<ShowroomCostLine> lines) {
+  return <String>[
+    for (final ShowroomCostLine line in lines)
+      if (_moneyDigits(line.amount).isNotEmpty)
+        '${line.name.trim()}:${_moneyDigits(line.amount)}',
+  ];
+}
+
+List<ShowroomBlock> _visibleBlocks(List<ShowroomBlock> blocks) {
+  return <ShowroomBlock>[
+    for (final ShowroomBlock block in blocks)
+      if (_visibleBlock(block) case final ShowroomBlock visible)
+        if (visible.hasContent) visible,
+  ];
+}
+
+ShowroomBlock? _visibleBlock(ShowroomBlock block) {
+  if (block.kind == ShowroomBlockKind.text) {
+    final List<RichTextParagraph> paragraphs = <RichTextParagraph>[
+      for (final RichTextParagraph paragraph in block.paragraphs)
+        if (paragraph.text.trim().isNotEmpty) paragraph,
+    ];
+    if (paragraphs.isEmpty) return null;
+    return ShowroomBlock.text(id: block.id, paragraphs: paragraphs);
+  }
+  if (block.kind == ShowroomBlockKind.process) {
+    final List<ShowroomProcessFrame> frames = <ShowroomProcessFrame>[
+      for (final ShowroomProcessFrame frame in block.frames)
+        if (frame.imageUrl.trim().isNotEmpty ||
+            frame.trade.trim().isNotEmpty ||
+            frame.caption.trim().isNotEmpty)
+          frame,
+    ];
+    if (frames.isEmpty) return null;
+    return ShowroomBlock.process(id: block.id, frames: frames);
+  }
+  return block.hasContent ? block : null;
+}
 
 String _costSum(List<ShowroomCostLine> lines) {
   var sum = 0;

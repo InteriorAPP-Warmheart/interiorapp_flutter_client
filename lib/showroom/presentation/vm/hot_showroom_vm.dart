@@ -33,6 +33,29 @@ class HotShowroomVmClass extends Notifier<List<HotShowroomModel>> {
     state = await ref.read(hotShowroomUseCaseProvider).getHotShowroom();
   }
 
+  void applyEditedShowroom({
+    required String id,
+    required String title,
+    required String thumbnailUrl,
+    required String themeName,
+  }) {
+    if (id.isEmpty) return;
+    state = <HotShowroomModel>[
+      for (final HotShowroomModel item in state)
+        if (item.id != id)
+          item
+        else
+          item.copyWith(
+            title: title.trim().isEmpty ? item.title : title.trim(),
+            thumbnailUrl:
+                thumbnailUrl.trim().isEmpty
+                    ? item.thumbnailUrl
+                    : thumbnailUrl.trim(),
+            themeName: themeName.trim().isEmpty ? item.themeName : themeName.trim(),
+          ),
+    ];
+  }
+
   Future<void> toggleFavoriteByIndex(String id) async {
     if (id.isEmpty) return;
     // 낙관적 업데이트

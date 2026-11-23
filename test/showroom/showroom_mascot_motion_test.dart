@@ -180,6 +180,16 @@ void main() {
     expect(tablet.minTravel, greaterThan(phone.minTravel));
     expect(tablet.figure, lessThanOrEqualTo(64));
     expect(largeText.left, greaterThan(phone.left));
+
+    final ShowroomMascotLayout reserved = showroomMascotLayout(
+      width: 360,
+      topInset: 47,
+      toolbarHeight: 56,
+      textScale: 1,
+      reservedRight: showroomMascotActionSlot,
+    );
+    expect(reserved.right, lessThan(phone.right));
+    expect(reserved.right + reserved.figure, lessThanOrEqualTo(360 - 56));
   });
 
   test('접힘선 위에는 멈추지 않는다', () {

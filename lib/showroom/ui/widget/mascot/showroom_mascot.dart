@@ -12,7 +12,10 @@ import 'package:interiorapp_flutter_client/showroom/ui/widget/mascot/showroom_ma
 /// 들어오고 3초 뒤에 떨어져 가운데 앉는다. 어느 동작이든 누르면 놀라서
 /// 진행 방향의 반대로 도망가고, 끝에서 다시 앉는다.
 class ShowroomMascot extends StatefulWidget {
-  const ShowroomMascot({super.key});
+  const ShowroomMascot({super.key, this.reservedRight = 0});
+
+  /// 오른쪽에서 비워 둘 폭. 수정 버튼이 있을 때 그 칸까지 가지 않게 쓴다.
+  final double reservedRight;
 
   @override
   State<ShowroomMascot> createState() => _ShowroomMascotState();
@@ -47,6 +50,7 @@ class _ShowroomMascotState extends State<ShowroomMascot>
       textScale: media.textScaler.scale(1),
       safeLeft: media.padding.left,
       safeRight: media.padding.right,
+      reservedRight: widget.reservedRight,
     );
   }
 

@@ -9,4 +9,8 @@ class ShowroomStoryUseCase {
   Future<ShowroomStoryModel?> getStory(String id) {
     return _repository.getStory(id);
   }
+
+  Future<void> saveStory(ShowroomStoryModel story) {
+    return _repository.saveStory(story);
+  }
 }

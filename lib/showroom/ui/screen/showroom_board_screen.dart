@@ -10,11 +10,13 @@ import 'package:interiorapp_flutter_client/showroom/domain/entity/quick_filter_c
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_reference_pick.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/hot_showroom_model.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
+import 'package:interiorapp_flutter_client/mypage/data/model/mypage_user_model.dart';
 import 'package:interiorapp_flutter_client/mypage/presentation/provider/mypage_provider.dart';
 import 'package:interiorapp_flutter_client/mypage/presentation/record_showroom_view.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/provider/showroom_story_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/mascot/showroom_mascot.dart';
+import 'package:interiorapp_flutter_client/showroom/ui/widget/mascot/showroom_mascot_motion.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_comment_section.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_font_scale.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_photo_gallery.dart';
@@ -104,6 +106,12 @@ class _ShowroomBoardScreenState extends ConsumerState<ShowroomBoardScreen> {
       if (story.isLoading) return;
       _rememberCurrent();
     });
+    final ShowroomStoryModel? overview =
+        storyAsync.asData?.value ?? _overviewFromList(listed, showroomId);
+    final bool canEdit = _canEditShowroom(
+      ref.watch(myPageUserVmProvider),
+      overview,
+    );
 
     return PopScope(
       canPop: !_picking,
@@ -136,12 +144,19 @@ class _ShowroomBoardScreenState extends ConsumerState<ShowroomBoardScreen> {
                   },
                   icon: const Icon(Icons.arrow_back),
                 ),
-                actions: const <Widget>[],
+                actions: <Widget>[
+                  if (canEdit)
+                    IconButton(
+                      tooltip: '글 수정',
+                      onPressed:
+                          () => context.push(
+                            '/showroom-write/first-write?showroomId=$showroomId',
+                          ),
+                      icon: const Icon(Icons.edit_outlined),
+                    ),
+                ],
               ),
               body: () {
-                final ShowroomStoryModel? overview =
-                    storyAsync.asData?.value ??
-                    _overviewFromList(listed, showroomId);
                 if (overview != null) {
                   final bool favorite =
                       listed
@@ -171,7 +186,9 @@ class _ShowroomBoardScreenState extends ConsumerState<ShowroomBoardScreen> {
               ),
             ),
           ),
-          const ShowroomMascot(),
+          ShowroomMascot(
+            reservedRight: canEdit ? showroomMascotActionSlot : 0,
+          ),
         ],
       ),
     );
@@ -197,6 +214,14 @@ ShowroomStoryModel? _overviewFromList(
     );
   }
   return null;
+}
+
+bool _canEditShowroom(MyPageUserModel? user, ShowroomStoryModel? story) {
+  if (user == null || story == null) return false;
+  final String authorId = story.authorUserId.trim();
+  if (authorId.isNotEmpty && authorId == user.id.trim()) return true;
+  final String name = user.name.trim();
+  return name.isNotEmpty && name == story.userName.trim();
 }
 
 class _Board extends StatelessWidget {

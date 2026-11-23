@@ -596,7 +596,7 @@ class _NoticeLine extends StatelessWidget {
                 children: [
                   Icon(kind.icon, size: 18, color: kind.color),
                   const SizedBox(width: 6),
-                  Flexible(
+                  Expanded(
                     child: Text(
                       kind.label,
                       maxLines: 1,
@@ -609,11 +609,7 @@ class _NoticeLine extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (unread) ...[
-                    const SizedBox(width: 6),
-                    const _UnreadMark(),
-                  ],
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                   Text(
                     _ago(notice.sentAt, now),
                     style: TextStyle(
@@ -624,18 +620,32 @@ class _NoticeLine extends StatelessWidget {
                   ),
                 ],
               ),
-              if (detail.isNotEmpty) ...[
+              if (detail.isNotEmpty || unread) ...[
                 const SizedBox(height: 6),
-                Text(
-                  detail,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13 * fontScale,
-                    height: 1.4,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child:
+                          detail.isEmpty
+                              ? const SizedBox.shrink()
+                              : Text(
+                                detail,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 13 * fontScale,
+                                  height: 1.4,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                    ),
+                    if (unread) ...[
+                      const SizedBox(width: 8),
+                      const _UnreadMark(),
+                    ],
+                  ],
                 ),
               ],
             ],

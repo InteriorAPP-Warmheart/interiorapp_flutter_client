@@ -8,6 +8,9 @@ const double showroomMascotMinTravel = 64;
 /// 선택한 끝에서 이 거리 안에서만 멈춘다.
 const double showroomMascotEdgeBand = 56;
 
+/// 앱바 오른쪽 아이콘 버튼 한 칸. 마스코트는 이 폭 안으로 들어가지 않는다.
+const double showroomMascotActionSlot = 56;
+
 /// 접힘선처럼 마스코트가 멈추면 안 되는 가로 구간.
 class ShowroomMascotSpan {
   const ShowroomMascotSpan(this.start, this.end);
@@ -46,12 +49,14 @@ ShowroomMascotLayout showroomMascotLayout({
   required double textScale,
   double safeLeft = 0,
   double safeRight = 0,
+  double reservedRight = 0,
 }) {
   final double scale = textScale.clamp(1, 1.6).toDouble();
   final double bar = math.max(toolbarHeight, 1);
   final double figure = (bar * 0.92).clamp(math.min(36, bar), bar).toDouble();
   final double left = math.max(bar, math.max(48 * scale, safeLeft));
-  final double rightLimit = width - math.max(8, safeRight) - figure;
+  final double tail = math.max(reservedRight, math.max(8, safeRight));
+  final double rightLimit = width - tail - figure;
   final double right = rightLimit < left ? left : rightLimit;
   final double runway = right - left;
   return ShowroomMascotLayout(
