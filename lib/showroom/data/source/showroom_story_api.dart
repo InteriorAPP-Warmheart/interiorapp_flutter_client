@@ -12,6 +12,7 @@ class ShowroomStoryApi {
       themeName: '깔끔하고 실용적인',
       thumbnailUrl: '$_warmheart/wh_01.webp',
       userName: '웜하트',
+      authorUserId: 'user-001',
       userProfileUrl: 'https://i.pravatar.cc/100?img=12',
       likeCount: 32,
       favoriteStatus: false,
@@ -254,6 +255,11 @@ class ShowroomStoryApi {
 
   Future<ShowroomStoryModel?> getStory(String id) async {
     return _stories[id];
+  }
+
+  Future<void> saveStory(ShowroomStoryModel story) async {
+    if (story.id.isEmpty) return;
+    _stories[story.id] = story;
   }
 }
 

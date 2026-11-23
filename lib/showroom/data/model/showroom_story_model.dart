@@ -7,6 +7,7 @@ class ShowroomStoryModel {
     required this.themeName,
     required this.thumbnailUrl,
     required this.userName,
+    this.authorUserId = '',
     required this.userProfileUrl,
     required this.likeCount,
     required this.favoriteStatus,
@@ -23,6 +24,9 @@ class ShowroomStoryModel {
   final String themeName;
   final String thumbnailUrl;
   final String userName;
+
+  /// 로그인한 사용자 id. 비어 있으면 작성자 이름으로만 가린다.
+  final String authorUserId;
   final String userProfileUrl;
   final int likeCount;
   final bool favoriteStatus;

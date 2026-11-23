@@ -222,6 +222,7 @@ class AppRouter {
                 (context, state) => AdaptiveFrame(
                   child: ShowroomWriteDetailScreen(
                     buildId: state.uri.queryParameters['buildId'],
+                    showroomId: state.uri.queryParameters['showroomId'],
                   ),
                 ),
           ),

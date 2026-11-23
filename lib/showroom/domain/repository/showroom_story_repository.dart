@@ -2,4 +2,6 @@ import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_mo
 
 abstract class ShowroomStoryRepository {
   Future<ShowroomStoryModel?> getStory(String id);
+
+  Future<void> saveStory(ShowroomStoryModel story);
 }

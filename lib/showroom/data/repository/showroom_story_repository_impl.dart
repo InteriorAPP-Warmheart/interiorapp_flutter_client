@@ -11,4 +11,9 @@ class ShowroomStoryImpl implements ShowroomStoryRepository {
   Future<ShowroomStoryModel?> getStory(String id) {
     return _api.getStory(id);
   }
+
+  @override
+  Future<void> saveStory(ShowroomStoryModel story) {
+    return _api.saveStory(story);
+  }
 }

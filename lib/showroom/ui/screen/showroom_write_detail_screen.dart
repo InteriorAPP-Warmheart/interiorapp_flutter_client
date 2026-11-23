@@ -9,11 +9,16 @@ import 'package:interiorapp_flutter_client/build/presentation/provider/build_pro
 import 'package:interiorapp_flutter_client/build/presentation/vm/space_board_vm.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
+import 'package:interiorapp_flutter_client/core/widget/calendar/app_calendar_dialog.dart';
+import 'package:interiorapp_flutter_client/core/widget/app_dialog.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_network_image.dart';
 import 'package:interiorapp_flutter_client/showroom/data/model/showroom_story_model.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/quick_filter_catalog.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/entity/showroom_body.dart';
 import 'package:interiorapp_flutter_client/showroom/domain/showroom_quill_document.dart';
+import 'package:interiorapp_flutter_client/showroom/presentation/provider/hot_showroom_provider.dart';
+import 'package:interiorapp_flutter_client/showroom/presentation/provider/showroom_story_provider.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/vm/showroom_composer.dart';
 import 'package:interiorapp_flutter_client/showroom/presentation/vm/showroom_write_vm.dart';
 import 'package:interiorapp_flutter_client/showroom/ui/widget/showroom_quill_body.dart';
@@ -24,9 +29,12 @@ import 'package:interiorapp_flutter_client/showroom/ui/widget/write_body_editor.
 import 'package:interiorapp_flutter_client/showroom/ui/widget/write_pickers.dart';
 
 class ShowroomWriteDetailScreen extends ConsumerStatefulWidget {
-  const ShowroomWriteDetailScreen({super.key, this.buildId});
+  const ShowroomWriteDetailScreen({super.key, this.buildId, this.showroomId});
 
   final String? buildId;
+
+  /// 이미 올라간 글을 고쳐 쓸 때 넘긴다.
+  final String? showroomId;
 
   @override
   ConsumerState<ShowroomWriteDetailScreen> createState() =>
@@ -45,6 +53,8 @@ class _ShowroomWriteDetailScreenState
   double _previewHeight = 0;
   bool _normalizingQuill = false;
   int _embedSeq = 0;
+  ShowroomDraft? _opened;
+  bool _leaving = false;
 
   @override
   void initState() {
@@ -76,6 +86,95 @@ class _ShowroomWriteDetailScreenState
     );
     stripShowroomHeadings(_quill!);
     _quill!.addListener(_syncQuill);
+  }
+
+  ShowroomDraft _editorDraft(ShowroomDraft draft) {
+    final QuillController? quill = _quill;
+    if (quill == null) return draft;
+    return draft.copyWith(blocks: blocksFromQuillDocument(quill.document));
+  }
+
+  void _rememberOpened(ShowroomDraft draft) {
+    if (!_editing || _opened != null) return;
+    _opened = _editorDraft(draft);
+  }
+
+  bool _hasEdits(ShowroomDraft draft) {
+    final ShowroomDraft? opened = _opened;
+    if (!_editing || opened == null) return false;
+    return !opened.sameEditableContent(_editorDraft(draft));
+  }
+
+  void _flushBody() {
+    final QuillController? quill = _quill;
+    if (quill == null) return;
+    final List<ShowroomBlock> blocks = blocksFromQuillDocument(quill.document);
+    final List<ShowroomBlock> current =
+        ref.read(showroomComposerProvider).blocks;
+    if (sameShowroomBody(current, blocks)) return;
+    _composer.setBlocks(blocks);
+  }
+
+  Future<void> _confirmLeave(ShowroomDraft draft) async {
+    if (_leaving || !_hasEdits(draft)) {
+      if (mounted && !_hasEdits(draft)) Navigator.of(context).pop();
+      return;
+    }
+    _leaving = true;
+    final String? choice = await showAppDialog<String>(
+      context: context,
+      title: '수정사항을 저장할까요?',
+      message: '기존 글과 다른 부분이 있어요. 저장하지 않으면 방금 고친 내용은 사라져요.',
+      actions:
+          (BuildContext dialogContext) => <Widget>[
+            AppButton(
+              label: '저장하고 나가기',
+              onPressed: () => Navigator.of(dialogContext).pop('save'),
+            ),
+            AppButton(
+              label: '저장하지 않고 닫기',
+              variant: AppButtonVariant.secondary,
+              onPressed: () => Navigator.of(dialogContext).pop('discard'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('계속 수정'),
+            ),
+          ],
+    );
+    _leaving = false;
+    if (!mounted || choice == null) return;
+    if (choice == 'save') {
+      _flushBody();
+      final bool saved = await _saveEdit(ref.read(showroomComposerProvider));
+      if (!mounted || !saved) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('수정한 내용을 저장했어요')));
+    }
+    if (!mounted) return;
+    Navigator.of(context).pop();
+  }
+
+  Future<bool> _saveEdit(ShowroomDraft draft) async {
+    final String id = widget.showroomId?.trim() ?? '';
+    if (id.isEmpty) return false;
+    final ShowroomStoryModel? current = await ref.read(
+      showroomStoryProvider(id).future,
+    );
+    if (current == null) return false;
+    final ShowroomStoryModel next = draft.applyToStory(current);
+    await ref.read(showroomStoryUseCaseProvider).saveStory(next);
+    ref.invalidate(showroomStoryProvider(id));
+    ref
+        .read(hotShowroomSliderVm.notifier)
+        .applyEditedShowroom(
+          id: id,
+          title: next.title,
+          thumbnailUrl: next.thumbnailUrl,
+          themeName: next.themeName,
+        );
+    return true;
   }
 
   bool _syncScheduled = false;
@@ -111,8 +210,43 @@ class _ShowroomWriteDetailScreenState
     return selection.extentOffset.clamp(0, max);
   }
 
+  bool get _editing {
+    final String id = widget.showroomId?.trim() ?? '';
+    return id.isNotEmpty;
+  }
+
+  void _applyDraft(ShowroomDraft draft) {
+    _title.text = draft.title;
+    _budget.text = draft.budget.replaceAll('원', '').trim();
+  }
+
   void _seed() {
     if (!mounted) return;
+    final String showroomId = widget.showroomId?.trim() ?? '';
+    if (showroomId.isNotEmpty) {
+      final AsyncValue<ShowroomStoryModel?> loaded = ref.read(
+        showroomStoryProvider(showroomId),
+      );
+      final ShowroomStoryModel? ready = loaded.asData?.value;
+      if (ready != null || loaded.hasError || loaded.hasValue) {
+        _applyDraft(
+          ready == null ? _composer.seed() : _composer.seedFromStory(ready),
+        );
+        return;
+      }
+      ref.read(showroomStoryProvider(showroomId).future).then((
+        ShowroomStoryModel? story,
+      ) {
+        if (!mounted) return;
+        _applyDraft(
+          story == null ? _composer.seed() : _composer.seedFromStory(story),
+        );
+      }, onError: (Object _, StackTrace _) {
+        if (!mounted) return;
+        _applyDraft(_composer.seed());
+      });
+      return;
+    }
     final SpaceBoard board = ref.read(spaceBoardProvider);
     final String? id = widget.buildId;
     final SpaceProject? project =
@@ -128,8 +262,7 @@ class _ShowroomWriteDetailScreenState
                   : board.constructionFor(project.id)?.recentPhotos ??
                       const <PublicSitePhoto>[],
         );
-    _title.text = draft.title;
-    _budget.text = draft.budget.replaceAll('원', '').trim();
+    _applyDraft(draft);
   }
 
   @override
@@ -346,16 +479,15 @@ class _ShowroomWriteDetailScreenState
 
   Future<void> _pickPeriod(ShowroomDraft draft) async {
     final DateTime now = DateTime.now();
-    final DateTimeRange? range = await showDateRangePicker(
+    final DateTimeRange? range = await showAppDateRangeDialog(
       context: context,
+      title: '시공 기간',
       firstDate: DateTime(now.year - 5),
       lastDate: DateTime(now.year + 5),
-      initialDateRange:
+      initialRange:
           draft.periodStart != null && draft.periodEnd != null
               ? DateTimeRange(start: draft.periodStart!, end: draft.periodEnd!)
               : null,
-      helpText: '시공 기간',
-      saveText: '선택',
     );
     if (range == null || !mounted) return;
     _composer.setPeriodRange(range.start, range.end);
@@ -441,6 +573,7 @@ class _ShowroomWriteDetailScreenState
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     _ensureQuill(draft.blocks);
+    _rememberOpened(draft);
     final QuillController quill = _quill!;
 
     final bool fromSpace = draft.projectId.isNotEmpty;
@@ -457,10 +590,17 @@ class _ShowroomWriteDetailScreenState
     if (!tuckPreview) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _syncPreviewHeight());
     }
-    return Scaffold(
+    final bool edited = _hasEdits(draft);
+    return PopScope(
+      canPop: !edited,
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (didPop) return;
+        _confirmLeave(draft);
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
       resizeToAvoidBottomInset: !writingBody,
-      appBar: AppBar(title: const Text('쇼룸 글쓰기')),
+      appBar: AppBar(title: Text(_editing ? '쇼룸 수정' : '쇼룸 글쓰기')),
       body: Column(
         children: [
           Expanded(
@@ -470,7 +610,9 @@ class _ShowroomWriteDetailScreenState
               padding: EdgeInsets.fromLTRB(20, 4, 20, writingBody ? 220 : 48),
               children: [
                 Text(
-                  fromSpace
+                  _editing
+                      ? '올려 둔 글을 고치고 있어요'
+                      : fromSpace
                       ? '${draft.projectName}에서 가져왔어요'
                       : '조건과 사진을 직접 적어 주세요',
                   style: const TextStyle(
@@ -641,6 +783,7 @@ class _ShowroomWriteDetailScreenState
               onPressed: () => _openPreview(draft),
             ),
         ],
+      ),
       ),
     );
   }
