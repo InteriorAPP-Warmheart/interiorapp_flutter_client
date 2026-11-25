@@ -173,17 +173,17 @@ class _WapllIntroScreenState extends State<WapllIntroScreen> {
           controller: _scroll,
           padding: EdgeInsets.fromLTRB(inset.left, 8, inset.right, 28),
           children: [
-            _Hero(key: _keys[0], fontScale: fontScale),
+            _Hero(key: _keys[0], fontScale: fontScale, scroll: _scroll),
             SizedBox(height: gap),
-            _Cost(key: _keys[1], fontScale: fontScale),
+            _Cost(key: _keys[1], fontScale: fontScale, scroll: _scroll),
             SizedBox(height: gap),
-            _Direct(key: _keys[2], fontScale: fontScale),
+            _Direct(key: _keys[2], fontScale: fontScale, scroll: _scroll),
             SizedBox(height: gap),
             _AppFlow(key: _keys[3], fontScale: fontScale, scroll: _scroll),
             SizedBox(height: gap),
-            _Community(key: _keys[4], fontScale: fontScale),
+            _Community(key: _keys[4], fontScale: fontScale, scroll: _scroll),
             SizedBox(height: gap),
-            _Close(key: _keys[5], fontScale: fontScale),
+            _Close(key: _keys[5], fontScale: fontScale, scroll: _scroll),
           ],
         ),
       ),
@@ -238,76 +238,450 @@ class _NavTab extends StatelessWidget {
   }
 }
 
-class _Hero extends StatelessWidget {
-  const _Hero({super.key, required this.fontScale});
+/// 구간이 화면에 들어오면 한 번 0에서 1로 오른다. 안쪽 조각은 [_Rise]로 순서대로 나온다.
+class _Reveal extends StatefulWidget {
+  const _Reveal({required this.scroll, required this.child});
 
-  final double fontScale;
+  final ScrollController scroll;
+  final Widget child;
+
+  @override
+  State<_Reveal> createState() => _RevealState();
+}
+
+class _RevealState extends State<_Reveal> with SingleTickerProviderStateMixin {
+  late final AnimationController _motion = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  );
+  bool _listening = true;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.scroll.addListener(_check);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _check());
+  }
+
+  @override
+  void didUpdateWidget(covariant _Reveal oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.scroll != widget.scroll && _listening) {
+      oldWidget.scroll.removeListener(_check);
+      widget.scroll.addListener(_check);
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_listening) widget.scroll.removeListener(_check);
+    _motion.dispose();
+    super.dispose();
+  }
+
+  void _stopListening() {
+    if (!_listening) return;
+    _listening = false;
+    widget.scroll.removeListener(_check);
+  }
+
+  void _check() {
+    if (!mounted || !_listening) return;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _motion.value = 1;
+      _stopListening();
+      return;
+    }
+    final RenderObject? object = context.findRenderObject();
+    if (object is! RenderBox || !object.hasSize || !object.attached) return;
+    final double top = object.localToGlobal(Offset.zero).dy;
+    final double screen = MediaQuery.sizeOf(context).height;
+    if (top < screen * 0.86) {
+      _motion.forward();
+      _stopListening();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return _Panel(
+    return _RevealScope(animation: _motion, child: widget.child);
+  }
+}
+
+class _RevealScope extends InheritedWidget {
+  const _RevealScope({required this.animation, required super.child});
+
+  final Animation<double> animation;
+
+  static Animation<double> of(BuildContext context) {
+    return context
+            .dependOnInheritedWidgetOfExactType<_RevealScope>()
+            ?.animation ??
+        const AlwaysStoppedAnimation<double>(1);
+  }
+
+  @override
+  bool updateShouldNotify(_RevealScope oldWidget) =>
+      oldWidget.animation != animation;
+}
+
+/// [order]번째로 아래에서 살짝 떠오르며 나타난다.
+class _Rise extends StatelessWidget {
+  const _Rise({required this.order, required this.child, this.lift = 18});
+
+  final int order;
+  final double lift;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final Animation<double> motion = _RevealScope.of(context);
+    final double start = (order * 0.1).clamp(0.0, 0.6);
+    final Interval curve = Interval(
+      start,
+      (start + 0.45).clamp(0.0, 1.0),
+      curve: Curves.easeOutCubic,
+    );
+    return AnimatedBuilder(
+      animation: motion,
+      child: child,
+      builder: (BuildContext context, Widget? child) {
+        final double value = curve.transform(motion.value);
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, lift * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 왼쪽에서 오른쪽으로 차오른다. 막대와 잇는 선에 쓴다.
+class _Grow extends StatelessWidget {
+  const _Grow({required this.order, required this.child, this.from = 0});
+
+  final int order;
+  final double from;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final Animation<double> motion = _RevealScope.of(context);
+    final double start = (order * 0.1).clamp(0.0, 0.6);
+    final Interval curve = Interval(
+      start,
+      (start + 0.5).clamp(0.0, 1.0),
+      curve: Curves.easeOutQuart,
+    );
+    return AnimatedBuilder(
+      animation: motion,
+      child: child,
+      builder: (BuildContext context, Widget? child) {
+        final double value = curve.transform(motion.value);
+        final double factor = from + (1 - from) * value;
+        // 크기는 내용 그대로 두고, 그리는 영역만 왼쪽에서 늘린다.
+        return ClipRect(clipper: _LeftClip(factor), child: child);
+      },
+    );
+  }
+}
+
+/// 왼쪽부터 [factor]만큼만 보여 준다. 배치는 바꾸지 않는다.
+class _LeftClip extends CustomClipper<Rect> {
+  const _LeftClip(this.factor);
+
+  final double factor;
+
+  @override
+  Rect getClip(Size size) {
+    return Rect.fromLTWH(0, 0, size.width * factor.clamp(0, 1), size.height);
+  }
+
+  @override
+  bool shouldReclip(covariant _LeftClip oldClipper) {
+    return oldClipper.factor != factor;
+  }
+}
+
+/// 마스코트가 제자리에서 천천히 오르내린다.
+class _Floating extends StatefulWidget {
+  const _Floating({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_Floating> createState() => _FloatingState();
+}
+
+class _FloatingState extends State<_Floating>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _motion = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2600),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _motion.stop();
+    } else if (!_motion.isAnimating) {
+      _motion.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _motion.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _motion,
+      child: widget.child,
+      builder: (BuildContext context, Widget? child) {
+        final double t = Curves.easeInOut.transform(_motion.value);
+        return Transform.translate(offset: Offset(0, -6 * t), child: child);
+      },
+    );
+  }
+}
+
+class _Hero extends StatelessWidget {
+  const _Hero({super.key, required this.fontScale, required this.scroll});
+
+  final double fontScale;
+  final ScrollController scroll;
+
+  @override
+  Widget build(BuildContext context) {
+    return _Reveal(
+      scroll: scroll,
+      child: _NavyStage(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _Rise(order: 0, child: _Eyebrow(label: 'WAPLL', onDark: true)),
+            const SizedBox(height: 14),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: _Rise(
+                    order: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '인테리어의\n새로운 기준, 와플',
+                          style: TextStyle(
+                            fontSize: 27 * fontScale,
+                            height: 1.3,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.8,
+                            color: AppColors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          '투명한 가격, 정직한 시공.',
+                          style: TextStyle(
+                            fontSize: 15 * fontScale,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.white.withValues(alpha: 0.72),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                _Rise(
+                  order: 2,
+                  child: _Floating(
+                    child: AppAssetImage(
+                      _mascot,
+                      width: 92,
+                      height: 92,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                for (final (int i, (IconData, String) item)
+                    in const [
+                      (Icons.receipt_long_outlined, '투명한 가격'),
+                      (Icons.architecture_outlined, '정직한 시공'),
+                      (Icons.savings_outlined, '합리적인 제안'),
+                    ].indexed) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  Expanded(
+                    child: _Rise(
+                      order: 3 + i,
+                      child: _GlassPillar(
+                        icon: item.$1,
+                        label: item.$2,
+                        fontScale: fontScale,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Cost extends StatelessWidget {
+  const _Cost({super.key, required this.fontScale, required this.scroll});
+
+  final double fontScale;
+  final ScrollController scroll;
+
+  @override
+  Widget build(BuildContext context) {
+    return _Reveal(
+      scroll: scroll,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          _Heading(
+            fontScale: fontScale,
+            number: '01',
+            label: '비용',
+            title: '공사비는 이렇게 나뉩니다',
+          ),
+          const SizedBox(height: 16),
+          _Panel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      '인테리어의 새로운 기준, 와플',
-                      style: TextStyle(
-                        fontSize: 18 * fontScale,
-                        height: 1.35,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.3,
-                        color: AppColors.textPrimary,
+                    Expanded(
+                      child: _Rise(
+                        order: 0,
+                        child: _Tile(
+                          icon: Icons.layers_outlined,
+                          label: '자재비',
+                          fontScale: fontScale,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '투명한 가격, 정직한 시공.',
-                      style: TextStyle(
-                        fontSize: 14 * fontScale,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
+                    const _Rise(order: 1, child: _Operator(symbol: '+')),
+                    Expanded(
+                      child: _Rise(
+                        order: 1,
+                        child: _Tile(
+                          icon: Icons.engineering_outlined,
+                          label: '인건비',
+                          fontScale: fontScale,
+                        ),
+                      ),
+                    ),
+                    const _Rise(order: 2, child: _Operator(symbol: '+')),
+                    Expanded(
+                      child: _Rise(
+                        order: 2,
+                        child: _Tile(
+                          icon: Icons.receipt_outlined,
+                          label: '경비',
+                          fontScale: fontScale,
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              AppAssetImage(
-                _mascot,
-                width: 72,
-                height: 72,
-                fit: BoxFit.contain,
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: const <Widget>[
-              Expanded(
-                child: _Cell(
-                  icon: Icons.receipt_long_outlined,
-                  label: '투명한 가격',
+                const _Rise(order: 3, lift: 8, child: _Flow()),
+                _Rise(
+                  order: 3,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.14),
+                      ),
+                    ),
+                    child: Text(
+                      '실제 공사 비용',
+                      style: TextStyle(
+                        fontSize: 16 * fontScale,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              SizedBox(width: 8),
-              Expanded(
-                child: _Cell(
-                  icon: Icons.architecture_outlined,
-                  label: '정직한 시공',
+                const _Rise(order: 4, lift: 8, child: _Flow()),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: _Grow(
+                        order: 5,
+                        from: 0.35,
+                        child: _ProfitBar(fontScale: fontScale),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    _Rise(
+                      order: 6,
+                      child: _Floating(
+                        child: AppAssetImage(
+                          _mascotHappy,
+                          width: 64,
+                          height: 64,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              SizedBox(width: 8),
-              Expanded(
-                child: _Cell(icon: Icons.savings_outlined, label: '합리적인 제안'),
-              ),
-            ],
+                const SizedBox(height: 16),
+                _Rise(
+                  order: 6,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(top: 1),
+                        child: Icon(
+                          Icons.info_outline,
+                          size: 15,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          '부가세와 별도·추가 공사는 견적에서 따로 안내합니다.',
+                          style: TextStyle(
+                            fontSize: 13 * fontScale,
+                            height: 1.4,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -315,121 +689,107 @@ class _Hero extends StatelessWidget {
   }
 }
 
-class _Cost extends StatelessWidget {
-  const _Cost({super.key, required this.fontScale});
-
-  final double fontScale;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _Heading(fontScale: fontScale, title: '공사비는 이렇게 나뉩니다'),
-        const SizedBox(height: 12),
-        _Panel(
-          child: Column(
-            children: [
-              const Row(
-                children: <Widget>[
-                  Expanded(
-                    child: _Cell(icon: Icons.layers_outlined, label: '자재비'),
-                  ),
-                  _Plus(),
-                  Expanded(
-                    child: _Cell(
-                      icon: Icons.engineering_outlined,
-                      label: '인건비',
-                    ),
-                  ),
-                  _Plus(),
-                  Expanded(
-                    child: _Cell(icon: Icons.receipt_outlined, label: '경비'),
-                  ),
-                ],
-              ),
-              const _Down(),
-              const _SumBar(label: '실제 공사 비용'),
-              const _Down(),
-              Row(
-                children: [
-                  Expanded(child: _ProfitBar(fontScale: fontScale)),
-                  const SizedBox(width: 8),
-                  AppAssetImage(
-                    _mascotHappy,
-                    width: 64,
-                    height: 64,
-                    fit: BoxFit.contain,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                '부가세와 별도·추가 공사는 견적에서 따로 안내합니다.',
-                style: TextStyle(
-                  fontSize: 12 * fontScale,
-                  height: 1.4,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _Direct extends StatelessWidget {
-  const _Direct({super.key, required this.fontScale});
+  const _Direct({super.key, required this.fontScale, required this.scroll});
 
   final double fontScale;
+  final ScrollController scroll;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _Heading(fontScale: fontScale, title: '맡겨 둔 공사, 고르는 공사'),
-        const SizedBox(height: 12),
-        const _Panel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    Expanded(
-                      child: _PlainColumn(
-                        title: '도급 공사',
-                        lines: <String>[
-                          '믿을 수 없는 견적',
-                          '전부 맡겨 둔 비용',
-                          '계속 추가되는 비용',
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: _MarkedColumn(
-                        title: '직영 공사',
-                        lines: <String>['항목이 보이는 견적', '자재·인력을 선택', '필요한 만큼만'],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 16),
-              _Assist(
-                icon: Icons.verified_user_outlined,
-                title: '감리',
-                body: '믿을 만한 감리가 공사를 돕습니다',
-              ),
-            ],
+    return _Reveal(
+      scroll: scroll,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _Heading(
+            fontScale: fontScale,
+            number: '02',
+            label: '직영',
+            title: '맡겨 둔 공사, 고르는 공사',
           ),
-        ),
-      ],
+          const SizedBox(height: 16),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _Rise(
+                    order: 0,
+                    child: _CompareCard(
+                      title: '도급 공사',
+                      lines: const ['믿을 수 없는 견적', '전부 맡겨 둔 비용', '계속 추가되는 비용'],
+                      fontScale: fontScale,
+                      chosen: false,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _Rise(
+                    order: 2,
+                    child: _CompareCard(
+                      title: '직영 공사',
+                      lines: const ['항목이 보이는 견적', '자재·인력을 선택', '필요한 만큼만'],
+                      fontScale: fontScale,
+                      chosen: true,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          _Rise(
+            order: 4,
+            child: _Panel(
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.verified_user_outlined,
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '감리',
+                          style: TextStyle(
+                            fontSize: 15 * fontScale,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '믿을 만한 감리가 공사를 돕습니다',
+                          style: TextStyle(
+                            fontSize: 13 * fontScale,
+                            height: 1.4,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -445,9 +805,17 @@ class _AppFlow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _Heading(fontScale: fontScale, title: '상담부터 현장까지 한곳'),
-        const SizedBox(height: 12),
-        _Panel(child: _AppStage(fontScale: fontScale, scroll: scroll)),
+        _Heading(
+          fontScale: fontScale,
+          number: '03',
+          label: '앱',
+          title: '상담부터 현장까지 한곳',
+        ),
+        const SizedBox(height: 16),
+        _Panel(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 22),
+          child: _AppStage(fontScale: fontScale, scroll: scroll),
+        ),
       ],
     );
   }
@@ -931,95 +1299,65 @@ class _SplashGlass extends StatelessWidget {
 }
 
 class _Community extends StatelessWidget {
-  const _Community({super.key, required this.fontScale});
+  const _Community({super.key, required this.fontScale, required this.scroll});
 
   final double fontScale;
+  final ScrollController scroll;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _Heading(fontScale: fontScale, title: '경험이 다음 사람에게'),
-        const SizedBox(height: 12),
-        const _Panel(
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                child: _Cell(icon: Icons.photo_outlined, label: '끝난 공간'),
-              ),
-              _Arrow(),
-              Expanded(
-                child: _Cell(icon: Icons.grid_view_rounded, label: '쇼룸'),
-              ),
-              _Arrow(),
-              Expanded(
-                child: _Cell(icon: Icons.person_outline, label: '다음 사람'),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _Close extends StatelessWidget {
-  const _Close({super.key, required this.fontScale});
-
-  final double fontScale;
-
-  @override
-  Widget build(BuildContext context) {
-    return _Panel(
+    const List<(IconData, String)> nodes = [
+      (Icons.photo_outlined, '끝난 공간'),
+      (Icons.grid_view_rounded, '쇼룸'),
+      (Icons.person_outline, '다음 사람'),
+    ];
+    return _Reveal(
+      scroll: scroll,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '더 좋은 공간을 만드는\n새로운 방법.',
-                      style: TextStyle(
-                        fontSize: 18 * fontScale,
-                        height: 1.35,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.3,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '이제 와플과 시작하세요.',
-                      style: TextStyle(
-                        fontSize: 14 * fontScale,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              AppAssetImage(
-                _mascot,
-                width: 72,
-                height: 72,
-                fit: BoxFit.contain,
-              ),
-            ],
+          _Heading(
+            fontScale: fontScale,
+            number: '04',
+            label: '커뮤니티',
+            title: '경험이 다음 사람에게',
           ),
-          const SizedBox(height: 14),
-          const Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: <Widget>[
-              _Chip(label: '투명한 견적'),
-              _Chip(label: '합리적인 시공'),
-              _Chip(label: '이어지는 경험'),
-            ],
+          const SizedBox(height: 16),
+          _Panel(
+            padding: const EdgeInsets.fromLTRB(12, 22, 12, 20),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final (int i, (IconData, String) node)
+                    in nodes.indexed) ...[
+                  if (i > 0)
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 25),
+                        child: _Grow(
+                          order: i * 2 - 1,
+                          child: Container(
+                            height: 2,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.25),
+                              borderRadius: BorderRadius.circular(99),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  _Rise(
+                    order: i * 2,
+                    child: _Node(
+                      icon: node.$1,
+                      label: node.$2,
+                      strong: i == nodes.length - 1,
+                      fontScale: fontScale,
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
         ],
       ),
@@ -1027,53 +1365,312 @@ class _Close extends StatelessWidget {
   }
 }
 
-class _Heading extends StatelessWidget {
-  const _Heading({required this.fontScale, required this.title});
+class _Close extends StatelessWidget {
+  const _Close({super.key, required this.fontScale, required this.scroll});
 
   final double fontScale;
-  final String title;
+  final ScrollController scroll;
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 18 * fontScale,
-        height: 1.35,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.3,
-        color: AppColors.textPrimary,
+    return _Reveal(
+      scroll: scroll,
+      child: _NavyStage(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: _Rise(
+                    order: 0,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '더 좋은 공간을 만드는\n새로운 방법.',
+                          style: TextStyle(
+                            fontSize: 23 * fontScale,
+                            height: 1.35,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.6,
+                            color: AppColors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '이제 와플과 시작하세요.',
+                          style: TextStyle(
+                            fontSize: 15 * fontScale,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.white.withValues(alpha: 0.72),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                _Rise(
+                  order: 1,
+                  child: _Floating(
+                    child: AppAssetImage(
+                      _mascot,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final (int i, String label)
+                    in const ['투명한 견적', '합리적인 시공', '이어지는 경험'].indexed)
+                  _Rise(
+                    order: 2 + i,
+                    child: _Chip(label: label, fontScale: fontScale),
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _Cell extends StatelessWidget {
-  const _Cell({required this.icon, required this.label});
+/// 소개의 처음과 끝에 쓰는 남색 무대. 오른쪽 위에 옅은 원을 겹쳐 깊이를 준다.
+class _NavyStage extends StatelessWidget {
+  const _NavyStage({required this.child});
 
-  final IconData icon;
-  final String label;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.primary, AppColors.primaryPressed],
+          ),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -70,
+              top: -80,
+              child: _Glow(size: 220, alpha: 0.07),
+            ),
+            Positioned(
+              left: -50,
+              bottom: -90,
+              child: _Glow(size: 180, alpha: 0.05),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
+              child: child,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Glow extends StatelessWidget {
+  const _Glow({required this.size, required this.alpha});
+
+  final double size;
+  final double alpha;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(6, 12, 6, 12),
+      width: size,
+      height: size,
       decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
+        shape: BoxShape.circle,
+        color: AppColors.white.withValues(alpha: alpha),
+      ),
+    );
+  }
+}
+
+class _Eyebrow extends StatelessWidget {
+  const _Eyebrow({required this.label, this.onDark = false});
+
+  final String label;
+  final bool onDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 2.4,
+        color:
+            onDark
+                ? AppColors.white.withValues(alpha: 0.6)
+                : AppColors.primary.withValues(alpha: 0.7),
+      ),
+    );
+  }
+}
+
+class _GlassPillar extends StatelessWidget {
+  const _GlassPillar({
+    required this.icon,
+    required this.label,
+    required this.fontScale,
+  });
+
+  final IconData icon;
+  final String label;
+  final double fontScale;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 14, 8, 13),
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.12)),
       ),
       child: Column(
         children: [
-          Icon(icon, size: 20, color: AppColors.primary),
+          Icon(icon, size: 22, color: AppColors.white),
           const SizedBox(height: 8),
           Text(
             label,
             textAlign: TextAlign.center,
-            maxLines: 2,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 12,
-              height: 1.25,
+            style: TextStyle(
+              fontSize: 13 * fontScale,
+              fontWeight: FontWeight.w700,
+              color: AppColors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 구간 제목. 위에 "01 · 비용"처럼 번호와 이름을 작게 둔다.
+class _Heading extends StatelessWidget {
+  const _Heading({
+    required this.fontScale,
+    required this.number,
+    required this.label,
+    required this.title,
+  });
+
+  final double fontScale;
+  final String number;
+  final String label;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                number,
+                style: TextStyle(
+                  fontSize: 13 * fontScale,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primary,
+                ),
+              ),
+              Container(
+                width: 18,
+                height: 1.5,
+                margin: const EdgeInsets.symmetric(horizontal: 8),
+                color: AppColors.primary.withValues(alpha: 0.35),
+              ),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13 * fontScale,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 22 * fontScale,
+              height: 1.3,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.6,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Tile extends StatelessWidget {
+  const _Tile({
+    required this.icon,
+    required this.label,
+    required this.fontScale,
+  });
+
+  final IconData icon;
+  final String label;
+  final double fontScale;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(6, 16, 6, 14),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: AppColors.surface,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 20, color: AppColors.primary),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 14 * fontScale,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
             ),
@@ -1084,80 +1681,50 @@ class _Cell extends StatelessWidget {
   }
 }
 
-class _Arrow extends StatelessWidget {
-  const _Arrow();
+class _Operator extends StatelessWidget {
+  const _Operator({required this.symbol});
+
+  final String symbol;
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox(
-      width: 16,
-      child: Icon(
-        Icons.arrow_forward_ios,
-        size: 11,
-        color: AppColors.textSecondary,
-      ),
-    );
-  }
-}
-
-class _Plus extends StatelessWidget {
-  const _Plus();
-
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox(
-      width: 16,
-      child: Text(
-        '+',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textSecondary,
+    return SizedBox(
+      width: 22,
+      child: Center(
+        child: Text(
+          symbol,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textSecondary,
+          ),
         ),
       ),
     );
   }
 }
 
-class _Down extends StatelessWidget {
-  const _Down();
+/// 위에서 아래로 이어지는 짧은 흐름 표시.
+class _Flow extends StatelessWidget {
+  const _Flow();
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 6),
-      child: Icon(
-        Icons.arrow_downward,
-        size: 16,
-        color: AppColors.textSecondary,
-      ),
-    );
-  }
-}
-
-class _SumBar extends StatelessWidget {
-  const _SumBar({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Column(
+        children: [
+          Container(
+            width: 1.5,
+            height: 10,
+            color: AppColors.primary.withValues(alpha: 0.25),
+          ),
+          Icon(
+            Icons.keyboard_arrow_down_rounded,
+            size: 18,
+            color: AppColors.primary.withValues(alpha: 0.5),
+          ),
+        ],
       ),
     );
   }
@@ -1171,33 +1738,56 @@ class _ProfitBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      padding: const EdgeInsets.fromLTRB(18, 16, 16, 16),
       decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          colors: [AppColors.primary, AppColors.primaryPressed],
+        ),
       ),
       child: Row(
         children: [
           Text(
             '10%',
+            maxLines: 1,
+            softWrap: false,
             style: TextStyle(
-              fontSize: 28 * fontScale,
+              fontSize: 30 * fontScale,
               height: 1,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.6,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.8,
               color: AppColors.white,
             ),
           ),
-          const SizedBox(width: 10),
-          const Expanded(
-            child: Text(
-              '기업 이윤\n공사 비용 합계에 산정',
-              style: TextStyle(
-                fontSize: 12,
-                height: 1.35,
-                fontWeight: FontWeight.w600,
-                color: AppColors.white,
-              ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '기업 이윤',
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.fade,
+                  style: TextStyle(
+                    fontSize: 14 * fontScale,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '공사 비용 합계에 산정',
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.fade,
+                  style: TextStyle(
+                    fontSize: 12 * fontScale,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.white.withValues(alpha: 0.72),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -1206,193 +1796,205 @@ class _ProfitBar extends StatelessWidget {
   }
 }
 
-class _PlainColumn extends StatelessWidget {
-  const _PlainColumn({required this.title, required this.lines});
+/// 도급과 직영을 나란히 둔다. 고른 쪽(직영)은 남색 카드로 앞에 선다.
+class _CompareCard extends StatelessWidget {
+  const _CompareCard({
+    required this.title,
+    required this.lines,
+    required this.fontScale,
+    required this.chosen,
+  });
 
   final String title;
   final List<String> lines;
+  final double fontScale;
+  final bool chosen;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.2,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 14),
-        for (final String line in lines)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(
-              line,
-              style: const TextStyle(
-                fontSize: 13,
-                height: 1.35,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _MarkedColumn extends StatelessWidget {
-  const _MarkedColumn({required this.title, required this.lines});
-
-  final String title;
-  final List<String> lines;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(left: BorderSide(color: AppColors.primary, width: 2)),
+    final Color ink = chosen ? AppColors.white : AppColors.textSecondary;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 18, 14, 8),
+      decoration: BoxDecoration(
+        color: chosen ? AppColors.primary : AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: chosen ? null : Border.all(color: AppColors.border, width: 0.7),
+        boxShadow:
+            chosen
+                ? const [
+                  BoxShadow(
+                    color: Color(0x290B1F38),
+                    blurRadius: 18,
+                    offset: Offset(0, 8),
+                  ),
+                ]
+                : null,
       ),
-      child: Padding(
-        padding: const EdgeInsets.only(left: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.2,
-                color: AppColors.primary,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 15 * fontScale,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.3,
+              color: chosen ? AppColors.white : AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 14),
+          for (final String line in lines)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 18,
+                    height: 18,
+                    margin: const EdgeInsets.only(top: 1),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color:
+                          chosen
+                              ? AppColors.white.withValues(alpha: 0.16)
+                              : AppColors.background,
+                    ),
+                    child: Icon(
+                      chosen ? Icons.check_rounded : Icons.close_rounded,
+                      size: 12,
+                      color: ink,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      line,
+                      style: TextStyle(
+                        fontSize: 13 * fontScale,
+                        height: 1.4,
+                        fontWeight: chosen ? FontWeight.w700 : FontWeight.w500,
+                        color: ink,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 14),
-            for (final String line in lines)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    const Padding(
-                      padding: EdgeInsets.only(top: 2),
-                      child: Icon(
-                        Icons.check,
-                        size: 14,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        line,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          height: 1.35,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }
 }
 
-class _Assist extends StatelessWidget {
-  const _Assist({required this.icon, required this.title, required this.body});
+class _Node extends StatelessWidget {
+  const _Node({
+    required this.icon,
+    required this.label,
+    required this.strong,
+    required this.fontScale,
+  });
 
   final IconData icon;
-  final String title;
-  final String body;
+  final String label;
+  final bool strong;
+  final double fontScale;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.only(top: 1),
-          child: Icon(icon, size: 18, color: AppColors.primary),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                body,
-                style: const TextStyle(
-                  fontSize: 12,
-                  height: 1.35,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
+    return SizedBox(
+      width: 72,
+      child: Column(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color:
+                  strong
+                      ? AppColors.primary
+                      : AppColors.primary.withValues(alpha: 0.07),
+            ),
+            child: Icon(
+              icon,
+              size: 22,
+              color: strong ? AppColors.white : AppColors.primary,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 10),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.visible,
+            style: TextStyle(
+              fontSize: 13 * fontScale,
+              fontWeight: strong ? FontWeight.w800 : FontWeight.w600,
+              color: strong ? AppColors.textPrimary : AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _Chip extends StatelessWidget {
-  const _Chip({required this.label});
+  const _Chip({required this.label, required this.fontScale});
 
   final String label;
+  final double fontScale;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: AppColors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.14)),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.check_rounded, size: 14, color: AppColors.white),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13 * fontScale,
+              fontWeight: FontWeight.w700,
+              color: AppColors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class _Panel extends StatelessWidget {
-  const _Panel({required this.child});
+  const _Panel({
+    required this.child,
+    this.padding = const EdgeInsets.fromLTRB(18, 18, 18, 18),
+  });
 
   final Widget child;
+  final EdgeInsets padding;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      padding: padding,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFD7DCE3)),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border, width: 0.7),
       ),
       child: child,
     );
