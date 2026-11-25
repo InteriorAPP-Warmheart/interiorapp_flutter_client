@@ -871,6 +871,7 @@ class SpaceApi {
               workPlace: record.workPlace,
               finishes: record.finishes,
               styleRef: record.styleRef,
+              coverPhoto: record.coverPhoto,
             );
     consults.removeWhere((PrepRecord item) => item.id == stored.id);
     final SpaceProject project = SpaceProject(
@@ -879,7 +880,7 @@ class SpaceApi {
       statusLabel: '상담 · 접수',
       nextAction: '담당자가 내용을 확인하고 전화로 연락해요',
       phase: SpacePhase.consult,
-      imageUrl: '',
+      imageUrl: stored.coverPhoto,
       completed: false,
     );
     received.insert(0, project);

@@ -1,7 +1,7 @@
 import 'package:interiorapp_flutter_client/build/domain/entity/construction_progress.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 
-/// 내공간의 상담, 후보지, 진행 현장.
+/// 내공간의 상담, 저장한 입지, 진행 현장.
 abstract class SpaceRepository {
   static const int maxTrades = 2;
 

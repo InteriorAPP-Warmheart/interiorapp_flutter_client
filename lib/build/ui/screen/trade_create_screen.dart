@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:interiorapp_flutter_client/build/domain/entity/space_project.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/kakao_address_search_screen.dart';
+import 'package:interiorapp_flutter_client/build/ui/widget/cover_photo_field.dart';
+import 'package:interiorapp_flutter_client/build/ui/widget/form_parts.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/form_step_header.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/build/presentation/provider/build_provider.dart';
@@ -9,7 +11,7 @@ import 'package:interiorapp_flutter_client/build/ui/screen/trade_detail_screen.d
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 
-/// 상권 분석 전에 남겨 두는 후보지. 성공 여부를 묻거나 점수를 만들지 않는다.
+/// 입지 선정에서 저장해 두는 곳. 성공 여부를 묻거나 점수를 만들지 않는다.
 class TradeCreateScreen extends ConsumerStatefulWidget {
   const TradeCreateScreen({super.key, this.initial});
 
@@ -20,7 +22,7 @@ class TradeCreateScreen extends ConsumerStatefulWidget {
 }
 
 class _TradeCreateScreenState extends ConsumerState<TradeCreateScreen> {
-  static const List<String> _steps = ['자리', '주변', '메모'];
+  static const List<String> _steps = ['위치', '주변 환경', '비용·메모'];
 
   final TextEditingController _name = TextEditingController();
   final TextEditingController _industryNote = TextEditingController();
@@ -48,6 +50,7 @@ class _TradeCreateScreenState extends ConsumerState<TradeCreateScreen> {
   String? _visitor;
   bool _rentUnknown = false;
   List<String> _interiorNotes = [];
+  String _coverPhoto = '';
   String? _error;
 
   @override
@@ -76,6 +79,7 @@ class _TradeCreateScreenState extends ConsumerState<TradeCreateScreen> {
     _visitor = initial.visitor;
     _rentUnknown = initial.rentUnknown;
     _interiorNotes = [...initial.interiorNotes];
+    _coverPhoto = initial.coverPhoto;
     if (TradeChoices.industries.contains(initial.industry)) {
       _industry = initial.industry;
     } else if (initial.industry.isNotEmpty) {
@@ -130,12 +134,13 @@ class _TradeCreateScreenState extends ConsumerState<TradeCreateScreen> {
       rentUnknown: _rentUnknown,
       reason: _reason.text.trim(),
       interiorNotes: _interiorNotes,
+      coverPhoto: _coverPhoto,
     );
   }
 
   String? _validate() {
     if (_step == 0) {
-      if (_name.text.trim().isEmpty) return '후보지 이름을 적어 주세요';
+      if (_name.text.trim().isEmpty) return '입지 이름을 적어 주세요';
       if (_industry == null) return '업종을 골라 주세요';
       if (_industry == TradeChoices.industryOther &&
           _industryNote.text.trim().isEmpty) {
@@ -228,7 +233,13 @@ class _TradeCreateScreenState extends ConsumerState<TradeCreateScreen> {
         backgroundColor: AppColors.background,
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
-          title: const Text('상권 후보지'),
+          title: Text(
+            _saved
+                ? '저장한 입지'
+                : widget.initial == null
+                ? '입지 추가'
+                : '입지 수정',
+          ),
           leading: BackButton(onPressed: _back),
         ),
         body: SafeArea(
@@ -246,6 +257,7 @@ class _TradeCreateScreenState extends ConsumerState<TradeCreateScreen> {
                       onEdit:
                           () => setState(() {
                             _saved = false;
+                            _step = 0;
                             _error = null;
                           }),
                     )
@@ -262,33 +274,23 @@ class _TradeCreateScreenState extends ConsumerState<TradeCreateScreen> {
                           child: ListView(
                             keyboardDismissBehavior:
                                 ScrollViewKeyboardDismissBehavior.onDrag,
-                            padding: EdgeInsets.only(bottom: keyboardInset),
+                            padding: EdgeInsets.only(
+                              bottom: keyboardInset + sectionGap,
+                            ),
                             children: [
-                              if (_step == 0)
-                                _placeStep(fontScale, subGap, sectionGap),
-                              if (_step == 1)
-                                _aroundStep(fontScale, subGap, sectionGap),
-                              if (_step == 2)
-                                _memoStep(fontScale, subGap, sectionGap),
+                              if (_step == 0) ..._placeStep(subGap),
+                              if (_step == 1) ..._aroundStep(subGap),
+                              if (_step == 2) ..._memoStep(subGap),
                             ],
                           ),
                         ),
                         if (_error != null) ...[
-                          Text(
-                            _error!,
-                            style: TextStyle(
-                              fontSize: 13 * fontScale,
-                              color: const Color(0xFFB42318),
-                            ),
-                          ),
                           SizedBox(height: subGap),
+                          _ErrorLine(text: _error!, fontScale: fontScale),
                         ],
+                        SizedBox(height: subGap * 0.75),
                         AppButton(
-                          label: switch (_step) {
-                            0 => '주변 넘어가기',
-                            1 => '메모 넘어가기',
-                            _ => '후보지 저장',
-                          },
+                          label: _step < _steps.length - 1 ? '다음' : '입지 저장',
                           onPressed: _next,
                         ),
                       ],
@@ -299,207 +301,295 @@ class _TradeCreateScreenState extends ConsumerState<TradeCreateScreen> {
     );
   }
 
-  Widget _placeStep(double fontScale, double subGap, double sectionGap) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _Lead(
-          title: '어떤 자리를 볼까요',
-          body:
-              '주소와 업종을 남겨 두면 나중에 이 자리를 기준으로 상권을 볼 수 있어요. 지금은 잘된다, 안된다를 정하지 않아요.',
-          fontScale: fontScale,
+  List<Widget> _placeStep(double subGap) {
+    final double gap = subGap * 1.25;
+    return [
+      const FormIntro(
+        title: '어디를 보고 있나요',
+        body: '사진과 주소, 용도만 남겨 두면 주변을 함께 볼 수 있어요.',
+      ),
+      SizedBox(height: gap * 1.4),
+      FormCard(
+        title: '공간 사진',
+        optional: true,
+        child: CoverPhotoField(
+          photo: _coverPhoto,
+          onChanged: (String value) => setState(() => _coverPhoto = value),
         ),
-        SizedBox(height: sectionGap),
-        _Label(label: '후보지 이름', fontScale: fontScale),
-        SizedBox(height: subGap),
-        _Field(controller: _name, hint: '예: 합정 식당 자리'),
-        SizedBox(height: sectionGap),
-        _Label(label: '업종', fontScale: fontScale),
-        SizedBox(height: subGap),
-        _Chips(
-          values: TradeChoices.industries,
-          selected: _industry == null ? const [] : [_industry!],
-          fontScale: fontScale,
-          onTap: (String value) => setState(() => _industry = value),
+      ),
+      SizedBox(height: gap),
+      FormCard(
+        title: '이름과 용도',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FormItem(
+              label: '입지 이름',
+              child: FormTextInput(
+                controller: _name,
+                hint: '예: 합정역 1층, 성수 오피스 3층',
+              ),
+            ),
+            SizedBox(height: gap),
+            FormItem(
+              label: '업종',
+              child: FormChoiceChips(
+                values: TradeChoices.industries,
+                isSelected: (String value) => value == _industry,
+                onTap: (String value) => setState(() => _industry = value),
+              ),
+            ),
+            if (_industry == TradeChoices.industryOther) ...[
+              SizedBox(height: subGap),
+              FormTextInput(controller: _industryNote, hint: '예: 복지시설, 창고'),
+            ],
+          ],
         ),
-        if (_industry == TradeChoices.industryOther) ...[
-          SizedBox(height: subGap),
-          _Field(controller: _industryNote, hint: '예: 복지시설, 창고'),
-        ],
-        SizedBox(height: sectionGap),
-        _Label(label: '주소', fontScale: fontScale),
-        SizedBox(height: subGap),
-        _AddressBox(
-          address: _address.text,
-          fontScale: fontScale,
-          onTap: _searchAddress,
+      ),
+      SizedBox(height: gap),
+      FormCard(
+        title: '위치',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FormAddressInput(address: _address.text, onTap: _searchAddress),
+            SizedBox(height: subGap),
+            FormTextInput(controller: _detailAddress, hint: '층·호수 (예: 1층)'),
+          ],
         ),
-        SizedBox(height: sectionGap),
-        _Label(label: '층·호수', fontScale: fontScale),
-        SizedBox(height: subGap),
-        _Field(controller: _detailAddress, hint: '예: 1층'),
-        SizedBox(height: sectionGap),
-        _Label(label: '대략 평수', fontScale: fontScale),
-        SizedBox(height: subGap),
-        _Field(
-          controller: _area,
-          hint: '예: 20',
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          onChanged: (String value) {
-            if (value.trim().isNotEmpty && _areaUnknown)
-              setState(() => _areaUnknown = false);
-          },
+      ),
+      SizedBox(height: gap),
+      FormCard(
+        title: '대략 평수',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FormTextInput(
+              controller: _area,
+              hint: _areaUnknown ? '잘 몰라도 괜찮아요' : '예: 20',
+              suffixText: '평',
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              onChanged: (String value) {
+                if (value.trim().isNotEmpty && _areaUnknown) {
+                  setState(() => _areaUnknown = false);
+                }
+              },
+            ),
+            SizedBox(height: subGap),
+            FormChoiceChips(
+              values: const [PrepLabels.areaUnknown],
+              isSelected: (_) => _areaUnknown,
+              onTap:
+                  (_) => setState(() {
+                    _areaUnknown = !_areaUnknown;
+                    if (_areaUnknown) _area.clear();
+                  }),
+            ),
+          ],
         ),
-        SizedBox(height: subGap),
-        _Chips(
-          values: const [PrepLabels.areaUnknown],
-          selected: _areaUnknown ? const [PrepLabels.areaUnknown] : const [],
-          fontScale: fontScale,
-          onTap:
-              (_) => setState(() {
-                _areaUnknown = !_areaUnknown;
-                if (_areaUnknown) _area.clear();
-              }),
-        ),
-      ],
-    );
+      ),
+    ];
   }
 
-  Widget _aroundStep(double fontScale, double subGap, double sectionGap) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _Lead(
-          title: '주변에서 보이는 것만',
-          body: '정확한 유동인구나 매출은 나중에 붙어요. 지금 눈으로 본 것과 모르는 것을 구분해 두면 돼요.',
-          fontScale: fontScale,
+  List<Widget> _aroundStep(double subGap) {
+    final double gap = subGap * 1.25;
+    return [
+      const FormIntro(
+        title: '주변에서 보이는 것만',
+        body: '눈으로 본 것만 고르면 돼요. 모르면 "잘 모르겠어요"를 골라 주세요.',
+      ),
+      SizedBox(height: gap * 1.4),
+      FormCard(
+        title: '길과 이동',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _choice('길은 어떤가요', TradeChoices.access, _access, (String v) {
+              _access = v;
+            }),
+            SizedBox(height: gap),
+            _choice('어떻게 오나요', TradeChoices.transit, _transit, (String v) {
+              _transit = v;
+            }),
+            SizedBox(height: gap),
+            _choice('주차', TradeChoices.parking, _parking, (String v) {
+              _parking = v;
+            }),
+          ],
         ),
-        SizedBox(height: sectionGap),
-        _choice(
-          '길은 어떤가요',
-          TradeChoices.access,
-          _access,
-          (String value) => _access = value,
-          fontScale,
-          subGap,
+      ),
+      SizedBox(height: gap),
+      FormCard(
+        title: '주변 가게',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _choice(
+              '같은 업종이 보이나요',
+              TradeChoices.sameIndustry,
+              _sameIndustry,
+              (String v) => _sameIndustry = v,
+            ),
+            SizedBox(height: gap),
+            FormItem(
+              label: '주변에 많은 업종',
+              optional: true,
+              child: FormTextInput(
+                controller: _nearbyTrades,
+                hint: '예: 카페, 편의점',
+              ),
+            ),
+            SizedBox(height: gap),
+            FormItem(
+              label: '눈에 띄는 주변',
+              optional: true,
+              child: FormTextInput(
+                controller: _landmark,
+                hint: '예: 지하철역, 오피스, 학교',
+              ),
+            ),
+          ],
         ),
-        SizedBox(height: sectionGap),
-        _choice(
-          '어떻게 오나요',
-          TradeChoices.transit,
-          _transit,
-          (String value) => _transit = value,
-          fontScale,
-          subGap,
+      ),
+      SizedBox(height: gap),
+      FormCard(
+        title: '사람',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _choice(
+              '붐비는 시간',
+              TradeChoices.timeBand,
+              _timeBand,
+              (String v) => _timeBand = v,
+            ),
+            SizedBox(height: gap),
+            _choice(
+              '주로 누가 지나나요',
+              TradeChoices.visitor,
+              _visitor,
+              (String v) => _visitor = v,
+            ),
+          ],
         ),
-        SizedBox(height: sectionGap),
-        _choice(
-          '주차',
-          TradeChoices.parking,
-          _parking,
-          (String value) => _parking = value,
-          fontScale,
-          subGap,
-        ),
-        SizedBox(height: sectionGap),
-        _Label(label: '눈에 띄는 주변', fontScale: fontScale),
-        SizedBox(height: subGap),
-        _Field(controller: _landmark, hint: '예: 지하철역, 오피스, 학교'),
-        SizedBox(height: sectionGap),
-        _choice(
-          '같은 업종이 보이나요',
-          TradeChoices.sameIndustry,
-          _sameIndustry,
-          (String value) => _sameIndustry = value,
-          fontScale,
-          subGap,
-        ),
-        SizedBox(height: sectionGap),
-        _Label(label: '주변에 많은 업종', fontScale: fontScale),
-        SizedBox(height: subGap),
-        _Field(controller: _nearbyTrades, hint: '예: 카페, 편의점'),
-        SizedBox(height: sectionGap),
-        _choice(
-          '붐비는 시간',
-          TradeChoices.timeBand,
-          _timeBand,
-          (String value) => _timeBand = value,
-          fontScale,
-          subGap,
-        ),
-        SizedBox(height: sectionGap),
-        _choice(
-          '주로 누가 지나나요',
-          TradeChoices.visitor,
-          _visitor,
-          (String value) => _visitor = value,
-          fontScale,
-          subGap,
-        ),
-        const SizedBox(height: 88),
-      ],
-    );
+      ),
+    ];
   }
 
-  Widget _memoStep(double fontScale, double subGap, double sectionGap) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _Lead(
-          title: '아는 비용과 메모',
-          body: '임대료를 확정값처럼 추정하지 않아요. 이미 들은 조건만 적고, 모르면 그렇게 골라도 돼요.',
-          fontScale: fontScale,
+  List<Widget> _memoStep(double subGap) {
+    final double gap = subGap * 1.25;
+    return [
+      const FormIntro(title: '아는 비용과 메모', body: '이미 들은 조건만 적어요. 모르면 비워 둬도 돼요.'),
+      SizedBox(height: gap * 1.4),
+      FormCard(
+        title: '임대 조건',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FormToggleRow(
+              label: '아직 몰라요',
+              value: _rentUnknown,
+              onChanged: (bool value) => setState(() => _rentUnknown = value),
+            ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child:
+                  _rentUnknown
+                      ? const SizedBox(width: double.infinity)
+                      : Padding(
+                        padding: EdgeInsets.only(top: gap),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: FormItem(
+                                    label: '보증금',
+                                    child: FormTextInput(
+                                      controller: _deposit,
+                                      hint: '5,000만 원',
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: subGap),
+                                Expanded(
+                                  child: FormItem(
+                                    label: '월세',
+                                    child: FormTextInput(
+                                      controller: _rent,
+                                      hint: '250만 원',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: gap),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: FormItem(
+                                    label: '관리비',
+                                    child: FormTextInput(
+                                      controller: _maintenance,
+                                      hint: '20만 원',
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: subGap),
+                                Expanded(
+                                  child: FormItem(
+                                    label: '권리금',
+                                    child: FormTextInput(
+                                      controller: _premium,
+                                      hint: '없음',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+            ),
+          ],
         ),
-        SizedBox(height: sectionGap),
-        _Chips(
-          values: const ['임대 조건은 아직 몰라요'],
-          selected: _rentUnknown ? const ['임대 조건은 아직 몰라요'] : const [],
-          fontScale: fontScale,
-          onTap: (_) => setState(() => _rentUnknown = !_rentUnknown),
+      ),
+      SizedBox(height: gap),
+      FormCard(
+        title: '메모',
+        optional: true,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FormItem(
+              label: '이곳을 보는 이유',
+              child: FormTextInput(
+                controller: _reason,
+                hint: '예: 코너라 간판이 보일 것 같아요',
+                maxLines: 4,
+              ),
+            ),
+            SizedBox(height: gap),
+            FormItem(
+              label: '인테리어에서 먼저 볼 점',
+              help: '여러 개 골라도 돼요.',
+              child: FormChoiceChips(
+                values: TradeChoices.interiorNotes,
+                isSelected: _interiorNotes.contains,
+                onTap: _toggleNote,
+              ),
+            ),
+          ],
         ),
-        if (!_rentUnknown) ...[
-          SizedBox(height: sectionGap),
-          _Label(label: '보증금', fontScale: fontScale),
-          SizedBox(height: subGap),
-          _Field(controller: _deposit, hint: '예: 5,000만 원'),
-          SizedBox(height: sectionGap),
-          _Label(label: '월세', fontScale: fontScale),
-          SizedBox(height: subGap),
-          _Field(controller: _rent, hint: '예: 250만 원'),
-          SizedBox(height: sectionGap),
-          _Label(label: '관리비', fontScale: fontScale),
-          SizedBox(height: subGap),
-          _Field(controller: _maintenance, hint: '예: 20만 원'),
-          SizedBox(height: sectionGap),
-          _Label(label: '권리금', fontScale: fontScale),
-          SizedBox(height: subGap),
-          _Field(controller: _premium, hint: '예: 없음'),
-        ],
-        SizedBox(height: sectionGap),
-        _Label(label: '이 자리를 보는 이유', fontScale: fontScale),
-        SizedBox(height: subGap),
-        _Field(controller: _reason, hint: '예: 코너라 간판이 보일 것 같아요', maxLines: 3),
-        SizedBox(height: sectionGap),
-        _Label(label: '인테리어에서 먼저 볼 점', fontScale: fontScale),
-        SizedBox(height: subGap),
-        Text(
-          '이 자리라면 공간에서 뭘 먼저 볼지 골라 두세요. 없어도 돼요.',
-          style: TextStyle(
-            fontSize: 13 * fontScale,
-            height: 1.4,
-            color: const Color(0xFF1A1A1A),
-          ),
-        ),
-        SizedBox(height: subGap),
-        _Chips(
-          values: TradeChoices.interiorNotes,
-          selected: _interiorNotes,
-          fontScale: fontScale,
-          onTap: _toggleNote,
-        ),
-        const SizedBox(height: 88),
-      ],
-    );
+      ),
+    ];
   }
 
   Widget _choice(
@@ -507,226 +597,50 @@ class _TradeCreateScreenState extends ConsumerState<TradeCreateScreen> {
     List<String> values,
     String? selected,
     ValueChanged<String> onSelected,
-    double fontScale,
-    double subGap,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _Label(label: label, fontScale: fontScale),
-        SizedBox(height: subGap),
-        _Chips(
-          values: values,
-          selected: selected == null ? const [] : [selected],
-          fontScale: fontScale,
-          onTap: (String value) => setState(() => onSelected(value)),
-        ),
-      ],
-    );
-  }
-}
-
-class _Lead extends StatelessWidget {
-  const _Lead({
-    required this.title,
-    required this.body,
-    required this.fontScale,
-  });
-
-  final String title;
-  final String body;
-  final double fontScale;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 22 * fontScale,
-            fontWeight: FontWeight.w700,
-            height: 1.3,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          body,
-          style: TextStyle(
-            fontSize: 14 * fontScale,
-            height: 1.45,
-            color: const Color(0xFF1A1A1A),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _Label extends StatelessWidget {
-  const _Label({required this.label, required this.fontScale});
-
-  final String label;
-  final double fontScale;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: TextStyle(fontSize: 14 * fontScale, fontWeight: FontWeight.w700),
-    );
-  }
-}
-
-class _Field extends StatelessWidget {
-  const _Field({
-    required this.controller,
-    required this.hint,
-    this.maxLines = 1,
-    this.keyboardType,
-    this.onChanged,
-  });
-
-  final TextEditingController controller;
-  final String hint;
-  final int maxLines;
-  final TextInputType? keyboardType;
-  final ValueChanged<String>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final double fontScale = ResponsiveSize.fontScale(context);
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      keyboardType: keyboardType,
-      onChanged: onChanged,
-      style: TextStyle(fontSize: 15 * fontScale),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(
-          fontSize: 15 * fontScale,
-          color: const Color(0xFFB0B0B0),
-        ),
-        filled: true,
-        fillColor: const Color(0xFFFFFFFF),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 14,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE4E4E4)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE4E4E4)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF1A1A1A)),
-        ),
+    return FormItem(
+      label: label,
+      child: FormChoiceChips(
+        values: values,
+        isSelected: (String value) => value == selected,
+        onTap: (String value) => setState(() => onSelected(value)),
       ),
     );
   }
 }
 
-class _AddressBox extends StatelessWidget {
-  const _AddressBox({
-    required this.address,
-    required this.fontScale,
-    required this.onTap,
-  });
+class _ErrorLine extends StatelessWidget {
+  const _ErrorLine({required this.text, required this.fontScale});
 
-  final String address;
+  final String text;
   final double fontScale;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final bool empty = address.isEmpty;
-    return Material(
-      color: const Color(0xFFFFFFFF),
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE4E4E4)),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  empty ? '주소 검색' : address,
-                  style: TextStyle(
-                    fontSize: 15 * fontScale,
-                    color:
-                        empty
-                            ? const Color(0xFFB0B0B0)
-                            : const Color(0xFF1A1A1A),
-                  ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Row(
+          children: [
+            const Icon(Icons.error_outline, size: 18, color: AppColors.error),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                text,
+                style: TextStyle(
+                  fontSize: 14 * fontScale,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.error,
                 ),
               ),
-              const Icon(Icons.search, color: Color(0xFF1A1A1A)),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
-  }
-}
-
-class _Chips extends StatelessWidget {
-  const _Chips({
-    required this.values,
-    required this.selected,
-    required this.fontScale,
-    required this.onTap,
-  });
-
-  final List<String> values;
-  final List<String> selected;
-  final double fontScale;
-  final ValueChanged<String> onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final String value in values)
-          ChoiceChip(
-            label: Text(value),
-            selected: selected.contains(value),
-            onSelected: (_) => onTap(value),
-            labelStyle: TextStyle(
-              fontSize: 14 * fontScale,
-              fontWeight: FontWeight.w600,
-              color:
-                  selected.contains(value)
-                      ? const Color(0xFFFFFFFF)
-                      : const Color(0xFF1A1A1A),
-            ),
-            selectedColor: const Color(0xFF111111),
-            backgroundColor: const Color(0xFFFFFFFF),
-            side: BorderSide(
-              color:
-                  selected.contains(value)
-                      ? const Color(0xFF111111)
-                      : const Color(0xFFE4E4E4),
-            ),
-            showCheckmark: false,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(99),
-            ),
-          ),
-      ],
     );
   }
 }

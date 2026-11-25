@@ -7,8 +7,10 @@ import 'package:interiorapp_flutter_client/build/domain/prep_budget_guide.dart';
 import 'package:interiorapp_flutter_client/build/domain/prep_survey.dart';
 import 'package:interiorapp_flutter_client/build/presentation/provider/build_provider.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/kakao_address_search_screen.dart';
+import 'package:interiorapp_flutter_client/build/ui/widget/form_parts.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/form_step_header.dart';
 import 'package:interiorapp_flutter_client/build/ui/screen/prep_detail_screen.dart';
+import 'package:interiorapp_flutter_client/build/ui/widget/cover_photo_field.dart';
 import 'package:interiorapp_flutter_client/build/ui/widget/prep_budget_reading_card.dart';
 import 'package:interiorapp_flutter_client/core/theme/app_colors.dart';
 import 'package:interiorapp_flutter_client/mypage/presentation/provider/mypage_provider.dart';
@@ -98,6 +100,7 @@ class _PrepCreateScreenState extends ConsumerState<PrepCreateScreen>
   GlobalKey? _errorAnchor;
   bool? _errorAbove;
   ShowroomStyleRef? _styleRef;
+  String _coverPhoto = '';
   final _FormAnchors _anchors = _FormAnchors();
 
   /// 화면을 연 직후의 작성 내용. 계정 연락처를 자동으로 채운 값도 여기에 포함한다.
@@ -125,6 +128,7 @@ class _PrepCreateScreenState extends ConsumerState<PrepCreateScreen>
     }
     _recordId = initial.id;
     _styleRef = initial.styleRef;
+    _coverPhoto = initial.coverPhoto;
     _address.text = initial.address;
     _detailAddress.text = initial.detailAddress;
     _buildingName.text = initial.placeName;
@@ -623,6 +627,7 @@ class _PrepCreateScreenState extends ConsumerState<PrepCreateScreen>
           _workScope == PrepLabels.partialWork ? _workPlace.text.trim() : '',
       finishes: _finishRecord(),
       styleRef: _styleRef,
+      coverPhoto: _coverPhoto,
     );
   }
 
@@ -678,7 +683,7 @@ class _PrepCreateScreenState extends ConsumerState<PrepCreateScreen>
   Future<void> _importTrade() async {
     final TradeCandidate? picked = await showAppBottomSheet<TradeCandidate>(
       context: context,
-      title: '후보지 불러오기',
+      title: '저장한 입지 불러오기',
       message: '주소, 업종, 이름을 상담준비에 채워요.',
       size: AppBottomSheetSize.compact,
       child: Builder(
@@ -705,6 +710,7 @@ class _PrepCreateScreenState extends ConsumerState<PrepCreateScreen>
     );
     if (!mounted || picked == null) return;
     setState(() {
+      if (_coverPhoto.isEmpty) _coverPhoto = picked.coverPhoto;
       _buildingName.text = picked.name;
       _address.text = picked.address;
       _detailAddress.text = picked.detailAddress;
@@ -857,11 +863,7 @@ class _PrepCreateScreenState extends ConsumerState<PrepCreateScreen>
     final EdgeInsets padding = ResponsiveSize.textInset(context);
     final double sectionGap = ResponsiveSize.sectionGap(context);
     final double subGap = ResponsiveSize.subGap(context);
-    final double messageFont = MediaQuery.textScalerOf(
-      context,
-    ).scale(13 * fontScale);
-    final double messagePad = subGap * 0.75;
-    final double messageSlot = messagePad + messageFont * 1.35 * 2 + messagePad;
+    final double messagePad = subGap * 0.5;
 
     final bool leaveScreen = _saved || (_step == 0 && !_isDirty);
     ref.listen(myPageUserVmProvider, (previous, next) {
@@ -914,7 +916,7 @@ class _PrepCreateScreenState extends ConsumerState<PrepCreateScreen>
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           FormStepHeader(
-                            steps: PrepSurvey.steps,
+                            steps: const ['현장 정보', '공사 조건', '마감 선택'],
                             index: _step,
                             fontScale: fontScale,
                           ),
@@ -1013,6 +1015,11 @@ class _PrepCreateScreenState extends ConsumerState<PrepCreateScreen>
                                                     ? null
                                                     : _importTrade,
                                             anchors: _anchors,
+                                            coverPhoto: _coverPhoto,
+                                            onCoverPhoto:
+                                                (String value) => setState(
+                                                  () => _coverPhoto = value,
+                                                ),
                                           ),
                                         if (_step == 1)
                                           _NeedsStep(
@@ -1155,12 +1162,12 @@ class _PrepCreateScreenState extends ConsumerState<PrepCreateScreen>
                               ],
                             ),
                           ),
-                          SizedBox(
-                            height: messageSlot,
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 180),
+                            alignment: Alignment.bottomCenter,
                             child: Padding(
                               padding: EdgeInsets.only(
-                                top: messagePad,
-                                bottom: messagePad,
+                                top: _error == null ? 0 : messagePad,
                               ),
                               child: Align(
                                 alignment: Alignment.centerLeft,
@@ -1227,12 +1234,9 @@ class _PrepCreateScreenState extends ConsumerState<PrepCreateScreen>
                               ),
                             ),
                           ),
+                          SizedBox(height: subGap * 0.75),
                           AppButton(
-                            label: switch (_step) {
-                              0 => '조건설정 넘어가기',
-                              1 => '마감 선택 넘어가기',
-                              _ => '상담준비 저장',
-                            },
+                            label: _step < 2 ? '다음' : '상담준비 저장',
                             onPressed: _next,
                           ),
                         ],
@@ -1276,6 +1280,7 @@ class _PrepCreateScreenState extends ConsumerState<PrepCreateScreen>
       record.workPlace,
       _finishSignature(record.finishes),
       _styleRefSignature(record.styleRef),
+      record.coverPhoto,
     ].join('\u0002');
   }
 
@@ -1424,12 +1429,16 @@ class _SiteStep extends StatelessWidget {
     required this.onSpaceKind,
     required this.onSearchAddress,
     required this.anchors,
+    required this.coverPhoto,
+    required this.onCoverPhoto,
     this.onImport,
   });
 
   final double fontScale;
   final double subGap;
   final double sectionGap;
+  final String coverPhoto;
+  final ValueChanged<String> onCoverPhoto;
   final TextEditingController address;
   final TextEditingController detailAddress;
   final TextEditingController buildingName;
@@ -1464,7 +1473,7 @@ class _SiteStep extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: onImport,
               icon: const Icon(Icons.file_download_outlined, size: 18),
-              label: const Text('상권 후보지에서 불러오기'),
+              label: const Text('저장한 입지에서 불러오기'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,
                 backgroundColor: AppColors.surface,
@@ -1481,6 +1490,17 @@ class _SiteStep extends StatelessWidget {
           ),
           SizedBox(height: subGap),
         ],
+        _FormSection(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _FieldLabel(label: '공간 사진', fontScale: fontScale),
+              SizedBox(height: subGap),
+              CoverPhotoField(photo: coverPhoto, onChanged: onCoverPhoto),
+            ],
+          ),
+        ),
+        SizedBox(height: subGap * 1.25),
         _FormSection(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1505,7 +1525,7 @@ class _SiteStep extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(height: subGap),
+        SizedBox(height: subGap * 1.25),
         _FormSection(
           key: anchors.address,
           child: Column(
@@ -1534,7 +1554,7 @@ class _SiteStep extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(height: subGap),
+        SizedBox(height: subGap * 1.25),
         _FormSection(
           key: anchors.placeName,
           child: Column(
@@ -1573,7 +1593,7 @@ class _SiteStep extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(height: subGap),
+        SizedBox(height: subGap * 1.25),
         _FormSection(
           key: anchors.industry,
           child: Column(
@@ -1679,7 +1699,7 @@ class _SiteStep extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(height: subGap),
+        SizedBox(height: subGap * 1.25),
         _FormSection(
           key: anchors.contact,
           child: Column(
@@ -1952,7 +1972,7 @@ class _NeedsStep extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(height: subGap),
+        SizedBox(height: subGap * 1.25),
         _FormSection(
           key: anchors.area,
           child: Column(
@@ -2011,7 +2031,7 @@ class _NeedsStep extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(height: subGap),
+        SizedBox(height: subGap * 1.25),
         _FormSection(
           key: anchors.demolition,
           child: Column(
@@ -2031,7 +2051,7 @@ class _NeedsStep extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(height: subGap),
+        SizedBox(height: subGap * 1.25),
         _FormSection(
           key: anchors.style,
           child: Column(
@@ -2071,7 +2091,7 @@ class _NeedsStep extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(height: subGap),
+        SizedBox(height: subGap * 1.25),
         _FormSection(
           key: anchors.budget,
           child: Column(
@@ -2115,7 +2135,7 @@ class _NeedsStep extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(height: subGap),
+        SizedBox(height: subGap * 1.25),
         _FormSection(
           key: anchors.period,
           child: Column(
@@ -2191,7 +2211,7 @@ class _NeedsStep extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(height: subGap),
+        SizedBox(height: subGap * 1.25),
         _FormSection(
           key: anchors.needs,
           child: Column(
@@ -2232,41 +2252,38 @@ class _DatePickField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.background,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          padding: const EdgeInsets.fromLTRB(16, 15, 12, 15),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color:
-                  selected ? const Color(0xFF1A1A1A) : const Color(0xFFE4E4E4),
-            ),
+            borderRadius: BorderRadius.circular(14),
+            border:
+                selected
+                    ? Border.all(color: AppColors.primary, width: 1.2)
+                    : null,
           ),
           child: Row(
             children: [
               Icon(
                 Icons.calendar_today_outlined,
                 size: 18,
-                color:
-                    selected
-                        ? const Color(0xFF1A1A1A)
-                        : const Color(0xFF8C7358),
+                color: selected ? AppColors.primary : AppColors.textSecondary,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   label,
                   style: TextStyle(
-                    fontSize: 15 * fontScale,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    fontSize: 16 * fontScale,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                     color:
                         selected
-                            ? const Color(0xFF1A1A1A)
-                            : const Color(0xFFB0B0B0),
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary.withValues(alpha: 0.6),
                   ),
                 ),
               ),
@@ -2275,8 +2292,8 @@ class _DatePickField extends StatelessWidget {
                   onTap: onClear,
                   child: const Icon(
                     Icons.close,
-                    size: 16,
-                    color: Color(0xFF8C7358),
+                    size: 18,
+                    color: AppColors.textSecondary,
                   ),
                 ),
             ],
@@ -2294,14 +2311,16 @@ class _FormSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double pad = ResponsiveSize.subGap(context);
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border, width: 0.7),
       ),
-      child: Padding(padding: EdgeInsets.all(pad), child: child),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+        child: child,
+      ),
     );
   }
 }
@@ -2319,21 +2338,7 @@ class _StepTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 22 * fontScale,
-            fontWeight: FontWeight.w700,
-            height: 1.3,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(body, style: TextStyle(fontSize: 14 * fontScale, height: 1.4)),
-      ],
-    );
+    return FormIntro(title: title, body: body);
   }
 }
 
@@ -2529,10 +2534,7 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: TextStyle(fontSize: 15 * fontScale, fontWeight: FontWeight.w700),
-    );
+    return FormLabel(label: label);
   }
 }
 
@@ -2549,41 +2551,7 @@ class _AddressSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool empty = address.isEmpty;
-
-    return Material(
-      color: AppColors.background,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE4E4E4)),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  empty ? '주소 검색' : address,
-                  style: TextStyle(
-                    fontSize: 15 * fontScale,
-                    color:
-                        empty
-                            ? const Color(0xFFB0B0B0)
-                            : const Color(0xFF1A1A1A),
-                  ),
-                ),
-              ),
-              const Icon(Icons.search, color: Color(0xFF8C7358)),
-            ],
-          ),
-        ),
-      ),
-    );
+    return FormAddressInput(address: address, onTap: onTap);
   }
 }
 
@@ -2750,46 +2718,14 @@ class _PrepTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double fontScale = ResponsiveSize.fontScale(context);
-
-    return TextField(
+    return FormTextInput(
       controller: controller,
+      hint: hint,
       maxLines: maxLines,
       keyboardType: keyboardType,
       onChanged: onChanged,
       inputFormatters: inputFormatters,
-      scrollPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 96),
-      style: TextStyle(fontSize: 15 * fontScale),
-      decoration: InputDecoration(
-        hintText: hint,
-        suffixText: suffixText,
-        suffixStyle: TextStyle(
-          fontSize: 15 * fontScale,
-          color: const Color(0xFF1A1A1A),
-        ),
-        hintStyle: TextStyle(
-          fontSize: 15 * fontScale,
-          color: const Color(0xFFB0B0B0),
-        ),
-        filled: true,
-        fillColor: AppColors.background,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 14,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE4E4E4)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE4E4E4)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF1A1A1A)),
-        ),
-      ),
+      suffixText: suffixText,
     );
   }
 }
@@ -3239,37 +3175,12 @@ class _ChoiceWrap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final String value in values)
-          Builder(
-            builder: (BuildContext context) {
-              final bool on =
-                  picked.isEmpty ? selected == value : picked.contains(value);
-              return ChoiceChip(
-                label: Text(value),
-                selected: on,
-                onSelected: (_) => onSelected(value),
-                labelStyle: TextStyle(
-                  fontSize: 14 * fontScale,
-                  fontWeight: FontWeight.w600,
-                  color: on ? const Color(0xFFFFFFFF) : const Color(0xFF1A1A1A),
-                ),
-                selectedColor: const Color(0xFF111111),
-                backgroundColor: AppColors.background,
-                side: BorderSide(
-                  color: on ? const Color(0xFF111111) : const Color(0xFFE4E4E4),
-                ),
-                showCheckmark: false,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(99),
-                ),
-              );
-            },
-          ),
-      ],
+    return FormChoiceChips(
+      values: values,
+      isSelected:
+          (String value) =>
+              picked.isEmpty ? selected == value : picked.contains(value),
+      onTap: onSelected,
     );
   }
 }

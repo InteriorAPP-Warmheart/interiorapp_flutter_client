@@ -273,6 +273,7 @@ class PrepRecord {
     this.workPlace = '',
     this.finishes = const <String, PrepFinishAnswer>{},
     this.styleRef,
+    this.coverPhoto = '',
   });
 
   final String id;
@@ -339,6 +340,9 @@ class PrepRecord {
   /// 쇼룸에서 골라 온 참고 사례. 없으면 일반 상담준비다.
   final ShowroomStyleRef? styleRef;
 
+  /// 공간 사진 한 장. 목록과 상세의 표지로 쓰고, 비어 있으면 업종 사진을 쓴다.
+  final String coverPhoto;
+
   bool get industryReady =>
       industry.isNotEmpty && industry != PrepLabels.industryUndecided;
 
@@ -368,7 +372,7 @@ class PrepRecord {
   }
 }
 
-/// 상담 전에 비교해 두는 상권 후보지. 분석 점수는 만들지 않는다.
+/// 입지 선정에서 상담 전에 비교해 두는 곳. 분석 점수는 만들지 않는다.
 class TradeCandidate {
   const TradeCandidate({
     required this.id,
@@ -392,6 +396,7 @@ class TradeCandidate {
     required this.rentUnknown,
     required this.reason,
     required this.interiorNotes,
+    this.coverPhoto = '',
   });
 
   final String id;
@@ -416,6 +421,9 @@ class TradeCandidate {
   final String reason;
   final List<String> interiorNotes;
 
+  /// 공간 사진 한 장. 목록과 상세의 표지로 쓰고, 비어 있으면 업종 사진을 쓴다.
+  final String coverPhoto;
+
   PrepRecord toConsultSeed() {
     final String note = [
       if (reason.trim().isNotEmpty) reason.trim(),
@@ -435,6 +443,7 @@ class TradeCandidate {
       floorPlanLabels: const [],
       referenceImageLabels: const [],
       industry: industry,
+      coverPhoto: coverPhoto,
     );
   }
 }
