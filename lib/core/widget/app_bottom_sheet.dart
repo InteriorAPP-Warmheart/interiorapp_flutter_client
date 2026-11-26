@@ -3,7 +3,7 @@ import 'package:interiorapp_flutter_client/core/theme/app_theme.dart';
 import 'package:interiorapp_flutter_client/core/utils/responsive_size.dart';
 import 'package:interiorapp_flutter_client/core/widget/app_button.dart';
 
-enum AppBottomSheetSize { compact, expanded }
+enum AppBottomSheetSize { compact, medium, expanded }
 
 /// 화면 공통 바텀시트. [AppBottomSheetSize]로 높이만 나눈다.
 class AppBottomSheet extends StatelessWidget {
@@ -78,7 +78,8 @@ class AppBottomSheet extends StatelessWidget {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                    child: child ??
+                    child:
+                        child ??
                         const DecoratedBox(
                           decoration: BoxDecoration(
                             color: Color(0xFFF6F6F6),
@@ -124,12 +125,16 @@ Future<T?> showAppBottomSheet<T>({
   String? message,
   Widget? child,
 }) {
-  final bool compact = size == AppBottomSheetSize.compact;
+  final (double fraction, double minHeight, double maxHeight) = switch (size) {
+    AppBottomSheetSize.compact => (0.42, 280.0, 420.0),
+    AppBottomSheetSize.medium => (0.58, 360.0, 540.0),
+    AppBottomSheetSize.expanded => (0.86, 460.0, 720.0),
+  };
   final double height = ResponsiveSize.modalMaxHeight(
     context,
-    screenFraction: compact ? 0.42 : 0.86,
-    minHeight: compact ? 280 : 460,
-    maxHeight: compact ? 420 : 720,
+    screenFraction: fraction,
+    minHeight: minHeight,
+    maxHeight: maxHeight,
   );
 
   return showModalBottomSheet<T>(

@@ -98,7 +98,7 @@ class _DutyBoardState extends ConsumerState<_DutyBoard> {
     final HomePiece? picked = await showAppBottomSheet<HomePiece>(
       context: context,
       title: collection.label,
-      size: AppBottomSheetSize.compact,
+      size: AppBottomSheetSize.medium,
       child: _PieceList(kind: collection.kind, pieces: collection.pieces),
     );
     if (picked == null || !mounted) return;
@@ -305,7 +305,7 @@ class _PieceList extends ConsumerWidget {
     return ListView.separated(
       itemCount: pieces.length,
       separatorBuilder: (BuildContext context, int index) {
-        return const SizedBox(height: 8);
+        return const SizedBox(height: 6);
       },
       itemBuilder: (BuildContext context, int index) {
         final HomePiece piece = pieces[index];
@@ -313,14 +313,14 @@ class _PieceList extends ConsumerWidget {
         return Material(
           color: AppColors.surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(12),
             side: const BorderSide(color: Color(0xFFD7DCE3)),
           ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: () => Navigator.of(context).pop(piece),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(8, 10, 10, 10),
+              padding: const EdgeInsets.fromLTRB(8, 7, 8, 7),
               child: Row(
                 children: [
                   if (tasks)
@@ -345,7 +345,7 @@ class _PieceList extends ConsumerWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 15 * fontScale,
+                            fontSize: 14 * fontScale,
                             fontWeight: FontWeight.w700,
                             letterSpacing: -0.2,
                             decoration:
@@ -363,7 +363,7 @@ class _PieceList extends ConsumerWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 13 * fontScale,
+                              fontSize: 12 * fontScale,
                               color: AppColors.textSecondary,
                             ),
                           ),
@@ -373,6 +373,7 @@ class _PieceList extends ConsumerWidget {
                   ),
                   const Icon(
                     Icons.chevron_right_rounded,
+                    size: 20,
                     color: AppColors.textSecondary,
                   ),
                 ],
@@ -407,11 +408,11 @@ class _TaskCheck extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
         ),
         child: SizedBox(
-          width: 36,
-          height: 36,
+          width: 30,
+          height: 30,
           child: Icon(
             done ? Icons.check_rounded : null,
-            size: 20,
+            size: 16,
             color: AppColors.white,
           ),
         ),
@@ -426,8 +427,8 @@ class _TradeMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 36,
-      height: 36,
+      width: 30,
+      height: 30,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: AppColors.background,
@@ -435,7 +436,7 @@ class _TradeMark extends StatelessWidget {
       ),
       child: const Icon(
         Icons.architecture_rounded,
-        size: 18,
+        size: 16,
         color: AppColors.primary,
       ),
     );
